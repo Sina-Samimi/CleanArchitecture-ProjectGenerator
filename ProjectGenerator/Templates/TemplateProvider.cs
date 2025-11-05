@@ -1,0 +1,452 @@
+namespace ProjectGenerator.Templates;
+
+public partial class TemplateProvider
+{
+    private readonly string _namespace;
+
+    public TemplateProvider(string namespaceName)
+    {
+        _namespace = namespaceName;
+    }
+
+    public string GetBasicCsprojTemplate(string projectName)
+    {
+        return $@"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>";
+    }
+
+    public string GetApplicationCsprojTemplate(string projectName)
+    {
+        return $@"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include=""..\Domain\Domain.csproj"" />
+    <ProjectReference Include=""..\SharedKernel\SharedKernel.csproj"" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
+    <PackageReference Include=""MediatR"" Version=""12.2.0"" />
+  </ItemGroup>
+
+</Project>";
+    }
+
+    public string GetInfrastructureCsprojTemplate(string projectName)
+    {
+        return $@"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include=""..\Application\Application.csproj"" />
+    <ProjectReference Include=""..\Domain\Domain.csproj"" />
+    <ProjectReference Include=""..\SharedKernel\SharedKernel.csproj"" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""9.0.0"">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.3"" />
+  </ItemGroup>
+
+</Project>";
+    }
+
+    public string GetTestsCsprojTemplate(string projectName)
+    {
+        return $@"<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.NET.Test.Sdk"" Version=""17.9.0"" />
+    <PackageReference Include=""xunit"" Version=""2.6.6"" />
+    <PackageReference Include=""xunit.runner.visualstudio"" Version=""2.5.6"">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include=""Moq"" Version=""4.20.70"" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include=""..\..\src\Domain\Domain.csproj"" />
+    <ProjectReference Include=""..\..\src\Application\Application.csproj"" />
+    <ProjectReference Include=""..\..\src\Infrastructure\Infrastructure.csproj"" />
+  </ItemGroup>
+
+</Project>";
+    }
+
+    public string GetWebSiteCsprojTemplate(string projectName)
+    {
+        return $@"<Project Sdk=""Microsoft.NET.Sdk.Web"">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include=""src\Application\Application.csproj"" />
+    <ProjectReference Include=""src\Infrastructure\Infrastructure.csproj"" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""9.0.0"">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>";
+    }
+
+    public string GetBaseEntityTemplate()
+    {
+        return $@"namespace {_namespace}.Domain.Entities;
+
+public abstract class BaseEntity
+{{
+    public int Id {{ get; set; }}
+    public DateTime CreatedDate {{ get; set; }} = DateTime.UtcNow;
+    public DateTime? ModifiedDate {{ get; set; }}
+    public bool IsDeleted {{ get; set; }} = false;
+}}
+";
+    }
+
+    public string GetIAggregateRootTemplate()
+    {
+        return $@"namespace {_namespace}.Domain.Entities;
+
+/// <summary>
+/// Marker interface to identify aggregate roots
+/// </summary>
+public interface IAggregateRoot
+{{
+}}
+";
+    }
+
+    public string GetIRepositoryTemplate()
+    {
+        return $@"using System.Linq.Expressions;
+
+namespace {_namespace}.SharedKernel.Interfaces;
+
+public interface IRepository<T> where T : class
+{{
+    Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
+    Task<T> AddAsync(T entity, CancellationToken cancellationToken = default);
+    Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
+    Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
+}}
+";
+    }
+
+    public string GetResultTemplate()
+    {
+        return $@"namespace {_namespace}.SharedKernel.Results;
+
+public class Result
+{{
+    public bool IsSuccess {{ get; protected set; }}
+    public string Message {{ get; protected set; }} = string.Empty;
+    public List<string> Errors {{ get; protected set; }} = new();
+
+    public static Result Success() => new Result {{ IsSuccess = true }};
+    public static Result Success(string message) => new Result {{ IsSuccess = true, Message = message }};
+    public static Result Failure(string error) => new Result {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
+    public static Result Failure(List<string> errors) => new Result {{ IsSuccess = false, Errors = errors }};
+}}
+
+public class Result<T> : Result
+{{
+    public T? Data {{ get; set; }}
+
+    public static Result<T> Success(T data) => new Result<T> {{ IsSuccess = true, Data = data }};
+    public static Result<T> Success(T data, string message) => new Result<T> {{ IsSuccess = true, Data = data, Message = message }};
+    public new static Result<T> Failure(string error) => new Result<T> {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
+    public new static Result<T> Failure(List<string> errors) => new Result<T> {{ IsSuccess = false, Errors = errors }};
+}}
+";
+    }
+
+    public string GetDbContextTemplate()
+    {
+        return $@"using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace {_namespace}.Infrastructure.Data;
+
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
+{{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {{
+    }}
+
+    // Add your DbSets here
+    // public DbSet<YourEntity> YourEntities {{ get; set; }}
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {{
+        base.OnModelCreating(builder);
+
+        // Configure your entities here
+        // builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+    }}
+}}
+
+// Placeholder classes - replace with your actual Identity classes
+public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int>
+{{
+    public string? FirstName {{ get; set; }}
+    public string? LastName {{ get; set; }}
+}}
+
+public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
+{{
+    public string? Description {{ get; set; }}
+}}
+";
+    }
+
+    public string GetGenericRepositoryTemplate()
+    {
+        return $@"using {_namespace}.SharedKernel.Interfaces;
+using {_namespace}.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+
+namespace {_namespace}.Infrastructure.Repositories;
+
+public class GenericRepository<T> : IRepository<T> where T : class
+{{
+    protected readonly ApplicationDbContext _context;
+    protected readonly DbSet<T> _dbSet;
+
+    public GenericRepository(ApplicationDbContext context)
+    {{
+        _context = context;
+        _dbSet = context.Set<T>();
+    }}
+
+    public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {{
+        return await _dbSet.FindAsync(new object[] {{ id }}, cancellationToken);
+    }}
+
+    public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    {{
+        return await _dbSet.ToListAsync(cancellationToken);
+    }}
+
+    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+    {{
+        return await _dbSet.Where(predicate).ToListAsync(cancellationToken);
+    }}
+
+    public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
+    {{
+        await _dbSet.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return entity;
+    }}
+
+    public virtual async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
+    {{
+        _dbSet.Update(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }}
+
+    public virtual async Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
+    {{
+        _dbSet.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }}
+
+    public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+    {{
+        return await _dbSet.AnyAsync(predicate, cancellationToken);
+    }}
+}}
+";
+    }
+
+    public string GetProgramTemplate()
+    {
+        return $@"var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{{
+    app.UseExceptionHandler(""/Home/Error"");
+    app.UseHsts();
+}}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: ""default"",
+    pattern: ""{{controller=Home}}/{{action=Index}}/{{id?}}"");
+
+app.Run();
+";
+    }
+
+    public string GetEnhancedProgramTemplate()
+    {
+        return $@"using {_namespace}.Application;
+using {_namespace}.Infrastructure;
+using {_namespace}.Infrastructure.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add Application and Infrastructure layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+
+// Add Identity
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+{{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = true;
+}})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+// Configure Authentication
+builder.Services.ConfigureApplicationCookie(options =>
+{{
+    options.LoginPath = ""/Account/Login"";
+    options.LogoutPath = ""/Account/Logout"";
+    options.AccessDeniedPath = ""/Account/AccessDenied"";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+}});
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+builder.Services.AddMemoryCache();
+builder.Services.AddSession(options =>
+{{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+}});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{{
+    app.UseExceptionHandler(""/Home/Error"");
+    app.UseHsts();
+}}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseSession();
+
+// Area routes
+app.MapControllerRoute(
+    name: ""areas"",
+    pattern: ""{{area:exists}}/{{controller=Home}}/{{action=Index}}/{{id?}}"");
+
+// Default route
+app.MapControllerRoute(
+    name: ""default"",
+    pattern: ""{{controller=Home}}/{{action=Index}}/{{id?}}"");
+
+app.Run();
+
+// Identity classes for Program.cs
+public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int>
+{{
+    public string? FirstName {{ get; set; }}
+    public string? LastName {{ get; set; }}
+    public DateTime? BirthDate {{ get; set; }}
+    public bool IsActive {{ get; set; }} = true;
+    public DateTime RegisterDate {{ get; set; }} = DateTime.UtcNow;
+}}
+
+public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
+{{
+    public string? Description {{ get; set; }}
+}}
+";
+    }
+
+    public string GetAppSettingsTemplate()
+    {
+        return $@"{{
+  ""ConnectionStrings"": {{
+    ""DefaultConnection"": ""Server=.;Database={_namespace}Db;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true""
+  }},
+  ""Logging"": {{
+    ""LogLevel"": {{
+      ""Default"": ""Information"",
+      ""Microsoft.AspNetCore"": ""Warning""
+    }}
+  }},
+  ""AllowedHosts"": ""*""
+}}
+";
+    }
+}

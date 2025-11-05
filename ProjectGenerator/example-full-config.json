@@ -1,0 +1,83 @@
+{
+  "ProjectName": "MyAwesomeShop",
+  "OutputPath": "C:\\Projects\\MyAwesomeShop",
+  "Namespace": "MyCompany.MyAwesomeShop",
+  "Options": {
+    "IncludeWebSite": true,
+    "IncludeTests": true,
+    "GenerateInitialSeedData": true,
+    "Features": {
+      "UserManagement": true,
+      "SellerPanel": true,
+      "ProductCatalog": true,
+      "ShoppingCart": true,
+      "Invoicing": true,
+      "BlogSystem": true
+    },
+    "SeedRoles": [
+      {
+        "Name": "Admin",
+        "Description": "مدیر سیستم با دسترسی کامل به تمام بخش‌ها",
+        "Permissions": [
+          "ManageUsers",
+          "ManageRoles",
+          "ManageSettings",
+          "ViewReports",
+          "ManageProducts",
+          "ManageOwnProducts",
+          "ViewProducts",
+          "ManageOrders",
+          "ManageOwnOrders",
+          "ViewOrders",
+          "ManageBlog",
+          "ViewBlog",
+          "ManageCategories"
+        ]
+      },
+      {
+        "Name": "Seller",
+        "Description": "فروشنده با دسترسی به مدیریت محصولات و سفارشات خود",
+        "Permissions": [
+          "ManageOwnProducts",
+          "ViewProducts",
+          "ManageOwnOrders",
+          "ViewOrders",
+          "ViewOwnOrders"
+        ]
+      },
+      {
+        "Name": "User",
+        "Description": "کاربر عادی با دسترسی به خرید و مشاهده محصولات",
+        "Permissions": [
+          "ViewProducts",
+          "PlaceOrders",
+          "ViewOwnOrders",
+          "ViewBlog"
+        ]
+      }
+    ],
+    "SeedUsers": [
+      {
+        "Username": "admin",
+        "Email": "admin@example.com",
+        "PhoneNumber": "09123456789",
+        "Password": "Admin@123",
+        "Roles": ["Admin"]
+      },
+      {
+        "Username": "seller1",
+        "Email": "seller@example.com",
+        "PhoneNumber": "09123456790",
+        "Password": "Seller@123",
+        "Roles": ["Seller"]
+      },
+      {
+        "Username": "user1",
+        "Email": "user@example.com",
+        "PhoneNumber": "09123456791",
+        "Password": "User@123",
+        "Roles": ["User"]
+      }
+    ]
+  }
+}
