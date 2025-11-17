@@ -1097,7 +1097,6 @@ public class BlogController : Controller
     public string GetViewImportsTemplate()
     {
         return $@"@using {_projectName}.WebSite
-@using {_projectName}.WebSite.Models
 @using Microsoft.AspNetCore.Identity
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 ";
