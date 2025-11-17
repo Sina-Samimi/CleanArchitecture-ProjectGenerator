@@ -21,6 +21,7 @@ public partial class TemplateProvider
       <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
       <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""9.0.0"" />
       <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
+      <PackageReference Include=""AutoMapper.Extensions.Microsoft.DependencyInjection"" Version=""12.0.1"" />
       <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
     </ItemGroup>
 

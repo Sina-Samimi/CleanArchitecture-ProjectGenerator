@@ -58,10 +58,12 @@ public abstract class Entity
     <ProjectReference Include=""..\SharedKernel\SharedKernel.csproj"" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
-    <PackageReference Include=""MediatR"" Version=""12.2.0"" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
+      <PackageReference Include=""MediatR"" Version=""12.2.0"" />
+      <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
+      <PackageReference Include=""AutoMapper.Extensions.Microsoft.DependencyInjection"" Version=""12.0.1"" />
+    </ItemGroup>
 
 </Project>";
     }
