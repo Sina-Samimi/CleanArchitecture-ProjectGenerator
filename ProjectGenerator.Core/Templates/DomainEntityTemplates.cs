@@ -1319,9 +1319,9 @@ public sealed class Invoice : Entity
 
         if (items != null)
         {{
-            foreach (var (description, unitPrice, quantity) in items)
+            foreach (var (itemDescription, unitPrice, quantity) in items)
             {{
-                AddItem(description, unitPrice, quantity);
+                AddItem(itemDescription, unitPrice, quantity);
             }}
         }}
     }}
