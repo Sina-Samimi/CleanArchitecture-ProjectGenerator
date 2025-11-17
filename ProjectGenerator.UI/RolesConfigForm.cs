@@ -1,4 +1,4 @@
-using ProjectGenerator.Models;
+using ProjectGenerator.Core.Models;
 using System.Windows.Forms;
 
 namespace ProjectGenerator.UI;

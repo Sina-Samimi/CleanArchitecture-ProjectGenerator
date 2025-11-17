@@ -177,34 +177,6 @@ public interface IRepository<T> where T : class
 ";
     }
 
-    public string GetResultTemplate()
-    {
-        return $@"namespace {_namespace}.SharedKernel.Results;
-
-public class Result
-{{
-    public bool IsSuccess {{ get; protected set; }}
-    public string Message {{ get; protected set; }} = string.Empty;
-    public List<string> Errors {{ get; protected set; }} = new();
-
-    public static Result Success() => new Result {{ IsSuccess = true }};
-    public static Result Success(string message) => new Result {{ IsSuccess = true, Message = message }};
-    public static Result Failure(string error) => new Result {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
-    public static Result Failure(List<string> errors) => new Result {{ IsSuccess = false, Errors = errors }};
-}}
-
-public class Result<T> : Result
-{{
-    public T? Data {{ get; set; }}
-
-    public static Result<T> Success(T data) => new Result<T> {{ IsSuccess = true, Data = data }};
-    public static Result<T> Success(T data, string message) => new Result<T> {{ IsSuccess = true, Data = data, Message = message }};
-    public new static Result<T> Failure(string error) => new Result<T> {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
-    public new static Result<T> Failure(List<string> errors) => new Result<T> {{ IsSuccess = false, Errors = errors }};
-}}
-";
-    }
-
     public string GetDbContextTemplate()
     {
         return $@"using Microsoft.AspNetCore.Identity.EntityFrameworkCore;

@@ -1,5 +1,5 @@
-using ProjectGenerator.Models;
-using ProjectGenerator.Generators;
+using ProjectGenerator.Core.Models;
+using ProjectGenerator.Core.Generators;
 using Newtonsoft.Json;
 
 namespace ProjectGenerator;
