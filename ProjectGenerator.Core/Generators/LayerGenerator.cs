@@ -97,7 +97,7 @@ public class LayerGenerator
         var basePath = Path.Combine(layerPath, "Base");
         File.WriteAllText(
             Path.Combine(basePath, "Entity.cs"),
-            _templateProvider.GetBaseEntityTemplate()
+            _templateProvider.GetEntityBaseClassTemplate()
         );
         
         File.WriteAllText(

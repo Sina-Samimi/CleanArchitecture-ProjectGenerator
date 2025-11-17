@@ -14,7 +14,7 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -22,12 +22,29 @@ public partial class TemplateProvider
 </Project>";
     }
 
+    public string GetEntityBaseClassTemplate()
+    {
+        return $@"using System;
+using System.Net;
+
+namespace {_namespace}.Domain.Base;
+
+public abstract class Entity
+{{
+    public Guid Id {{ get; protected set; }} = Guid.NewGuid();
+    public DateTimeOffset CreateDate {{ get; protected set; }} = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdateDate {{ get; protected set; }} = DateTimeOffset.UtcNow;
+    public IPAddress Ip {{ get; protected set; }} = IPAddress.None;
+}}
+";
+    }
+
     public string GetApplicationCsprojTemplate(string projectName)
     {
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -50,7 +67,7 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -62,10 +79,10 @@ public partial class TemplateProvider
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""9.0.0"">
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""8.0.0"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -80,7 +97,7 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -110,7 +127,7 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk.Web"">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
