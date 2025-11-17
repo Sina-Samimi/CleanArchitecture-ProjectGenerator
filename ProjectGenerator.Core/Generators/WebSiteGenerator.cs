@@ -1,7 +1,7 @@
-using ProjectGenerator.Models;
-using ProjectGenerator.Templates;
+using ProjectGenerator.Core.Models;
+using ProjectGenerator.Core.Templates;
 
-namespace ProjectGenerator.Generators;
+namespace ProjectGenerator.Core.Generators;
 
 public class WebSiteGenerator
 {

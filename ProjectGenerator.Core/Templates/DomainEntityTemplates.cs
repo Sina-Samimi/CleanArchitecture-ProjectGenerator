@@ -1,4 +1,4 @@
-namespace ProjectGenerator.Templates;
+namespace ProjectGenerator.Core.Templates;
 
 public partial class TemplateProvider
 {

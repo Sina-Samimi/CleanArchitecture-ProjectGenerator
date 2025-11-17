@@ -1,6 +1,6 @@
-using ProjectGenerator.Models;
+using ProjectGenerator.Core.Models;
 
-namespace ProjectGenerator.Templates;
+namespace ProjectGenerator.Core.Templates;
 
 public class WebSiteTemplates
 {

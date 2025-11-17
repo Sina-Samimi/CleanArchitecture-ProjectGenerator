@@ -1,7 +1,7 @@
-using ProjectGenerator.Models;
+using ProjectGenerator.Core.Models;
 using Newtonsoft.Json;
 
-namespace ProjectGenerator.Generators;
+namespace ProjectGenerator.Core.Generators;
 
 public class SeedDataGenerator
 {
