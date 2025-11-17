@@ -276,102 +276,99 @@ public class LayerGenerator
 
     private void GenerateApplicationLayer(string layerPath, string layerName)
     {
-        var csprojContent = _templateProvider.GetApplicationCsprojTemplate(layerName);
+        var csprojContent = _templateProvider.GetApplicationCsprojTemplate();
         File.WriteAllText(Path.Combine(layerPath, $"{layerName}.csproj"), csprojContent);
 
-        var dirs = new[] { "Interfaces", "Services", "DTOs", "Mapping" };
+        // Create directory structure for CQRS
+        var dirs = new[] { 
+            "Services", 
+            "Common",
+            "Users/Commands/CreateUser",
+            "Users/Commands/UpdateUser", 
+            "Users/Queries/GetUsers",
+            "Products/Commands/CreateProduct",
+            "Products/Queries/GetProducts"
+        };
+        
         foreach (var dir in dirs)
         {
             Directory.CreateDirectory(Path.Combine(layerPath, dir));
         }
 
-        var features = _config.Options.Features;
-        var interfacesPath = Path.Combine(layerPath, "Interfaces");
-        var dtosPath = Path.Combine(layerPath, "DTOs");
-
-        // Generate services and DTOs based on features
-        if (features.ProductCatalog)
-        {
-            // Create DTO directories
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Product"));
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Category"));
-
-            // Generate interfaces
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "IProductService.cs"),
-                _templateProvider.GetIProductServiceTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "ICategoryService.cs"),
-                _templateProvider.GetICategoryServiceTemplate()
-            );
-
-            // Generate DTOs
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Product", "ProductDtos.cs"),
-                _templateProvider.GetProductDtosTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Category", "CategoryDtos.cs"),
-                _templateProvider.GetCategoryDtosTemplate()
-            );
-        }
-
-        if (features.ShoppingCart)
-        {
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Cart"));
-            
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "ICartService.cs"),
-                _templateProvider.GetICartServiceTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Cart", "CartDtos.cs"),
-                _templateProvider.GetCartDtosTemplate()
-            );
-        }
-
-        if (features.Invoicing)
-        {
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Order"));
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Invoice"));
-            
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "IOrderService.cs"),
-                _templateProvider.GetIOrderServiceTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "IInvoiceService.cs"),
-                _templateProvider.GetIInvoiceServiceTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Order", "OrderDtos.cs"),
-                _templateProvider.GetOrderDtosTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Invoice", "InvoiceDtos.cs"),
-                _templateProvider.GetInvoiceDtosTemplate()
-            );
-        }
-
-        if (features.BlogSystem)
-        {
-            Directory.CreateDirectory(Path.Combine(dtosPath, "Blog"));
-            
-            File.WriteAllText(
-                Path.Combine(interfacesPath, "IBlogService.cs"),
-                _templateProvider.GetIBlogServiceTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(dtosPath, "Blog", "BlogDtos.cs"),
-                _templateProvider.GetBlogDtosTemplate()
-            );
-        }
-
-        // Create DependencyInjection
+        // Create Service Interfaces
+        var servicesPath = Path.Combine(layerPath, "Services");
         File.WriteAllText(
-            Path.Combine(layerPath, "DependencyInjection.cs"),
-            _templateProvider.GetApplicationDependencyInjectionTemplate()
+            Path.Combine(servicesPath, "IFileService.cs"),
+            _templateProvider.GetIFileServiceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "ISmsService.cs"),
+            _templateProvider.GetISmsServiceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "IOtpService.cs"),
+            _templateProvider.GetIOtpServiceTemplate()
+        );
+
+        // Create Common DTOs
+        var commonPath = Path.Combine(layerPath, "Common");
+        File.WriteAllText(
+            Path.Combine(commonPath, "PaginatedResponse.cs"),
+            _templateProvider.GetPaginatedResponseTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(commonPath, "Result.cs"),
+            _templateProvider.GetResultTemplate()
+        );
+
+        // Create User Commands/Queries
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Commands/CreateUser", "CreateUserCommand.cs"),
+            _templateProvider.GetCreateUserCommandTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Commands/CreateUser", "CreateUserHandler.cs"),
+            _templateProvider.GetCreateUserHandlerTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Commands/UpdateUser", "UpdateUserCommand.cs"),
+            _templateProvider.GetUpdateUserCommandTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Commands/UpdateUser", "UpdateUserHandler.cs"),
+            _templateProvider.GetUpdateUserHandlerTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Queries/GetUsers", "GetUsersQuery.cs"),
+            _templateProvider.GetGetUsersQueryTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Users/Queries/GetUsers", "GetUsersHandler.cs"),
+            _templateProvider.GetGetUsersHandlerTemplate()
+        );
+
+        // Create Product Commands/Queries
+        File.WriteAllText(
+            Path.Combine(layerPath, "Products/Commands/CreateProduct", "CreateProductCommand.cs"),
+            _templateProvider.GetCreateProductCommandTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Products/Commands/CreateProduct", "CreateProductHandler.cs"),
+            _templateProvider.GetCreateProductHandlerTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Products/Queries/GetProducts", "GetProductsQuery.cs"),
+            _templateProvider.GetGetProductsQueryTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "Products/Queries/GetProducts", "GetProductsHandler.cs"),
+            _templateProvider.GetGetProductsHandlerTemplate()
+        );
+
+        // Create ServiceCollectionExtensions
+        File.WriteAllText(
+            Path.Combine(layerPath, "ServiceCollectionExtensions.cs"),
+            _templateProvider.GetMediatRExtensionsTemplate()
         );
     }
 
