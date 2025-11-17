@@ -48,22 +48,22 @@ using {_config.Namespace}.Infrastructure.Persistence;
 namespace {_config.Namespace}.Infrastructure.Persistence.SeedData;
 
 public class DatabaseSeeder
-{
+{{
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
 
     public DatabaseSeeder(ApplicationDbContext context, IConfiguration configuration)
-    {
+    {{
         _context = context;
         _configuration = configuration;
-    }
+    }}
 
     public async Task SeedAsync()
-    {
+    {{
         await _context.Database.EnsureCreatedAsync();
         // TODO: Add your data seeding logic here.
-    }
-}
+    }}
+}}
 ";
 
         File.WriteAllText(Path.Combine(seedDataPath, "DatabaseSeeder.cs"), content);
