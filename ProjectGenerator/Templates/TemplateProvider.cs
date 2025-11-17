@@ -116,8 +116,8 @@ public partial class TemplateProvider
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include=""src\Application\Application.csproj"" />
-    <ProjectReference Include=""src\Infrastructure\Infrastructure.csproj"" />
+    <ProjectReference Include=""..\Application\Application.csproj"" />
+    <ProjectReference Include=""..\Infrastructure\Infrastructure.csproj"" />
   </ItemGroup>
 
   <ItemGroup>
