@@ -40,6 +40,7 @@ public class HomeController : Controller
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
 
 namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 
@@ -48,11 +49,11 @@ namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 public class UsersController : Controller
 {{
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager)
+        RoleManager<IdentityRole> roleManager)
     {{
         _userManager = userManager;
         _roleManager = roleManager;
@@ -99,9 +100,9 @@ public class UsersController : Controller
         return View(model);
     }}
 
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(string id)
     {{
-        var user = await _userManager.FindByIdAsync(id.ToString());
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null)
         {{
             return NotFound();
@@ -124,7 +125,7 @@ public class UsersController : Controller
     {{
         if (ModelState.IsValid)
         {{
-            var user = await _userManager.FindByIdAsync(model.Id.ToString());
+            var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
             {{
                 return NotFound();
@@ -152,9 +153,9 @@ public class UsersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(string id)
     {{
-        var user = await _userManager.FindByIdAsync(id.ToString());
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null)
         {{
             return NotFound();
@@ -185,14 +186,11 @@ public class CreateUserViewModel
 
 public class EditUserViewModel
 {{
-    public int Id {{ get; set; }}
+    public string Id {{ get; set; }} = string.Empty;
     public string Username {{ get; set; }} = string.Empty;
     public string Email {{ get; set; }} = string.Empty;
     public string PhoneNumber {{ get; set; }} = string.Empty;
 }}
-
-public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int> {{ }}
-public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int> {{ }}
 ";
     }
 
@@ -209,9 +207,9 @@ namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 [Authorize(Roles = ""Admin"")]
 public class RolesController : Controller
 {{
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public RolesController(RoleManager<ApplicationRole> roleManager)
+    public RolesController(RoleManager<IdentityRole> roleManager)
     {{
         _roleManager = roleManager;
     }}
@@ -233,7 +231,7 @@ public class RolesController : Controller
     {{
         if (ModelState.IsValid)
         {{
-            var role = new ApplicationRole {{ Name = model.Name }};
+            var role = new IdentityRole {{ Name = model.Name }};
             var result = await _roleManager.CreateAsync(role);
             
             if (result.Succeeded)

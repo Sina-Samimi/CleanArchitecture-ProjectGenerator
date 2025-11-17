@@ -370,6 +370,11 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 }});
 
+// Register Infrastructure Services
+builder.Services.AddScoped<{_namespace}.Application.Services.IFileService, {_namespace}.Infrastructure.Services.FileService>();
+builder.Services.AddScoped<{_namespace}.Application.Services.ISmsService, {_namespace}.Infrastructure.Services.SmsService>();
+builder.Services.AddScoped<{_namespace}.Application.Services.IOtpService, {_namespace}.Infrastructure.Services.OtpService>();
+
 // Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
