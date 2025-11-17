@@ -83,10 +83,10 @@ public abstract class Entity
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""8.0.0"">
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""8.0.10"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -142,8 +142,8 @@ public abstract class Entity
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""9.0.0"">
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""8.0.10"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

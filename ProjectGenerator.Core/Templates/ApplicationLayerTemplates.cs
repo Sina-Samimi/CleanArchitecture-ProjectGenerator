@@ -19,7 +19,7 @@ public partial class TemplateProvider
     <PackageReference Include=""MediatR"" Version=""12.2.0"" />
     <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
     <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
-    <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""8.0.2"" />
     <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
   </ItemGroup>
 

@@ -545,7 +545,6 @@ public sealed class UserSession : Entity
     {{
     }}
 
-    [SetsRequiredMembers]
     public static UserSession Start(
         string userId,
         IPAddress? clientIp,
