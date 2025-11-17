@@ -10,7 +10,7 @@ public partial class TemplateProvider
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using {_namespace}.Domain.Entities;
+using {_namespace}.Domain.Base;
 using {_namespace}.Domain.Enums;
 
 namespace {_namespace}.Domain.Entities;

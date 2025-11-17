@@ -19,6 +19,10 @@ public partial class TemplateProvider
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.Extensions.Identity.Stores"" Version=""8.0.10"" />
+  </ItemGroup>
+
 </Project>";
     }
 
