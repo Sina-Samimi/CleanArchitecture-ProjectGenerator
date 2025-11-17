@@ -1,4 +1,4 @@
-namespace ProjectGenerator.Models;
+namespace ProjectGenerator.Core.Models;
 
 public class ProjectConfig
 {

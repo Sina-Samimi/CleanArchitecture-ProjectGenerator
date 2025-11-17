@@ -1,7 +1,7 @@
-using ProjectGenerator.Models;
+using ProjectGenerator.Core.Models;
 using Newtonsoft.Json;
 using System.Windows.Forms;
-using ProjectGenerator.Generators;
+using ProjectGenerator.Core.Generators;
 
 namespace ProjectGenerator.UI;
 

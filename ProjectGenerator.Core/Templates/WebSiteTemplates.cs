@@ -1,6 +1,6 @@
-using ProjectGenerator.Models;
+using ProjectGenerator.Core.Models;
 
-namespace ProjectGenerator.Templates;
+namespace ProjectGenerator.Core.Templates;
 
 public class WebSiteTemplates
 {
@@ -40,6 +40,7 @@ public class HomeController : Controller
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
 
 namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 
@@ -48,11 +49,11 @@ namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 public class UsersController : Controller
 {{
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager)
+        RoleManager<IdentityRole> roleManager)
     {{
         _userManager = userManager;
         _roleManager = roleManager;
@@ -99,9 +100,9 @@ public class UsersController : Controller
         return View(model);
     }}
 
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(string id)
     {{
-        var user = await _userManager.FindByIdAsync(id.ToString());
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null)
         {{
             return NotFound();
@@ -124,7 +125,7 @@ public class UsersController : Controller
     {{
         if (ModelState.IsValid)
         {{
-            var user = await _userManager.FindByIdAsync(model.Id.ToString());
+            var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
             {{
                 return NotFound();
@@ -152,9 +153,9 @@ public class UsersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(string id)
     {{
-        var user = await _userManager.FindByIdAsync(id.ToString());
+        var user = await _userManager.FindByIdAsync(id);
         if (user == null)
         {{
             return NotFound();
@@ -185,14 +186,11 @@ public class CreateUserViewModel
 
 public class EditUserViewModel
 {{
-    public int Id {{ get; set; }}
+    public string Id {{ get; set; }} = string.Empty;
     public string Username {{ get; set; }} = string.Empty;
     public string Email {{ get; set; }} = string.Empty;
     public string PhoneNumber {{ get; set; }} = string.Empty;
 }}
-
-public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int> {{ }}
-public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int> {{ }}
 ";
     }
 
@@ -209,9 +207,9 @@ namespace {_projectName}.WebSite.Areas.Admin.Controllers;
 [Authorize(Roles = ""Admin"")]
 public class RolesController : Controller
 {{
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public RolesController(RoleManager<ApplicationRole> roleManager)
+    public RolesController(RoleManager<IdentityRole> roleManager)
     {{
         _roleManager = roleManager;
     }}
@@ -233,7 +231,7 @@ public class RolesController : Controller
     {{
         if (ModelState.IsValid)
         {{
-            var role = new ApplicationRole {{ Name = model.Name }};
+            var role = new IdentityRole {{ Name = model.Name }};
             var result = await _roleManager.CreateAsync(role);
             
             if (result.Succeeded)
@@ -255,6 +253,564 @@ public class RolesController : Controller
 public class CreateRoleViewModel
 {{
     public string Name {{ get; set; }} = string.Empty;
+}}
+";
+    }
+
+    public string GetAdminAccessLevelsControllerTemplate()
+    {
+        return $@"using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
+
+namespace {_projectName}.WebSite.Areas.Admin.Controllers;
+
+[Area(""Admin"")]
+[Authorize(Roles = ""Admin"")]
+public class AccessLevelsController : Controller
+{{
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ApplicationDbContext _context;
+
+    public AccessLevelsController(
+        RoleManager<IdentityRole> roleManager,
+        ApplicationDbContext context)
+    {{
+        _roleManager = roleManager;
+        _context = context;
+    }}
+
+    public async Task<IActionResult> Index()
+    {{
+        var roles = await _roleManager.Roles.ToListAsync();
+        return View(roles);
+    }}
+
+    public async Task<IActionResult> Permissions(string roleId)
+    {{
+        var role = await _roleManager.FindByIdAsync(roleId);
+        if (role == null)
+        {{
+            return NotFound();
+        }}
+
+        var allPermissions = await _context.AccessPermissions.ToListAsync();
+        // Get role claims (permissions)
+        var roleClaims = await _context.RoleClaims
+            .Where(rc => rc.RoleId == roleId && rc.ClaimType == ""Permission"")
+            .Select(rc => rc.ClaimValue)
+            .ToListAsync();
+
+        ViewBag.RoleName = role.Name;
+        ViewBag.RoleId = roleId;
+        ViewBag.AssignedPermissions = roleClaims;
+        
+        return View(allPermissions);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignPermissions(string roleId, List<string> permissionKeys)
+    {{
+        var role = await _roleManager.FindByIdAsync(roleId);
+        if (role == null)
+        {{
+            return NotFound();
+        }}
+
+        // Remove existing permission claims
+        var existingClaims = await _context.RoleClaims
+            .Where(rc => rc.RoleId == roleId && rc.ClaimType == ""Permission"")
+            .ToListAsync();
+        
+        _context.RoleClaims.RemoveRange(existingClaims);
+
+        // Add new claims
+        foreach (var permissionKey in permissionKeys ?? new List<string>())
+        {{
+            _context.RoleClaims.Add(new IdentityRoleClaim<string>
+            {{
+                RoleId = roleId,
+                ClaimType = ""Permission"",
+                ClaimValue = permissionKey
+            }});
+        }}
+
+        await _context.SaveChangesAsync();
+
+        TempData[""SuccessMessage""] = ""مجوزها با موفقیت تخصیص داده شد"";
+        return RedirectToAction(nameof(Index));
+    }}
+}}
+";
+    }
+
+    public string GetAdminPermissionsControllerTemplate()
+    {
+        return $@"using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
+
+namespace {_projectName}.WebSite.Areas.Admin.Controllers;
+
+[Area(""Admin"")]
+[Authorize(Roles = ""Admin"")]
+public class PermissionsController : Controller
+{{
+    private readonly ApplicationDbContext _context;
+
+    public PermissionsController(ApplicationDbContext context)
+    {{
+        _context = context;
+    }}
+
+    public async Task<IActionResult> Index()
+    {{
+        var permissions = await _context.AccessPermissions
+            .OrderBy(p => p.GroupKey)
+            .ThenBy(p => p.DisplayName)
+            .ToListAsync();
+        
+        return View(permissions);
+    }}
+
+    public IActionResult Create()
+    {{
+        return View();
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreatePermissionViewModel model)
+    {{
+        if (ModelState.IsValid)
+        {{
+            var exists = await _context.AccessPermissions
+                .AnyAsync(p => p.Key == model.Key);
+            
+            if (exists)
+            {{
+                ModelState.AddModelError(nameof(model.Key), ""این کلید قبلاً استفاده شده است"");
+                return View(model);
+            }}
+
+            var permission = new AccessPermission(
+                model.Key,
+                model.DisplayName,
+                model.Description,
+                model.IsCore,
+                model.GroupKey ?? ""custom"",
+                model.GroupDisplayName ?? ""سفارشی"");
+
+            _context.AccessPermissions.Add(permission);
+            await _context.SaveChangesAsync();
+
+            TempData[""SuccessMessage""] = ""مجوز با موفقیت ایجاد شد"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        return View(model);
+    }}
+
+    public async Task<IActionResult> Edit(Guid id)
+    {{
+        var permission = await _context.AccessPermissions.FindAsync(id);
+        if (permission == null)
+        {{
+            return NotFound();
+        }}
+
+        if (permission.IsCore)
+        {{
+            TempData[""ErrorMessage""] = ""نمی‌توانید مجوزهای اصلی را ویرایش کنید"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        var model = new EditPermissionViewModel
+        {{
+            Id = permission.Id,
+            Key = permission.Key,
+            DisplayName = permission.DisplayName,
+            Description = permission.Description,
+            GroupKey = permission.GroupKey,
+            GroupDisplayName = permission.GroupDisplayName
+        }};
+
+        return View(model);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(EditPermissionViewModel model)
+    {{
+        if (ModelState.IsValid)
+        {{
+            var permission = await _context.AccessPermissions.FindAsync(model.Id);
+            if (permission == null)
+            {{
+                return NotFound();
+            }}
+
+            if (permission.IsCore)
+            {{
+                TempData[""ErrorMessage""] = ""نمی‌توانید مجوزهای اصلی را ویرایش کنید"";
+                return RedirectToAction(nameof(Index));
+            }}
+
+            permission.UpdateDetails(
+                model.DisplayName,
+                model.Description,
+                false,
+                model.GroupKey ?? ""custom"",
+                model.GroupDisplayName ?? ""سفارشی"");
+
+            await _context.SaveChangesAsync();
+
+            TempData[""SuccessMessage""] = ""مجوز با موفقیت به‌روز شد"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        return View(model);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {{
+        var permission = await _context.AccessPermissions.FindAsync(id);
+        if (permission == null)
+        {{
+            return NotFound();
+        }}
+
+        if (permission.IsCore)
+        {{
+            TempData[""ErrorMessage""] = ""نمی‌توانید مجوزهای اصلی را حذف کنید"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        _context.AccessPermissions.Remove(permission);
+        await _context.SaveChangesAsync();
+
+        TempData[""SuccessMessage""] = ""مجوز با موفقیت حذف شد"";
+        return RedirectToAction(nameof(Index));
+    }}
+}}
+
+public class CreatePermissionViewModel
+{{
+    public string Key {{ get; set; }} = string.Empty;
+    public string DisplayName {{ get; set; }} = string.Empty;
+    public string? Description {{ get; set; }}
+    public bool IsCore {{ get; set; }}
+    public string? GroupKey {{ get; set; }}
+    public string? GroupDisplayName {{ get; set; }}
+}}
+
+public class EditPermissionViewModel
+{{
+    public Guid Id {{ get; set; }}
+    public string Key {{ get; set; }} = string.Empty;
+    public string DisplayName {{ get; set; }} = string.Empty;
+    public string? Description {{ get; set; }}
+    public string? GroupKey {{ get; set; }}
+    public string? GroupDisplayName {{ get; set; }}
+}}
+";
+    }
+
+    public string GetAdminPageAccessControllerTemplate()
+    {
+        return $@"using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
+
+namespace {_projectName}.WebSite.Areas.Admin.Controllers;
+
+[Area(""Admin"")]
+[Authorize(Roles = ""Admin"")]
+public class PageAccessController : Controller
+{{
+    private readonly ApplicationDbContext _context;
+
+    public PageAccessController(ApplicationDbContext context)
+    {{
+        _context = context;
+    }}
+
+    public async Task<IActionResult> Index()
+    {{
+        var policies = await _context.PageAccessPolicies
+            .OrderBy(p => p.Area)
+            .ThenBy(p => p.Controller)
+            .ThenBy(p => p.Action)
+            .ToListAsync();
+        
+        return View(policies);
+    }}
+
+    public async Task<IActionResult> Create()
+    {{
+        ViewBag.Permissions = await _context.AccessPermissions.ToListAsync();
+        return View();
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreatePageAccessViewModel model)
+    {{
+        if (ModelState.IsValid)
+        {{
+            var exists = await _context.PageAccessPolicies
+                .AnyAsync(p => 
+                    p.Area == (model.Area ?? string.Empty) &&
+                    p.Controller == model.Controller &&
+                    p.Action == model.Action);
+            
+            if (exists)
+            {{
+                ModelState.AddModelError(string.Empty, ""این مسیر قبلاً تعریف شده است"");
+                ViewBag.Permissions = await _context.AccessPermissions.ToListAsync();
+                return View(model);
+            }}
+
+            var policy = new PageAccessPolicy(
+                model.Area ?? string.Empty,
+                model.Controller,
+                model.Action,
+                model.PermissionKey);
+
+            _context.PageAccessPolicies.Add(policy);
+            await _context.SaveChangesAsync();
+
+            TempData[""SuccessMessage""] = ""سیاست دسترسی با موفقیت ایجاد شد"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        ViewBag.Permissions = await _context.AccessPermissions.ToListAsync();
+        return View(model);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {{
+        var policy = await _context.PageAccessPolicies.FindAsync(id);
+        if (policy == null)
+        {{
+            return NotFound();
+        }}
+
+        _context.PageAccessPolicies.Remove(policy);
+        await _context.SaveChangesAsync();
+
+        TempData[""SuccessMessage""] = ""سیاست دسترسی با موفقیت حذف شد"";
+        return RedirectToAction(nameof(Index));
+    }}
+}}
+
+public class CreatePageAccessViewModel
+{{
+    public string? Area {{ get; set; }}
+    public string Controller {{ get; set; }} = string.Empty;
+    public string Action {{ get; set; }} = string.Empty;
+    public string PermissionKey {{ get; set; }} = string.Empty;
+}}
+";
+    }
+
+    public string GetAdminSellersControllerTemplate()
+    {
+        return $@"using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
+using {_namespace}.Application.Services;
+
+namespace {_projectName}.WebSite.Areas.Admin.Controllers;
+
+[Area(""Admin"")]
+[Authorize(Roles = ""Admin"")]
+public class SellersController : Controller
+{{
+    private readonly ApplicationDbContext _context;
+    private readonly IFileService _fileService;
+
+    public SellersController(ApplicationDbContext context, IFileService fileService)
+    {{
+        _context = context;
+        _fileService = fileService;
+    }}
+
+    public async Task<IActionResult> Index()
+    {{
+        var sellers = await _context.SellerProfiles
+            .Include(s => s.User)
+            .OrderByDescending(s => s.CreateDate)
+            .ToListAsync();
+        
+        return View(sellers);
+    }}
+
+    public IActionResult Create()
+    {{
+        return View();
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreateSellerViewModel model)
+    {{
+        if (ModelState.IsValid)
+        {{
+            string? avatarPath = null;
+            if (model.AvatarFile != null)
+            {{
+                avatarPath = await _fileService.SaveFileAsync(model.AvatarFile, ""sellers"");
+            }}
+
+            var seller = new SellerProfile(
+                model.DisplayName,
+                model.Degree,
+                model.Specialty,
+                model.Bio,
+                avatarPath,
+                model.ContactEmail,
+                model.ContactPhone,
+                model.UserId,
+                model.IsActive);
+
+            _context.SellerProfiles.Add(seller);
+            await _context.SaveChangesAsync();
+
+            TempData[""SuccessMessage""] = ""فروشنده با موفقیت ایجاد شد"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        return View(model);
+    }}
+
+    public async Task<IActionResult> Edit(Guid id)
+    {{
+        var seller = await _context.SellerProfiles.FindAsync(id);
+        if (seller == null)
+        {{
+            return NotFound();
+        }}
+
+        var model = new EditSellerViewModel
+        {{
+            Id = seller.Id,
+            DisplayName = seller.DisplayName,
+            Degree = seller.Degree,
+            Specialty = seller.Specialty,
+            Bio = seller.Bio,
+            ContactEmail = seller.ContactEmail,
+            ContactPhone = seller.ContactPhone,
+            UserId = seller.UserId,
+            IsActive = seller.IsActive,
+            CurrentAvatarUrl = seller.AvatarUrl
+        }};
+
+        return View(model);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(EditSellerViewModel model)
+    {{
+        if (ModelState.IsValid)
+        {{
+            var seller = await _context.SellerProfiles.FindAsync(model.Id);
+            if (seller == null)
+            {{
+                return NotFound();
+            }}
+
+            string? avatarPath = seller.AvatarUrl;
+            if (model.AvatarFile != null)
+            {{
+                if (avatarPath != null)
+                {{
+                    await _fileService.DeleteFileAsync(avatarPath);
+                }}
+                avatarPath = await _fileService.SaveFileAsync(model.AvatarFile, ""sellers"");
+            }}
+
+            seller.UpdateDisplayName(model.DisplayName);
+            seller.UpdateAcademicInfo(model.Degree, model.Specialty, model.Bio);
+            seller.UpdateMedia(avatarPath);
+            seller.UpdateContact(model.ContactEmail, model.ContactPhone);
+            seller.ConnectToUser(model.UserId);
+            seller.SetActive(model.IsActive);
+
+            await _context.SaveChangesAsync();
+
+            TempData[""SuccessMessage""] = ""فروشنده با موفقیت به‌روز شد"";
+            return RedirectToAction(nameof(Index));
+        }}
+
+        return View(model);
+    }}
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {{
+        var seller = await _context.SellerProfiles.FindAsync(id);
+        if (seller == null)
+        {{
+            return NotFound();
+        }}
+
+        if (seller.AvatarUrl != null)
+        {{
+            await _fileService.DeleteFileAsync(seller.AvatarUrl);
+        }}
+
+        _context.SellerProfiles.Remove(seller);
+        await _context.SaveChangesAsync();
+
+        TempData[""SuccessMessage""] = ""فروشنده با موفقیت حذف شد"";
+        return RedirectToAction(nameof(Index));
+    }}
+}}
+
+public class CreateSellerViewModel
+{{
+    public string DisplayName {{ get; set; }} = string.Empty;
+    public string? Degree {{ get; set; }}
+    public string? Specialty {{ get; set; }}
+    public string? Bio {{ get; set; }}
+    public IFormFile? AvatarFile {{ get; set; }}
+    public string? ContactEmail {{ get; set; }}
+    public string? ContactPhone {{ get; set; }}
+    public string? UserId {{ get; set; }}
+    public bool IsActive {{ get; set; }} = true;
+}}
+
+public class EditSellerViewModel
+{{
+    public Guid Id {{ get; set; }}
+    public string DisplayName {{ get; set; }} = string.Empty;
+    public string? Degree {{ get; set; }}
+    public string? Specialty {{ get; set; }}
+    public string? Bio {{ get; set; }}
+    public IFormFile? AvatarFile {{ get; set; }}
+    public string? CurrentAvatarUrl {{ get; set; }}
+    public string? ContactEmail {{ get; set; }}
+    public string? ContactPhone {{ get; set; }}
+    public string? UserId {{ get; set; }}
+    public bool IsActive {{ get; set; }}
 }}
 ";
     }
@@ -1097,7 +1653,6 @@ public class BlogController : Controller
     public string GetViewImportsTemplate()
     {
         return $@"@using {_projectName}.WebSite
-@using {_projectName}.WebSite.Models
 @using Microsoft.AspNetCore.Identity
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 ";

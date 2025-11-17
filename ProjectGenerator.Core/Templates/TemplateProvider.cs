@@ -1,4 +1,4 @@
-namespace ProjectGenerator.Templates;
+namespace ProjectGenerator.Core.Templates;
 
 public partial class TemplateProvider
 {
@@ -19,7 +19,28 @@ public partial class TemplateProvider
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include=""Microsoft.Extensions.Identity.Stores"" Version=""9.0.0"" />
+  </ItemGroup>
+
 </Project>";
+    }
+
+    public string GetEntityBaseClassTemplate()
+    {
+        return $@"using System;
+using System.Net;
+
+namespace {_namespace}.Domain.Base;
+
+public abstract class Entity
+{{
+    public Guid Id {{ get; protected set; }} = Guid.NewGuid();
+    public DateTimeOffset CreateDate {{ get; protected set; }} = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdateDate {{ get; protected set; }} = DateTimeOffset.UtcNow;
+    public IPAddress Ip {{ get; protected set; }} = IPAddress.None;
+}}
+";
     }
 
     public string GetApplicationCsprojTemplate(string projectName)
@@ -116,12 +137,15 @@ public partial class TemplateProvider
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include=""src\Application\Application.csproj"" />
-    <ProjectReference Include=""src\Infrastructure\Infrastructure.csproj"" />
+    <ProjectReference Include=""..\Application\Application.csproj"" />
+    <ProjectReference Include=""..\Infrastructure\Infrastructure.csproj"" />
+    <ProjectReference Include=""..\Domain\Domain.csproj"" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
     <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""9.0.0"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -173,34 +197,6 @@ public interface IRepository<T> where T : class
     Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
     Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
-}}
-";
-    }
-
-    public string GetResultTemplate()
-    {
-        return $@"namespace {_namespace}.SharedKernel.Results;
-
-public class Result
-{{
-    public bool IsSuccess {{ get; protected set; }}
-    public string Message {{ get; protected set; }} = string.Empty;
-    public List<string> Errors {{ get; protected set; }} = new();
-
-    public static Result Success() => new Result {{ IsSuccess = true }};
-    public static Result Success(string message) => new Result {{ IsSuccess = true, Message = message }};
-    public static Result Failure(string error) => new Result {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
-    public static Result Failure(List<string> errors) => new Result {{ IsSuccess = false, Errors = errors }};
-}}
-
-public class Result<T> : Result
-{{
-    public T? Data {{ get; set; }}
-
-    public static Result<T> Success(T data) => new Result<T> {{ IsSuccess = true, Data = data }};
-    public static Result<T> Success(T data, string message) => new Result<T> {{ IsSuccess = true, Data = data, Message = message }};
-    public new static Result<T> Failure(string error) => new Result<T> {{ IsSuccess = false, Errors = new List<string> {{ error }} }};
-    public new static Result<T> Failure(List<string> errors) => new Result<T> {{ IsSuccess = false, Errors = errors }};
 }}
 ";
     }
@@ -340,27 +336,26 @@ app.Run();
 
     public string GetEnhancedProgramTemplate()
     {
-        return $@"using {_namespace}.Application;
-using {_namespace}.Infrastructure;
-using {_namespace}.Infrastructure.Data;
+        return $@"using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Application and Infrastructure layers
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString(""DefaultConnection"")));
 
 // Add Identity
-builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
-    options.User.RequireUniqueEmail = true;
+    options.User.RequireUniqueEmail = false;
 }})
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -375,7 +370,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 }});
 
-// Add services to the container.
+// Register Infrastructure Services
+builder.Services.AddScoped<{_namespace}.Application.Services.IFileService, {_namespace}.Infrastructure.Services.FileService>();
+builder.Services.AddScoped<{_namespace}.Application.Services.ISmsService, {_namespace}.Infrastructure.Services.SmsService>();
+builder.Services.AddScoped<{_namespace}.Application.Services.IOtpService, {_namespace}.Infrastructure.Services.OtpService>();
+
+// Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMemoryCache();
@@ -388,7 +388,7 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {{
     app.UseExceptionHandler(""/Home/Error"");
@@ -415,21 +415,6 @@ app.MapControllerRoute(
     pattern: ""{{controller=Home}}/{{action=Index}}/{{id?}}"");
 
 app.Run();
-
-// Identity classes for Program.cs
-public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int>
-{{
-    public string? FirstName {{ get; set; }}
-    public string? LastName {{ get; set; }}
-    public DateTime? BirthDate {{ get; set; }}
-    public bool IsActive {{ get; set; }} = true;
-    public DateTime RegisterDate {{ get; set; }} = DateTime.UtcNow;
-}}
-
-public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
-{{
-    public string? Description {{ get; set; }}
-}}
 ";
     }
 
