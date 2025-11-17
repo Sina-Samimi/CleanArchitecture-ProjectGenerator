@@ -9,21 +9,21 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>{_namespace}.Infrastructure</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""8.0.10"">
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""9.0.0"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.Extensions.Configuration.Abstractions"" Version=""8.0.0"" />
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.Extensions.Configuration.Abstractions"" Version=""9.0.0"" />
     <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.3"" />
   </ItemGroup>
 

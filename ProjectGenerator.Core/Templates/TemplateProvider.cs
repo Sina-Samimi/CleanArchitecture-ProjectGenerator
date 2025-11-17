@@ -14,13 +14,13 @@ public partial class TemplateProvider
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.Extensions.Identity.Stores"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.Extensions.Identity.Stores"" Version=""9.0.0"" />
   </ItemGroup>
 
 </Project>";
@@ -48,7 +48,7 @@ public abstract class Entity
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -71,7 +71,7 @@ public abstract class Entity
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -83,10 +83,10 @@ public abstract class Entity
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""8.0.10"">
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""9.0.0"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -101,7 +101,7 @@ public abstract class Entity
         return $@"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -131,7 +131,7 @@ public abstract class Entity
         return $@"<Project Sdk=""Microsoft.NET.Sdk.Web"">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -143,10 +143,10 @@ public abstract class Entity
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.10"" />
-    <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""8.0.10"">
+    <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""9.0.0"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""9.0.0"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
