@@ -32,6 +32,10 @@ public partial class TemplateProvider
     <ProjectReference Include=""..\Application\Application.csproj"" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include=""Microsoft.AspNetCore.App"" />
+  </ItemGroup>
+
 </Project>";
     }
 
