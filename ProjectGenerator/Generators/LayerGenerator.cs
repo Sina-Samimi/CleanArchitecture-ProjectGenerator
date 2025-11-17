@@ -87,112 +87,165 @@ public class LayerGenerator
         File.WriteAllText(Path.Combine(layerPath, $"{layerName}.csproj"), csprojContent);
 
         // Create directories
-        var dirs = new[] { "Entities", "Enums", "ValueObjects", "Events" };
+        var dirs = new[] { "Entities", "Enums", "Base" };
         foreach (var dir in dirs)
         {
             Directory.CreateDirectory(Path.Combine(layerPath, dir));
         }
 
-        // Create base entity
-        var baseEntityPath = Path.Combine(layerPath, "Entities");
+        // Create base classes
+        var basePath = Path.Combine(layerPath, "Base");
         File.WriteAllText(
-            Path.Combine(baseEntityPath, "BaseEntity.cs"),
+            Path.Combine(basePath, "Entity.cs"),
             _templateProvider.GetBaseEntityTemplate()
         );
-
+        
         File.WriteAllText(
-            Path.Combine(baseEntityPath, "IAggregateRoot.cs"),
-            _templateProvider.GetIAggregateRootTemplate()
+            Path.Combine(basePath, "SeoEntity.cs"),
+            _templateProvider.GetSeoEntityTemplate()
         );
 
-        // Generate all domain entities based on features
-        var features = _config.Options.Features;
+        // Generate all core domain entities
+        var entitiesPath = Path.Combine(layerPath, "Entities");
 
-        if (features.ProductCatalog)
-        {
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Product.cs"),
-                _templateProvider.GetProductEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Category.cs"),
-                _templateProvider.GetCategoryEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "ProductImage.cs"),
-                _templateProvider.GetProductImageEntityTemplate()
-            );
-        }
+        // Core Identity
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "ApplicationUser.cs"),
+            _templateProvider.GetEnhancedApplicationUserTemplate()
+        );
 
-        if (features.ShoppingCart)
-        {
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Cart.cs"),
-                _templateProvider.GetCartEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "CartItem.cs"),
-                _templateProvider.GetCartItemEntityTemplate()
-            );
-        }
+        // Product & Catalog
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "Product.cs"),
+            _templateProvider.GetProductEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "ProductImage.cs"),
+            _templateProvider.GetProductImageEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "ProductComment.cs"),
+            _templateProvider.GetProductCommentEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "ProductExecutionStep.cs"),
+            _templateProvider.GetProductExecutionStepEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "ProductFaq.cs"),
+            _templateProvider.GetProductFaqEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "SiteCategory.cs"),
+            _templateProvider.GetSiteCategoryEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "DiscountCode.cs"),
+            _templateProvider.GetDiscountCodeEntityTemplate()
+        );
 
-        if (features.Invoicing)
-        {
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Order.cs"),
-                _templateProvider.GetOrderEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "OrderItem.cs"),
-                _templateProvider.GetOrderItemEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Invoice.cs"),
-                _templateProvider.GetInvoiceEntityTemplate()
-            );
-        }
+        // Blog
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "Blog.cs"),
+            _templateProvider.GetBlogEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "BlogComment.cs"),
+            _templateProvider.GetBlogCommentEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "BlogCategory.cs"),
+            _templateProvider.GetBlogCategoryEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "BlogAuthor.cs"),
+            _templateProvider.GetBlogAuthorEntityTemplate()
+        );
 
-        if (features.BlogSystem)
-        {
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "Blog.cs"),
-                _templateProvider.GetBlogEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "BlogComment.cs"),
-                _templateProvider.GetBlogCommentEntityTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(baseEntityPath, "BlogCategory.cs"),
-                _templateProvider.GetBlogCategoryEntityTemplate()
-            );
-        }
+        // Billing & Wallet
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "Invoice.cs"),
+            _templateProvider.GetInvoiceEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "InvoiceItem.cs"),
+            _templateProvider.GetInvoiceItemEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "Transaction.cs"),
+            _templateProvider.GetTransactionEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "WalletAccount.cs"),
+            _templateProvider.GetWalletAccountEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "WalletTransaction.cs"),
+            _templateProvider.GetWalletTransactionEntityTemplate()
+        );
 
-        // Generate Enums
+        // Settings
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "SiteSetting.cs"),
+            _templateProvider.GetSiteSettingEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "NavigationMenuItem.cs"),
+            _templateProvider.GetNavigationMenuItemEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "FinancialSettings.cs"),
+            _templateProvider.GetFinancialSettingsEntityTemplate()
+        );
+
+        // Sellers
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "SellerProfile.cs"),
+            _templateProvider.GetSellerProfileEntityTemplate()
+        );
+
+        // Permissions & Access
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "AccessPermission.cs"),
+            _templateProvider.GetAccessPermissionEntityTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "PageAccessPolicy.cs"),
+            _templateProvider.GetPageAccessPolicyEntityTemplate()
+        );
+
+        // Sessions
+        File.WriteAllText(
+            Path.Combine(entitiesPath, "UserSession.cs"),
+            _templateProvider.GetUserSessionEntityTemplate()
+        );
+
+        // Generate all Enums
         var enumsPath = Path.Combine(layerPath, "Enums");
-        if (features.Invoicing)
-        {
-            File.WriteAllText(
-                Path.Combine(enumsPath, "OrderStatus.cs"),
-                _templateProvider.GetOrderStatusEnumTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(enumsPath, "InvoiceStatus.cs"),
-                _templateProvider.GetInvoiceStatusEnumTemplate()
-            );
-        }
-
-        if (features.BlogSystem)
-        {
-            File.WriteAllText(
-                Path.Combine(enumsPath, "BlogStatus.cs"),
-                _templateProvider.GetBlogStatusEnumTemplate()
-            );
-            File.WriteAllText(
-                Path.Combine(enumsPath, "CommentStatus.cs"),
-                _templateProvider.GetCommentStatusEnumTemplate()
-            );
-        }
+        File.WriteAllText(
+            Path.Combine(enumsPath, "ProductType.cs"),
+            _templateProvider.GetProductTypeEnumTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(enumsPath, "BlogStatus.cs"),
+            _templateProvider.GetBlogStatusEnumTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(enumsPath, "CategoryScope.cs"),
+            _templateProvider.GetCategoryScopeEnumTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(enumsPath, "InvoiceStatus.cs"),
+            _templateProvider.GetInvoiceStatusEnumTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(enumsPath, "DiscountType.cs"),
+            _templateProvider.GetDiscountTypeEnumTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(enumsPath, "Currency.cs"),
+            _templateProvider.GetCurrencyEnumTemplate()
+        );
     }
 
     private void GenerateSharedKernelLayer(string layerPath, string layerName)
@@ -324,33 +377,76 @@ public class LayerGenerator
 
     private void GenerateInfrastructureLayer(string layerPath, string layerName)
     {
-        var csprojContent = _templateProvider.GetInfrastructureCsprojTemplate(layerName);
+        var csprojContent = _templateProvider.GetInfrastructureCsprojTemplate();
         File.WriteAllText(Path.Combine(layerPath, $"{layerName}.csproj"), csprojContent);
 
-        var dirs = new[] { "Data", "Repositories", "Services", "Identity" };
+        var dirs = new[] { "Persistence", "Persistence/Configurations", "Services" };
         foreach (var dir in dirs)
         {
             Directory.CreateDirectory(Path.Combine(layerPath, dir));
         }
 
-        // Create DbContext template (enhanced with all entities)
-        var dataPath = Path.Combine(layerPath, "Data");
+        // Create DbContext
+        var persistencePath = Path.Combine(layerPath, "Persistence");
         File.WriteAllText(
-            Path.Combine(dataPath, "ApplicationDbContext.cs"),
-            _templateProvider.GetDbContextEnhancedTemplate()
+            Path.Combine(persistencePath, "ApplicationDbContext.cs"),
+            _templateProvider.GetApplicationDbContextTemplate()
         );
 
-        // Create GenericRepository
-        var repoPath = Path.Combine(layerPath, "Repositories");
+        // Create Entity Configurations
+        var configPath = Path.Combine(persistencePath, "Configurations");
         File.WriteAllText(
-            Path.Combine(repoPath, "GenericRepository.cs"),
-            _templateProvider.GetGenericRepositoryTemplate()
+            Path.Combine(configPath, "ProductConfiguration.cs"),
+            _templateProvider.GetProductEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "BlogConfiguration.cs"),
+            _templateProvider.GetBlogEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "InvoiceConfiguration.cs"),
+            _templateProvider.GetInvoiceEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "SiteCategoryConfiguration.cs"),
+            _templateProvider.GetSiteCategoryEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "AccessPermissionConfiguration.cs"),
+            _templateProvider.GetAccessPermissionEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "PageAccessPolicyConfiguration.cs"),
+            _templateProvider.GetPageAccessPolicyEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "WalletAccountConfiguration.cs"),
+            _templateProvider.GetWalletAccountEntityConfigurationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(configPath, "SellerProfileConfiguration.cs"),
+            _templateProvider.GetSellerProfileEntityConfigurationTemplate()
+        );
+
+        // Create Services
+        var servicesPath = Path.Combine(layerPath, "Services");
+        File.WriteAllText(
+            Path.Combine(servicesPath, "FileService.cs"),
+            _templateProvider.GetFileServiceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "OtpService.cs"),
+            _templateProvider.GetOtpServiceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "SmsService.cs"),
+            _templateProvider.GetSmsServiceTemplate()
         );
 
         // Create DependencyInjection
         File.WriteAllText(
-            Path.Combine(layerPath, "DependencyInjection.cs"),
-            _templateProvider.GetInfrastructureDependencyInjectionTemplate()
+            Path.Combine(layerPath, "ServiceCollectionExtensions.cs"),
+            _templateProvider.GetInfrastructureExtensionsTemplate()
         );
     }
 
