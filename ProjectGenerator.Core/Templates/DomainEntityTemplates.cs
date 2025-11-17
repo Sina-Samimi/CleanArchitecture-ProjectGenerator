@@ -349,7 +349,7 @@ public abstract class SeoEntity : Entity
     public string SeoDescription {{ get; protected set; }} = string.Empty;
     public string SeoKeywords {{ get; protected set; }} = string.Empty;
     public string SeoSlug {{ get; protected set; }} = string.Empty;
-    public string? Robots {{ get; protected set; }}
+      public string? Robots {{ get; protected set; }};
 
     protected void UpdateSeo(string seoTitle, string seoDescription, string seoKeywords, string seoSlug, string? robots)
     {{
