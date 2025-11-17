@@ -208,7 +208,7 @@ public interface IRepository<T> where T : class
         return $@"using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace {_namespace}.Infrastructure.Data;
+namespace {_namespace}.Infrastructure.Persistence;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
 {{
@@ -246,7 +246,7 @@ public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
     public string GetGenericRepositoryTemplate()
     {
         return $@"using {_namespace}.SharedKernel.Interfaces;
-using {_namespace}.Infrastructure.Data;
+using {_namespace}.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
