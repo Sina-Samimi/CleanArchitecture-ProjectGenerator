@@ -312,6 +312,8 @@ public class LayerGenerator
 
         // Create Common DTOs
         var commonPath = Path.Combine(layerPath, "Common");
+        var interfacesPath = Path.Combine(commonPath, "Interfaces");
+        Directory.CreateDirectory(interfacesPath);
         File.WriteAllText(
             Path.Combine(commonPath, "PaginatedResponse.cs"),
             _templateProvider.GetPaginatedResponseTemplate()
@@ -319,6 +321,10 @@ public class LayerGenerator
         File.WriteAllText(
             Path.Combine(commonPath, "Result.cs"),
             _templateProvider.GetResultTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "IApplicationDbContext.cs"),
+            _templateProvider.GetApplicationDbContextInterfaceTemplate()
         );
 
         // Create User Commands/Queries

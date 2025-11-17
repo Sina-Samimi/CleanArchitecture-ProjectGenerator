@@ -15,13 +15,14 @@ public partial class TemplateProvider
     <RootNamespace>{_namespace}.Application</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include=""MediatR"" Version=""12.2.0"" />
-    <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
-    <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
-    <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""9.0.0"" />
-    <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include=""MediatR"" Version=""12.2.0"" />
+      <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
+      <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
+      <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""9.0.0"" />
+      <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
+      <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include=""..\Domain\Domain.csproj"" />
@@ -337,17 +338,17 @@ public sealed record CreateProductResponse(
     public string GetCreateProductHandlerTemplate()
     {
         return $@"using MediatR;
+using {_namespace}.Application.Common.Interfaces;
 using {_namespace}.Domain.Entities;
-using {_namespace}.Infrastructure.Persistence;
 
 namespace {_namespace}.Application.Products.Commands.CreateProduct;
 
-public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, CreateProductResponse>
-{{
-    private readonly ApplicationDbContext _context;
-
-    public CreateProductHandler(ApplicationDbContext context)
+    public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, CreateProductResponse>
     {{
+        private readonly IApplicationDbContext _context;
+
+        public CreateProductHandler(IApplicationDbContext context)
+        {{
         _context = context;
     }}
 
@@ -425,16 +426,16 @@ public sealed record ProductDto(
     {
         return $@"using MediatR;
 using Microsoft.EntityFrameworkCore;
-using {_namespace}.Infrastructure.Persistence;
+using {_namespace}.Application.Common.Interfaces;
 
 namespace {_namespace}.Application.Products.Queries.GetProducts;
 
-public sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, GetProductsResponse>
-{{
-    private readonly ApplicationDbContext _context;
-
-    public GetProductsHandler(ApplicationDbContext context)
+    public sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, GetProductsResponse>
     {{
+        private readonly IApplicationDbContext _context;
+
+        public GetProductsHandler(IApplicationDbContext context)
+        {{
         _context = context;
     }}
 
@@ -560,6 +561,43 @@ public interface IOtpService
     string GenerateOtp();
     Task<bool> StoreOtpAsync(string phoneNumber, string otp, CancellationToken cancellationToken = default);
     Task<bool> ValidateOtpAsync(string phoneNumber, string otp, CancellationToken cancellationToken = default);
+}}";
+    }
+
+    public string GetApplicationDbContextInterfaceTemplate()
+    {
+        return $@"using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+
+namespace {_namespace}.Application.Common.Interfaces;
+
+public interface IApplicationDbContext
+{{
+    DbSet<Product> Products {{ get; }}
+    DbSet<ProductImage> ProductImages {{ get; }}
+    DbSet<ProductComment> ProductComments {{ get; }}
+    DbSet<ProductExecutionStep> ProductExecutionSteps {{ get; }}
+    DbSet<ProductFaq> ProductFaqs {{ get; }}
+    DbSet<SiteCategory> Categories {{ get; }}
+    DbSet<DiscountCode> DiscountCodes {{ get; }}
+    DbSet<Blog> Blogs {{ get; }}
+    DbSet<BlogCategory> BlogCategories {{ get; }}
+    DbSet<BlogAuthor> BlogAuthors {{ get; }}
+    DbSet<BlogComment> BlogComments {{ get; }}
+    DbSet<Invoice> Invoices {{ get; }}
+    DbSet<InvoiceItem> InvoiceItems {{ get; }}
+    DbSet<Transaction> Transactions {{ get; }}
+    DbSet<WalletAccount> WalletAccounts {{ get; }}
+    DbSet<WalletTransaction> WalletTransactions {{ get; }}
+    DbSet<SiteSetting> SiteSettings {{ get; }}
+    DbSet<NavigationMenuItem> NavigationMenuItems {{ get; }}
+    DbSet<FinancialSettings> FinancialSettings {{ get; }}
+    DbSet<SellerProfile> SellerProfiles {{ get; }}
+    DbSet<AccessPermission> AccessPermissions {{ get; }}
+    DbSet<PageAccessPolicy> PageAccessPolicies {{ get; }}
+    DbSet<UserSession> UserSessions {{ get; }}
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }}";
     }
 }

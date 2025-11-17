@@ -43,11 +43,12 @@ public partial class TemplateProvider
     {
         return $@"using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using {_namespace}.Application.Common.Interfaces;
 using {_namespace}.Domain.Entities;
 
 namespace {_namespace}.Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {{
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -627,6 +628,7 @@ public class SmsService : ISmsService
         return $@"using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using {_namespace}.Application.Common.Interfaces;
 using {_namespace}.Application.Services;
 using {_namespace}.Infrastructure.Persistence;
 using {_namespace}.Infrastructure.Services;
@@ -644,6 +646,8 @@ public static class ServiceCollectionExtensions
             options.UseSqlServer(
                 configuration.GetConnectionString(""DefaultConnection""),
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        services.AddScoped<IApplicationDbContext>(sp =>
+            sp.GetRequiredService<ApplicationDbContext>());
 
         // Services
         services.AddScoped<IFileService, FileService>();
