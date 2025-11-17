@@ -154,6 +154,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithMany(c => c.Products)
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Configure ApplicationUser relationship (Seller)
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }});
 
         builder.Entity<Category>(entity =>
@@ -187,6 +193,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.Property(e => e.DiscountAmount).HasColumnType(""decimal(18,2)"");
             entity.Property(e => e.ShippingCost).HasColumnType(""decimal(18,2)"");
             entity.Property(e => e.FinalAmount).HasColumnType(""decimal(18,2)"");
+            
+            // Configure ApplicationUser relationship
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }});
 
         builder.Entity<OrderItem>(entity =>
@@ -213,6 +225,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithOne(o => o.Invoice)
                 .HasForeignKey<Invoice>(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Configure ApplicationUser relationship
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }});
     }}
 
@@ -222,6 +240,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {{
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.UserId).IsUnique();
+            
+            // Configure ApplicationUser relationship
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }});
 
         builder.Entity<CartItem>(entity =>
@@ -248,6 +272,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Slug).IsRequired().HasMaxLength(250);
             entity.HasIndex(e => e.Slug).IsUnique();
+            
+            // Configure ApplicationUser relationship (Author)
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(e => e.AuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
         }});
 
         builder.Entity<BlogComment>(entity =>
@@ -263,6 +293,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithMany(c => c.Replies)
                 .HasForeignKey(e => e.ParentCommentId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            // Configure ApplicationUser relationship (optional)
+            if (entity.Metadata.FindProperty(""UserId"") != null)
+            {{
+                entity.HasOne<ApplicationUser>()
+                    .WithMany()
+                    .HasForeignKey(""UserId"")
+                    .OnDelete(DeleteBehavior.SetNull);
+            }}
         }});
 
         builder.Entity<BlogCategory>(entity =>

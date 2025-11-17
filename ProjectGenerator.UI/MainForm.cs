@@ -31,10 +31,17 @@ public partial class MainForm : Form
     
     private GroupBox grpBasicSettings;
     private GroupBox grpFeatures;
+    private GroupBox grpTheme;
     private GroupBox grpActions;
     
     private Label lblStatus;
     private ProgressBar progressBar;
+    
+    // Theme controls
+    private TextBox txtSiteName;
+    private TextBox txtPrimaryColor;
+    private TextBox txtSecondaryColor;
+    private TextBox txtFontFamily;
     
     private ProjectConfig _config;
 
@@ -48,7 +55,7 @@ public partial class MainForm : Form
     private void InitializeComponents()
     {
         this.Text = "تولید کننده پروژه Clean Architecture";
-        this.Size = new Size(800, 700);
+        this.Size = new Size(800, 900);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.RightToLeft = RightToLeft.Yes;
         this.RightToLeftLayout = true;
@@ -109,6 +116,33 @@ public partial class MainForm : Form
         chkBlogSystem = AddCheckBox(grpFeatures, "سیستم بلاگ", 450, 60, true);
 
         yPos += 140;
+
+        // Theme Settings Group
+        grpTheme = new GroupBox
+        {
+            Text = "تنظیمات تم و طراحی",
+            Location = new Point(leftMargin, yPos),
+            Size = new Size(740, 150),
+            Visible = chkIncludeWebSite.Checked
+        };
+        this.Controls.Add(grpTheme);
+
+        AddLabel(grpTheme, "نام سایت:", 20, 30);
+        txtSiteName = AddTextBox(grpTheme, 150, 25, 550);
+
+        AddLabel(grpTheme, "رنگ اصلی:", 20, 60);
+        txtPrimaryColor = AddTextBox(grpTheme, 150, 55, 200);
+        txtPrimaryColor.Text = "#007bff";
+
+        AddLabel(grpTheme, "رنگ ثانویه:", 370, 60);
+        txtSecondaryColor = AddTextBox(grpTheme, 500, 55, 200);
+        txtSecondaryColor.Text = "#6c757d";
+
+        AddLabel(grpTheme, "فونت:", 20, 90);
+        txtFontFamily = AddTextBox(grpTheme, 150, 85, 550);
+        txtFontFamily.Text = "Vazirmatn, Tahoma, Arial, sans-serif";
+
+        yPos += 160;
 
         // Actions Group
         grpActions = new GroupBox
@@ -237,6 +271,7 @@ public partial class MainForm : Form
         
         txtProjectName.TextChanged += TxtProjectName_TextChanged;
         chkGenerateSeedData.CheckedChanged += ChkGenerateSeedData_CheckedChanged;
+        chkIncludeWebSite.CheckedChanged += ChkIncludeWebSite_CheckedChanged;
     }
 
     private void TxtProjectName_TextChanged(object? sender, EventArgs e)
@@ -251,6 +286,11 @@ public partial class MainForm : Form
     {
         btnConfigureRoles.Enabled = chkGenerateSeedData.Checked;
         btnConfigureUsers.Enabled = chkGenerateSeedData.Checked;
+    }
+
+    private void ChkIncludeWebSite_CheckedChanged(object? sender, EventArgs e)
+    {
+        grpTheme.Visible = chkIncludeWebSite.Checked;
     }
 
     private void BtnBrowse_Click(object? sender, EventArgs e)
@@ -417,6 +457,23 @@ public partial class MainForm : Form
         _config.Options.Features.ShoppingCart = chkShoppingCart.Checked;
         _config.Options.Features.Invoicing = chkInvoicing.Checked;
         _config.Options.Features.BlogSystem = chkBlogSystem.Checked;
+
+        // Theme settings
+        if (chkIncludeWebSite.Checked)
+        {
+            _config.Theme.SiteName = string.IsNullOrWhiteSpace(txtSiteName.Text) 
+                ? _config.Theme.SiteName 
+                : txtSiteName.Text.Trim();
+            _config.Theme.PrimaryColor = string.IsNullOrWhiteSpace(txtPrimaryColor.Text) 
+                ? _config.Theme.PrimaryColor 
+                : txtPrimaryColor.Text.Trim();
+            _config.Theme.SecondaryColor = string.IsNullOrWhiteSpace(txtSecondaryColor.Text) 
+                ? _config.Theme.SecondaryColor 
+                : txtSecondaryColor.Text.Trim();
+            _config.Theme.FontFamily = string.IsNullOrWhiteSpace(txtFontFamily.Text) 
+                ? _config.Theme.FontFamily 
+                : txtFontFamily.Text.Trim();
+        }
     }
 
     private void LoadConfigToUI()
@@ -435,5 +492,12 @@ public partial class MainForm : Form
         chkShoppingCart.Checked = _config.Options.Features.ShoppingCart;
         chkInvoicing.Checked = _config.Options.Features.Invoicing;
         chkBlogSystem.Checked = _config.Options.Features.BlogSystem;
+
+        // Theme settings
+        txtSiteName.Text = _config.Theme.SiteName;
+        txtPrimaryColor.Text = _config.Theme.PrimaryColor;
+        txtSecondaryColor.Text = _config.Theme.SecondaryColor;
+        txtFontFamily.Text = _config.Theme.FontFamily;
+        grpTheme.Visible = chkIncludeWebSite.Checked;
     }
 }

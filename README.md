@@ -72,14 +72,14 @@ MyShop/
 │   ├── Domain/              # 15+ Entities
 │   ├── Application/         # Services & DTOs
 │   ├── Infrastructure/      # EF Core & Repositories
-│   └── SharedKernel/        # Common Interfaces
-├── MyShop.WebSite/         # ASP.NET Core MVC
-│   ├── Areas/
-│   │   ├── Admin/          # Admin Panel
-│   │   ├── Seller/         # Seller Panel
-│   │   └── User/           # User Panel
-│   ├── Controllers/
-│   └── Views/
+│   ├── SharedKernel/        # Common Interfaces
+│   └── MyShop.WebSite/      # ASP.NET Core MVC
+│       ├── Areas/
+│       │   ├── Admin/      # Admin Panel
+│       │   ├── Seller/     # Seller Panel
+│       │   └── User/       # User Panel
+│       ├── Controllers/
+│       └── Views/
 └── tests/
     └── UnitTests/
 ```
@@ -253,8 +253,8 @@ cd C:\Projects\MyAwesomeShop
 dotnet restore
 
 # ایجاد دیتابیس
-cd MyAwesomeShop.WebSite
-dotnet ef migrations add InitialCreate --project ../src/Infrastructure
+cd src/MyAwesomeShop.WebSite
+dotnet ef migrations add InitialCreate --project ../Infrastructure
 dotnet ef database update
 
 # اجرا

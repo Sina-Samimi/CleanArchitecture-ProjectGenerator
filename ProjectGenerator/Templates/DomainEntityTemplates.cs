@@ -26,7 +26,7 @@ public class Product : BaseEntity, IAggregateRoot
     public int CategoryId {{ get; set; }}
     
     // Navigation properties
-    public virtual ApplicationUser? Seller {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
     public virtual Category? Category {{ get; set; }}
     public virtual ICollection<ProductImage> ProductImages {{ get; set; }} = new List<ProductImage>();
     public virtual ICollection<OrderItem> OrderItems {{ get; set; }} = new List<OrderItem>();
@@ -101,7 +101,7 @@ public class Order : BaseEntity, IAggregateRoot
     public string? ShippingPostalCode {{ get; set; }}
     
     // Navigation properties
-    public virtual ApplicationUser? User {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
     public virtual ICollection<OrderItem> OrderItems {{ get; set; }} = new List<OrderItem>();
     public virtual Invoice? Invoice {{ get; set; }}
 }}
@@ -153,7 +153,7 @@ public class Invoice : BaseEntity, IAggregateRoot
     
     // Navigation properties
     public virtual Order? Order {{ get; set; }}
-    public virtual ApplicationUser? User {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
 }}
 ";
     }
@@ -169,7 +169,7 @@ public class Cart : BaseEntity
     public DateTime LastUpdated {{ get; set; }} = DateTime.UtcNow;
     
     // Navigation properties
-    public virtual ApplicationUser? User {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
     public virtual ICollection<CartItem> CartItems {{ get; set; }} = new List<CartItem>();
 }}
 ";
@@ -218,7 +218,7 @@ public class Blog : BaseEntity, IAggregateRoot
     public string? MetaKeywords {{ get; set; }}
     
     // Navigation properties
-    public virtual ApplicationUser? Author {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
     public virtual ICollection<BlogComment> Comments {{ get; set; }} = new List<BlogComment>();
     public virtual ICollection<BlogCategory> BlogCategories {{ get; set; }} = new List<BlogCategory>();
 }}
@@ -244,7 +244,7 @@ public class BlogComment : BaseEntity
     
     // Navigation properties
     public virtual Blog? Blog {{ get; set; }}
-    public virtual ApplicationUser? User {{ get; set; }}
+    // Note: ApplicationUser navigation property is configured in Infrastructure layer
     public virtual BlogComment? ParentComment {{ get; set; }}
     public virtual ICollection<BlogComment> Replies {{ get; set; }} = new List<BlogComment>();
 }}

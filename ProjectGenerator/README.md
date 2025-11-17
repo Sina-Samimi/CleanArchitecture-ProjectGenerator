@@ -21,15 +21,15 @@ Solution/
 │   ├── Domain/              # لایه Domain - Entities, Enums, ValueObjects
 │   ├── SharedKernel/        # لایه مشترک - Interfaces, Results, Guards
 │   ├── Application/         # لایه Application - Services, DTOs, Interfaces
-│   └── Infrastructure/      # لایه Infrastructure - DbContext, Repositories
-├── ProjectName.WebSite/     # لایه Presentation با تمام Areas
-│   ├── Areas/
-│   │   ├── Admin/          # پنل مدیریت
-│   │   ├── Seller/         # پنل فروشنده
-│   │   └── User/           # پنل کاربری
-│   ├── Controllers/        # کنترلرهای اصلی
-│   ├── Views/              # ویوهای Razor
-│   └── wwwroot/           # فایل‌های استاتیک
+│   ├── Infrastructure/      # لایه Infrastructure - DbContext, Repositories
+│   └── ProjectName.WebSite/ # لایه Presentation با تمام Areas
+│       ├── Areas/
+│       │   ├── Admin/      # پنل مدیریت
+│       │   ├── Seller/     # پنل فروشنده
+│       │   └── User/       # پنل کاربری
+│       ├── Controllers/    # کنترلرهای اصلی
+│       ├── Views/          # ویوهای Razor
+│       └── wwwroot/        # فایل‌های استاتیک
 └── tests/
     └── UnitTests/          # تست‌های واحد
 ```
@@ -257,8 +257,8 @@ dotnet run
 پس از تولید پروژه:
 
 ```bash
-cd YourProjectName.WebSite
-dotnet ef migrations add InitialCreate --project ../src/Infrastructure
+cd src/YourProjectName.WebSite
+dotnet ef migrations add InitialCreate --project ../Infrastructure
 dotnet ef database update
 ```
 
@@ -324,8 +324,8 @@ dotnet run -- --config blog-config.json
 
 4. اجرای Migration:
    ```bash
-   cd YourProject.WebSite
-   dotnet ef migrations add InitialCreate --project ../src/Infrastructure
+   cd src/YourProject.WebSite
+   dotnet ef migrations add InitialCreate --project ../Infrastructure
    dotnet ef database update
    ```
 

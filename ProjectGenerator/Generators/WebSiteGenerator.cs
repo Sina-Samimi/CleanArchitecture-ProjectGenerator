@@ -63,6 +63,199 @@ public class WebSiteGenerator
         {
             Directory.CreateDirectory(Path.Combine(_websitePath, dir));
         }
+
+        // Generate CSS files with theme settings
+        GenerateThemeCss();
+    }
+
+    private void GenerateThemeCss()
+    {
+        var cssPath = Path.Combine(_websitePath, "wwwroot", "css");
+        var theme = _config.Theme;
+
+        // Generate main site.css with theme variables
+        var siteCss = $@"/* Theme Variables */
+:root {{
+    --primary-color: {theme.PrimaryColor};
+    --secondary-color: {theme.SecondaryColor};
+    --success-color: {theme.SuccessColor};
+    --danger-color: {theme.DangerColor};
+    --warning-color: {theme.WarningColor};
+    --info-color: {theme.InfoColor};
+    --light-color: {theme.LightColor};
+    --dark-color: {theme.DarkColor};
+    --background-color: {theme.BackgroundColor};
+    --text-color: {theme.TextColor};
+    --font-family: {theme.FontFamily};
+}}
+
+* {{
+    font-family: var(--font-family);
+}}
+
+body {{
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    direction: rtl;
+    text-align: right;
+}}
+
+.navbar {{
+    background-color: var(--primary-color) !important;
+}}
+
+.btn-primary {{
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}}
+
+.btn-primary:hover {{
+    background-color: var(--dark-color);
+    border-color: var(--dark-color);
+}}
+
+.btn-success {{
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}}
+
+.btn-danger {{
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}}
+
+.btn-warning {{
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+}}
+
+.btn-info {{
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+}}
+
+.text-primary {{
+    color: var(--primary-color) !important;
+}}
+
+.text-success {{
+    color: var(--success-color) !important;
+}}
+
+.text-danger {{
+    color: var(--danger-color) !important;
+}}
+
+.bg-primary {{
+    background-color: var(--primary-color) !important;
+}}
+
+.bg-success {{
+    background-color: var(--success-color) !important;
+}}
+
+.bg-danger {{
+    background-color: var(--danger-color) !important;
+}}
+
+/* Additional custom styles */
+.site-header {{
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 2rem 0;
+}}
+
+.site-footer {{
+    background-color: var(--dark-color);
+    color: var(--light-color);
+    padding: 2rem 0;
+    margin-top: 3rem;
+}}
+";
+
+        File.WriteAllText(Path.Combine(cssPath, "site.css"), siteCss);
+
+        // Generate admin.css
+        var adminCss = $@"/* Admin Panel Styles with Theme */
+:root {{
+    --primary-color: {theme.PrimaryColor};
+    --secondary-color: {theme.SecondaryColor};
+    --dark-color: {theme.DarkColor};
+    --light-color: {theme.LightColor};
+    --font-family: {theme.FontFamily};
+}}
+
+.admin-wrapper {{
+    display: flex;
+    min-height: 100vh;
+    font-family: var(--font-family);
+    direction: rtl;
+}}
+
+.admin-sidebar {{
+    width: 250px;
+    background-color: var(--dark-color);
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}}
+
+.sidebar-header {{
+    padding: 1.5rem;
+    background-color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+}}
+
+.sidebar-header h3 {{
+    margin: 0;
+    color: white;
+    font-size: 1.2rem;
+}}
+
+.sidebar-nav ul {{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}}
+
+.sidebar-nav li {{
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}}
+
+.sidebar-nav a {{
+    display: block;
+    padding: 1rem 1.5rem;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}}
+
+.sidebar-nav a:hover {{
+    background-color: var(--primary-color);
+}}
+
+.admin-main {{
+    margin-right: 250px;
+    flex: 1;
+    background-color: var(--light-color);
+}}
+
+.admin-content {{
+    padding: 2rem;
+}}
+";
+
+        File.WriteAllText(Path.Combine(cssPath, "admin.css"), adminCss);
+
+        // Generate seller.css
+        var sellerCss = adminCss.Replace("admin-", "seller-").Replace("Admin", "Seller");
+        File.WriteAllText(Path.Combine(cssPath, "seller.css"), sellerCss);
+
+        // Generate user.css
+        var userCss = adminCss.Replace("admin-", "user-").Replace("Admin", "User");
+        File.WriteAllText(Path.Combine(cssPath, "user.css"), userCss);
     }
 
     private void GenerateAdminArea()
@@ -317,7 +510,7 @@ public class WebSiteGenerator
 
         File.WriteAllText(
             Path.Combine(sharedPath, "_Layout.cshtml"),
-            _templates.GetLayoutTemplate()
+            _templates.GetLayoutTemplate(_config.Theme)
         );
 
         File.WriteAllText(

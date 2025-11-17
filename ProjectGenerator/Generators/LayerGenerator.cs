@@ -57,7 +57,7 @@ public class LayerGenerator
 
     public void GenerateWebSiteLayer()
     {
-        var layerPath = Path.Combine(_config.OutputPath, $"{_config.ProjectName}.WebSite");
+        var layerPath = Path.Combine(_config.OutputPath, "src", $"{_config.ProjectName}.WebSite");
         Directory.CreateDirectory(layerPath);
         Console.WriteLine($"Creating WebSite layer...");
 

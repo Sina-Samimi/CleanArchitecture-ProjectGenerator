@@ -77,7 +77,7 @@ public class SolutionGenerator
 
         if (_config.Options.IncludeWebSite)
         {
-            AddProject(sb, $"{_config.ProjectName}.WebSite", "");
+            AddProject(sb, $"{_config.ProjectName}.WebSite", "src");
         }
 
         if (_config.Options.IncludeTests)

@@ -115,12 +115,50 @@ class Program
         var generateSeed = Console.ReadLine()?.Trim().ToLower();
         config.Options.GenerateInitialSeedData = generateSeed == "y";
 
+        if (config.Options.IncludeWebSite)
+        {
+            ConfigureTheme(config);
+        }
+
         if (config.Options.GenerateInitialSeedData)
         {
             ConfigureSeedData(config);
         }
 
         return config;
+    }
+
+    static void ConfigureTheme(ProjectConfig config)
+    {
+        Console.WriteLine("\n--- Configuring Theme Settings ---");
+        
+        Console.Write($"Site name (default: {config.Theme.SiteName}): ");
+        var siteName = Console.ReadLine()?.Trim();
+        if (!string.IsNullOrEmpty(siteName))
+        {
+            config.Theme.SiteName = siteName;
+        }
+
+        Console.Write($"Primary color (default: {config.Theme.PrimaryColor}): ");
+        var primaryColor = Console.ReadLine()?.Trim();
+        if (!string.IsNullOrEmpty(primaryColor))
+        {
+            config.Theme.PrimaryColor = primaryColor;
+        }
+
+        Console.Write($"Secondary color (default: {config.Theme.SecondaryColor}): ");
+        var secondaryColor = Console.ReadLine()?.Trim();
+        if (!string.IsNullOrEmpty(secondaryColor))
+        {
+            config.Theme.SecondaryColor = secondaryColor;
+        }
+
+        Console.Write($"Font family (default: {config.Theme.FontFamily}): ");
+        var fontFamily = Console.ReadLine()?.Trim();
+        if (!string.IsNullOrEmpty(fontFamily))
+        {
+            config.Theme.FontFamily = fontFamily;
+        }
     }
 
     static void ConfigureSeedData(ProjectConfig config)
@@ -140,8 +178,8 @@ class Program
             });
             config.Options.SeedRoles.Add(new SeedRole 
             { 
-                Name = "Teacher", 
-                Description = "Teacher role with course management access" 
+                Name = "Seller", 
+                Description = "Seller role with product management access" 
             });
             config.Options.SeedRoles.Add(new SeedRole 
             { 

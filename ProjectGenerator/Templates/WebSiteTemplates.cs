@@ -1,3 +1,5 @@
+using ProjectGenerator.Models;
+
 namespace ProjectGenerator.Templates;
 
 public class WebSiteTemplates
@@ -1133,14 +1135,18 @@ public class BlogController : Controller
 ";
     }
 
-    public string GetLayoutTemplate()
+    public string GetLayoutTemplate(ThemeSettings? theme = null)
     {
-        return @"<!DOCTYPE html>
+        theme ??= new ThemeSettings();
+        var siteName = theme.SiteName;
+        var faviconUrl = theme.FaviconUrl;
+        return $@"<!DOCTYPE html>
 <html lang=""fa"" dir=""rtl"">
 <head>
     <meta charset=""utf-8"" />
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
-    <title>@ViewData[""Title""] - وب‌سایت</title>
+    <title>@ViewData[""Title""] - {siteName}</title>
+    <link rel=""icon"" href=""{faviconUrl}"" />
     <link rel=""stylesheet"" href=""~/css/site.css"" asp-append-version=""true"" />
 </head>
 <body>
@@ -1165,7 +1171,7 @@ public class BlogController : Controller
                     </ul>
                     <ul class=""navbar-nav"">
                         @if (User.Identity?.IsAuthenticated ?? false)
-                        {
+                        {{
                             <li class=""nav-item"">
                                 <a class=""nav-link text-dark"" asp-area=""User"" asp-controller=""Home"" asp-action=""Index"">پنل کاربری</a>
                             </li>
@@ -1174,16 +1180,16 @@ public class BlogController : Controller
                                     <button type=""submit"" class=""nav-link btn btn-link text-dark"">خروج</button>
                                 </form>
                             </li>
-                        }
+                        }}
                         else
-                        {
+                        {{
                             <li class=""nav-item"">
                                 <a class=""nav-link text-dark"" asp-area="""" asp-controller=""Account"" asp-action=""Login"">ورود</a>
                             </li>
                             <li class=""nav-item"">
                                 <a class=""nav-link text-dark"" asp-area="""" asp-controller=""Account"" asp-action=""Register"">ثبت نام</a>
                             </li>
-                        }
+                        }}
                     </ul>
                 </div>
             </div>
