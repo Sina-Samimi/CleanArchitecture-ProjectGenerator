@@ -139,10 +139,13 @@ public abstract class Entity
   <ItemGroup>
     <ProjectReference Include=""..\Application\Application.csproj"" />
     <ProjectReference Include=""..\Infrastructure\Infrastructure.csproj"" />
+    <ProjectReference Include=""..\Domain\Domain.csproj"" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include=""Microsoft.AspNetCore.Identity.EntityFrameworkCore"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""8.0.10"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.SqlServer"" Version=""8.0.10"" />
     <PackageReference Include=""Microsoft.EntityFrameworkCore.Design"" Version=""8.0.10"">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -333,27 +336,26 @@ app.Run();
 
     public string GetEnhancedProgramTemplate()
     {
-        return $@"using {_namespace}.Application;
-using {_namespace}.Infrastructure;
-using {_namespace}.Infrastructure.Data;
+        return $@"using {_namespace}.Domain.Entities;
+using {_namespace}.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Application and Infrastructure layers
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString(""DefaultConnection"")));
 
 // Add Identity
-builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
-    options.User.RequireUniqueEmail = true;
+    options.User.RequireUniqueEmail = false;
 }})
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -368,7 +370,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 }});
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMemoryCache();
@@ -381,7 +383,7 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {{
     app.UseExceptionHandler(""/Home/Error"");
@@ -408,21 +410,6 @@ app.MapControllerRoute(
     pattern: ""{{controller=Home}}/{{action=Index}}/{{id?}}"");
 
 app.Run();
-
-// Identity classes for Program.cs
-public class ApplicationUser : Microsoft.AspNetCore.Identity.IdentityUser<int>
-{{
-    public string? FirstName {{ get; set; }}
-    public string? LastName {{ get; set; }}
-    public DateTime? BirthDate {{ get; set; }}
-    public bool IsActive {{ get; set; }} = true;
-    public DateTime RegisterDate {{ get; set; }} = DateTime.UtcNow;
-}}
-
-public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
-{{
-    public string? Description {{ get; set; }}
-}}
 ";
     }
 

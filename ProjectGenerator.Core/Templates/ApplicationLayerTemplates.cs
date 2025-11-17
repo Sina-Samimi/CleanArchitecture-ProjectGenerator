@@ -27,6 +27,10 @@ public partial class TemplateProvider
     <ProjectReference Include=""..\Domain\Domain.csproj"" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include=""Microsoft.AspNetCore.App"" />
+  </ItemGroup>
+
 </Project>";
     }
 

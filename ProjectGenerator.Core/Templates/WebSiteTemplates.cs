@@ -631,6 +631,7 @@ public class CreatePageAccessViewModel
     public string GetAdminSellersControllerTemplate()
     {
         return $@"using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using {_namespace}.Domain.Entities;
