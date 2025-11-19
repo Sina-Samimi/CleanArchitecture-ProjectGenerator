@@ -15,13 +15,15 @@ public partial class TemplateProvider
     <RootNamespace>{_namespace}.Application</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include=""MediatR"" Version=""12.2.0"" />
-    <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
-    <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
-    <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""9.0.0"" />
-    <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include=""MediatR"" Version=""12.2.0"" />
+      <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
+      <PackageReference Include=""FluentValidation.DependencyInjectionExtensions"" Version=""11.9.0"" />
+      <PackageReference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"" Version=""9.0.0"" />
+      <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
+      <PackageReference Include=""AutoMapper.Extensions.Microsoft.DependencyInjection"" Version=""12.0.1"" />
+      <PackageReference Include=""Microsoft.EntityFrameworkCore"" Version=""9.0.0"" />
+    </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include=""..\Domain\Domain.csproj"" />
@@ -337,17 +339,17 @@ public sealed record CreateProductResponse(
     public string GetCreateProductHandlerTemplate()
     {
         return $@"using MediatR;
+using {_namespace}.Application.Common.Interfaces;
 using {_namespace}.Domain.Entities;
-using {_namespace}.Infrastructure.Persistence;
 
 namespace {_namespace}.Application.Products.Commands.CreateProduct;
 
-public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, CreateProductResponse>
-{{
-    private readonly ApplicationDbContext _context;
-
-    public CreateProductHandler(ApplicationDbContext context)
+    public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, CreateProductResponse>
     {{
+        private readonly IApplicationDbContext _context;
+
+        public CreateProductHandler(IApplicationDbContext context)
+        {{
         _context = context;
     }}
 
@@ -425,16 +427,16 @@ public sealed record ProductDto(
     {
         return $@"using MediatR;
 using Microsoft.EntityFrameworkCore;
-using {_namespace}.Infrastructure.Persistence;
+using {_namespace}.Application.Common.Interfaces;
 
 namespace {_namespace}.Application.Products.Queries.GetProducts;
 
-public sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, GetProductsResponse>
-{{
-    private readonly ApplicationDbContext _context;
-
-    public GetProductsHandler(ApplicationDbContext context)
+    public sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, GetProductsResponse>
     {{
+        private readonly IApplicationDbContext _context;
+
+        public GetProductsHandler(IApplicationDbContext context)
+        {{
         _context = context;
     }}
 
@@ -507,6 +509,8 @@ public record PaginatedResponse<T>(
 
 public record Result(bool Success, string Message)
 {{
+    public bool IsSuccess => Success;
+    
     public static Result SuccessResult(string message = ""عملیات با موفقیت انجام شد."") 
         => new Result(true, message);
     
@@ -562,4 +566,306 @@ public interface IOtpService
     Task<bool> ValidateOtpAsync(string phoneNumber, string otp, CancellationToken cancellationToken = default);
 }}";
     }
+
+    public string GetApplicationDbContextInterfaceTemplate()
+    {
+        return $@"using Microsoft.EntityFrameworkCore;
+using {_namespace}.Domain.Entities;
+
+namespace {_namespace}.Application.Common.Interfaces;
+
+public interface IApplicationDbContext
+{{
+    DbSet<Product> Products {{ get; }}
+    DbSet<ProductImage> ProductImages {{ get; }}
+    DbSet<ProductComment> ProductComments {{ get; }}
+    DbSet<ProductExecutionStep> ProductExecutionSteps {{ get; }}
+    DbSet<ProductFaq> ProductFaqs {{ get; }}
+    DbSet<SiteCategory> Categories {{ get; }}
+    DbSet<DiscountCode> DiscountCodes {{ get; }}
+    DbSet<Blog> Blogs {{ get; }}
+    DbSet<BlogCategory> BlogCategories {{ get; }}
+    DbSet<BlogAuthor> BlogAuthors {{ get; }}
+    DbSet<BlogComment> BlogComments {{ get; }}
+    DbSet<Invoice> Invoices {{ get; }}
+    DbSet<InvoiceItem> InvoiceItems {{ get; }}
+    DbSet<Transaction> Transactions {{ get; }}
+    DbSet<WalletAccount> WalletAccounts {{ get; }}
+    DbSet<WalletTransaction> WalletTransactions {{ get; }}
+    DbSet<SiteSetting> SiteSettings {{ get; }}
+    DbSet<NavigationMenuItem> NavigationMenuItems {{ get; }}
+    DbSet<FinancialSettings> FinancialSettings {{ get; }}
+    DbSet<SellerProfile> SellerProfiles {{ get; }}
+    DbSet<AccessPermission> AccessPermissions {{ get; }}
+    DbSet<PageAccessPolicy> PageAccessPolicies {{ get; }}
+    DbSet<UserSession> UserSessions {{ get; }}
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}}";
+    }
+
+
+    public string GetProductDtosTemplate()
+    {
+        return $@"using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace {_namespace}.Application.DTOs.Product;
+
+public class ProductDto
+{{
+    public int Id {{ get; set; }}
+    public string Name {{ get; set; }} = string.Empty;
+    public string? Summary {{ get; set; }}
+    public string? Description {{ get; set; }}
+    public decimal Price {{ get; set; }}
+    public decimal? CompareAtPrice {{ get; set; }}
+    public bool TrackInventory {{ get; set; }}
+    public int StockQuantity {{ get; set; }}
+    public bool IsPublished {{ get; set; }}
+    public int CategoryId {{ get; set; }}
+    public int? SellerId {{ get; set; }}
+    public string? FeaturedImageUrl {{ get; set; }}
+    public string? SeoTitle {{ get; set; }}
+    public string? SeoDescription {{ get; set; }}
+    public string? SeoSlug {{ get; set; }}
+}}
+
+public class CreateProductDto
+{{
+    [Required, MaxLength(200)]
+    public string Name {{ get; set; }} = string.Empty;
+    [MaxLength(500)]
+    public string? Summary {{ get; set; }}
+    public string? Description {{ get; set; }}
+    [Range(0, double.MaxValue)]
+    public decimal Price {{ get; set; }}
+    [Range(0, double.MaxValue)]
+    public decimal? CompareAtPrice {{ get; set; }}
+    public bool TrackInventory {{ get; set; }} = true;
+    [Range(0, int.MaxValue)]
+    public int StockQuantity {{ get; set; }} = 0;
+    public bool IsPublished {{ get; set; }} = true;
+    [Required]
+    public int CategoryId {{ get; set; }}
+    public int SellerId {{ get; set; }}
+    public string? FeaturedImageUrl {{ get; set; }}
+    public string? SeoTitle {{ get; set; }}
+    public string? SeoDescription {{ get; set; }}
+    public string? SeoSlug {{ get; set; }}
+}}
+
+public class UpdateProductDto : CreateProductDto
+{{
+    public int Id {{ get; set; }}
+}}";
+    }
+
+    public string GetCategoryDtosTemplate()
+    {
+        return $@"using System.ComponentModel.DataAnnotations;
+
+namespace {_namespace}.Application.DTOs.Category;
+
+public class CategoryDto
+{{
+    public int Id {{ get; set; }}
+    public string Name {{ get; set; }} = string.Empty;
+    public string Slug {{ get; set; }} = string.Empty;
+    public string? Description {{ get; set; }}
+    public int? ParentId {{ get; set; }}
+}}
+
+public class CreateCategoryDto
+{{
+    [Required, MaxLength(200)]
+    public string Name {{ get; set; }} = string.Empty;
+    [MaxLength(200)]
+    public string? Slug {{ get; set; }}
+    [MaxLength(500)]
+    public string? Description {{ get; set; }}
+    public int? ParentId {{ get; set; }}
+}}";
+    }
+
+    public string GetBlogDtosTemplate()
+    {
+        return $@"using System.ComponentModel.DataAnnotations;
+
+namespace {_namespace}.Application.DTOs.Blog;
+
+public class BlogPostDto
+{{
+    public int Id {{ get; set; }}
+    public string Title {{ get; set; }} = string.Empty;
+    public string Slug {{ get; set; }} = string.Empty;
+    public string Summary {{ get; set; }} = string.Empty;
+    public string Content {{ get; set; }} = string.Empty;
+    public bool IsPublished {{ get; set; }}
+    public DateTimeOffset? PublishedAt {{ get; set; }}
+}}
+
+public class CreateBlogDto
+{{
+    [Required, MaxLength(200)]
+    public string Title {{ get; set; }} = string.Empty;
+    [MaxLength(200)]
+    public string Slug {{ get; set; }} = string.Empty;
+    [MaxLength(500)]
+    public string Summary {{ get; set; }} = string.Empty;
+    [Required]
+    public string Content {{ get; set; }} = string.Empty;
+    public bool IsPublished {{ get; set; }}
+}}";
+    }
+
+    public string GetOrderDtosTemplate()
+    {
+        return $@"using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace {_namespace}.Application.DTOs.Order;
+
+public class OrderDto
+{{
+    public int Id {{ get; set; }}
+    public int UserId {{ get; set; }}
+    public decimal TotalAmount {{ get; set; }}
+    public string Status {{ get; set; }} = ""Pending"";
+    public DateTimeOffset CreatedAt {{ get; set; }} = DateTimeOffset.UtcNow;
+    public List<OrderItemDto> Items {{ get; set; }} = new();
+}}
+
+public class OrderItemDto
+{{
+    public int ProductId {{ get; set; }}
+    public string ProductName {{ get; set; }} = string.Empty;
+    public decimal UnitPrice {{ get; set; }}
+    public int Quantity {{ get; set; }}
+}}
+
+public class CreateOrderDto
+{{
+    public int UserId {{ get; set; }}
+    [Required]
+    public string ShippingAddress {{ get; set; }} = string.Empty;
+    [Required]
+    public string PaymentMethod {{ get; set; }} = ""Online"";
+    [MinLength(1)]
+    public List<CreateOrderItemDto> Items {{ get; set; }} = new();
+}}
+
+public class CreateOrderItemDto
+{{
+    public int ProductId {{ get; set; }}
+    public string ProductName {{ get; set; }} = string.Empty;
+    public decimal UnitPrice {{ get; set; }}
+    public int Quantity {{ get; set; }}
+}}";
+    }
+
+    public string GetCartDtosTemplate()
+    {
+        return $@"using System.Collections.Generic;
+using System.Linq;
+
+namespace {_namespace}.Application.DTOs.Cart;
+
+public class CartDto
+{{
+    public int UserId {{ get; set; }}
+    public List<CartItemDto> Items {{ get; set; }} = new();
+    public decimal TotalAmount => Items.Sum(item => item.TotalPrice);
+}}
+
+public class CartItemDto
+{{
+    public int ProductId {{ get; set; }}
+    public string ProductName {{ get; set; }} = string.Empty;
+    public decimal UnitPrice {{ get; set; }}
+    public int Quantity {{ get; set; }}
+    public decimal TotalPrice => UnitPrice * Quantity;
+}}";
+    }
+
+    public string GetProductServiceInterfaceTemplate()
+    {
+        return $@"using {_namespace}.Application.Common;
+using {_namespace}.Application.DTOs.Product;
+
+namespace {_namespace}.Application.Interfaces;
+
+public interface IProductService
+{{
+    Task<Result<List<ProductDto>>> GetAllAsync();
+    Task<Result<ProductDto>> GetByIdAsync(int id);
+    Task<Result<List<ProductDto>>> GetByCategoryIdAsync(int categoryId);
+    Task<Result<List<ProductDto>>> GetBySellerIdAsync(int sellerId);
+    Task<Result<ProductDto>> CreateAsync(CreateProductDto dto);
+    Task<Result<ProductDto>> UpdateAsync(int id, UpdateProductDto dto);
+    Task<Result> DeleteAsync(int id);
+}}";
+    }
+
+    public string GetCategoryServiceInterfaceTemplate()
+    {
+        return $@"using {_namespace}.Application.Common;
+using {_namespace}.Application.DTOs.Category;
+
+namespace {_namespace}.Application.Interfaces;
+
+public interface ICategoryService
+{{
+    Task<Result<List<CategoryDto>>> GetAllAsync();
+    Task<Result<CategoryDto>> CreateAsync(CreateCategoryDto dto);
+}}";
+    }
+
+    public string GetOrderServiceInterfaceTemplate()
+    {
+        return $@"using {_namespace}.Application.Common;
+using {_namespace}.Application.DTOs.Order;
+
+namespace {_namespace}.Application.Interfaces;
+
+public interface IOrderService
+{{
+    Task<Result<OrderDto>> CreateAsync(CreateOrderDto dto);
+    Task<Result<OrderDto>> GetByIdAsync(int id);
+    Task<Result<List<OrderDto>>> GetByUserIdAsync(int userId);
+}}";
+    }
+
+    public string GetBlogServiceInterfaceTemplate()
+    {
+        return $@"using {_namespace}.Application.Common;
+using {_namespace}.Application.DTOs.Blog;
+
+namespace {_namespace}.Application.Interfaces;
+
+public interface IBlogService
+{{
+    Task<Result> CreateAsync(CreateBlogDto dto);
+    Task<Result<List<BlogPostDto>>> GetAllPublishedAsync();
+    Task<Result<BlogPostDto>> GetBySlugAsync(string slug);
+}}";
+    }
+
+    public string GetCartServiceInterfaceTemplate()
+    {
+        return $@"using {_namespace}.Application.Common;
+using {_namespace}.Application.DTOs.Cart;
+
+namespace {_namespace}.Application.Interfaces;
+
+public interface ICartService
+{{
+    Task<Result<CartDto>> GetByUserIdAsync(int userId);
+    Task<Result> AddItemAsync(int userId, int productId, int quantity);
+    Task<Result> RemoveItemAsync(int userId, int productId);
+    Task ClearCartAsync(int userId);
+}}";
+    }
+
 }

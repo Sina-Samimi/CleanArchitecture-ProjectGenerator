@@ -76,6 +76,7 @@ public class SeedUser
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
+    public string? FullName { get; set; }
     public string Password { get; set; } = "Admin@123"; // Default password
     public List<string> Roles { get; set; } = new();
 }
@@ -102,6 +103,7 @@ public class SeedProduct
     public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public Guid CategoryId { get; set; }
+    public string? CategorySlug { get; set; }
     public bool IsPublished { get; set; } = true;
 }
 
@@ -120,6 +122,7 @@ public class SeedBlogPost
     public string Summary { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public Guid CategoryId { get; set; }
+    public string? CategorySlug { get; set; }
     public bool IsPublished { get; set; } = true;
 }
 

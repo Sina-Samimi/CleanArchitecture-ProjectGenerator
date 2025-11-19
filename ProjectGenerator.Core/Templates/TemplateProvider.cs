@@ -58,10 +58,12 @@ public abstract class Entity
     <ProjectReference Include=""..\SharedKernel\SharedKernel.csproj"" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
-    <PackageReference Include=""MediatR"" Version=""12.2.0"" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include=""FluentValidation"" Version=""11.9.0"" />
+      <PackageReference Include=""MediatR"" Version=""12.2.0"" />
+      <PackageReference Include=""AutoMapper"" Version=""12.0.1"" />
+      <PackageReference Include=""AutoMapper.Extensions.Microsoft.DependencyInjection"" Version=""12.0.1"" />
+    </ItemGroup>
 
 </Project>";
     }
@@ -206,7 +208,7 @@ public interface IRepository<T> where T : class
         return $@"using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace {_namespace}.Infrastructure.Data;
+namespace {_namespace}.Infrastructure.Persistence;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
 {{
@@ -244,7 +246,7 @@ public class ApplicationRole : Microsoft.AspNetCore.Identity.IdentityRole<int>
     public string GetGenericRepositoryTemplate()
     {
         return $@"using {_namespace}.SharedKernel.Interfaces;
-using {_namespace}.Infrastructure.Data;
+using {_namespace}.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -403,6 +405,27 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
+
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{{
+    var services = scope.ServiceProvider;
+    try
+    {{
+        var seeder = new {_namespace}.Infrastructure.Persistence.SeedData.DatabaseSeeder(
+            services.GetRequiredService<ApplicationDbContext>(),
+            services.GetRequiredService<UserManager<ApplicationUser>>(),
+            services.GetRequiredService<RoleManager<IdentityRole>>(),
+            services.GetRequiredService<IConfiguration>()
+        );
+        await seeder.SeedAsync();
+    }}
+    catch (Exception ex)
+    {{
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, ""An error occurred while seeding the database."");
+    }}
+}}
 
 // Area routes
 app.MapControllerRoute(
