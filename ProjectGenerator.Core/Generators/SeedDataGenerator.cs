@@ -41,8 +41,10 @@ public class SeedDataGenerator
     private void GenerateSeedDataClass(string seedDataPath)
     {
         var content = $@"using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using {_config.Namespace}.Domain.Entities;
 using {_config.Namespace}.Infrastructure.Persistence;
 
 namespace {_config.Namespace}.Infrastructure.Persistence.SeedData;
@@ -50,18 +52,77 @@ namespace {_config.Namespace}.Infrastructure.Persistence.SeedData;
 public class DatabaseSeeder
 {{
     private readonly ApplicationDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
 
-    public DatabaseSeeder(ApplicationDbContext context, IConfiguration configuration)
+    public DatabaseSeeder(
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration)
     {{
         _context = context;
+        _userManager = userManager;
+        _roleManager = roleManager;
         _configuration = configuration;
     }}
 
     public async Task SeedAsync()
     {{
+        // Ensure database is created
         await _context.Database.EnsureCreatedAsync();
-        // TODO: Add your data seeding logic here.
+
+        // Seed Roles
+        await SeedRolesAsync();
+
+        // Seed Users
+        await SeedUsersAsync();
+
+        await _context.SaveChangesAsync();
+    }}
+
+    private async Task SeedRolesAsync()
+    {{
+        var roles = new[] {{ ""Admin"", ""User"", ""Seller"" }};
+
+        foreach (var roleName in roles)
+        {{
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {{
+                await _roleManager.CreateAsync(new IdentityRole(roleName));
+            }}
+        }}
+    }}
+
+    private async Task SeedUsersAsync()
+    {{
+        // Seed Admin User
+        var adminEmail = _configuration[""SeedData:AdminEmail""] ?? ""admin@example.com"";
+        var adminPhone = _configuration[""SeedData:AdminPhone""] ?? ""09123456789"";
+        var adminPassword = _configuration[""SeedData:AdminPassword""] ?? ""Admin@123"";
+
+        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
+        {{
+            adminUser = new ApplicationUser
+            {{
+                UserName = adminPhone,
+                Email = adminEmail,
+                PhoneNumber = adminPhone,
+                PhoneNumberConfirmed = true,
+                EmailConfirmed = true
+            }};
+
+            var result = await _userManager.CreateAsync(adminUser, adminPassword);
+            if (result.Succeeded)
+            {{
+                await _userManager.AddToRoleAsync(adminUser, ""Admin"");
+            }}
+        }}
+
+        // Note: Additional users can be seeded from appsettings.json or users.json file
+        // For now, only the admin user is seeded. You can extend this method to read from configuration.
     }}
 }}
 ";

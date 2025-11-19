@@ -509,6 +509,8 @@ public record PaginatedResponse<T>(
 
 public record Result(bool Success, string Message)
 {{
+    public bool IsSuccess => Success;
+    
     public static Result SuccessResult(string message = ""عملیات با موفقیت انجام شد."") 
         => new Result(true, message);
     

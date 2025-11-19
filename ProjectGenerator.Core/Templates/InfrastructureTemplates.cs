@@ -765,7 +765,7 @@ public class ProductService : IProductService
     {{
         if (string.IsNullOrWhiteSpace(value))
         {{
-            return $""product-{seed}"";
+            return $""product-{{seed}}"";
         }}
 
         return value.Trim().ToLowerInvariant().Replace(' ', '-');
@@ -846,7 +846,7 @@ public class CategoryService : ICategoryService
         }}
 
         return string.IsNullOrWhiteSpace(fallback)
-            ? $""category-{seed}""
+            ? $""category-{{seed}}""
             : fallback.Trim().ToLowerInvariant().Replace(' ', '-');
     }}
 
@@ -1105,7 +1105,7 @@ public class BlogService : IBlogService
         }}
 
         return string.IsNullOrWhiteSpace(fallback)
-            ? $""post-{seed}""
+            ? $""post-{{seed}}""
             : fallback.Trim().ToLowerInvariant().Replace(' ', '-');
     }}
 

@@ -406,6 +406,27 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{{
+    var services = scope.ServiceProvider;
+    try
+    {{
+        var seeder = new {_namespace}.Infrastructure.Persistence.SeedData.DatabaseSeeder(
+            services.GetRequiredService<ApplicationDbContext>(),
+            services.GetRequiredService<UserManager<ApplicationUser>>(),
+            services.GetRequiredService<RoleManager<IdentityRole>>(),
+            services.GetRequiredService<IConfiguration>()
+        );
+        await seeder.SeedAsync();
+    }}
+    catch (Exception ex)
+    {{
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, ""An error occurred while seeding the database."");
+    }}
+}}
+
 // Area routes
 app.MapControllerRoute(
     name: ""areas"",
