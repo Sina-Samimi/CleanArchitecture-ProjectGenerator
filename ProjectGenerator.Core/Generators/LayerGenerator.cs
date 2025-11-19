@@ -295,6 +295,25 @@ public class LayerGenerator
             Directory.CreateDirectory(Path.Combine(layerPath, dir));
         }
 
+        // Create DTO directories
+        var dtoDirs = new[]
+        {
+            "DTOs",
+            "DTOs/Product",
+            "DTOs/Category",
+            "DTOs/Blog",
+            "DTOs/Order",
+            "DTOs/Cart"
+        };
+
+        foreach (var dir in dtoDirs)
+        {
+            Directory.CreateDirectory(Path.Combine(layerPath, dir));
+        }
+
+        var interfacesPath = Path.Combine(layerPath, "Interfaces");
+        Directory.CreateDirectory(interfacesPath);
+
         // Create Service Interfaces
         var servicesPath = Path.Combine(layerPath, "Services");
         File.WriteAllText(
@@ -325,6 +344,46 @@ public class LayerGenerator
         File.WriteAllText(
             Path.Combine(interfacesPath, "IApplicationDbContext.cs"),
             _templateProvider.GetApplicationDbContextInterfaceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "DTOs/Product", "ProductDtos.cs"),
+            _templateProvider.GetProductDtosTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "DTOs/Category", "CategoryDtos.cs"),
+            _templateProvider.GetCategoryDtosTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "DTOs/Blog", "BlogDtos.cs"),
+            _templateProvider.GetBlogDtosTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "DTOs/Order", "OrderDtos.cs"),
+            _templateProvider.GetOrderDtosTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(layerPath, "DTOs/Cart", "CartDtos.cs"),
+            _templateProvider.GetCartDtosTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "IProductService.cs"),
+            _templateProvider.GetProductServiceInterfaceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "ICategoryService.cs"),
+            _templateProvider.GetCategoryServiceInterfaceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "IOrderService.cs"),
+            _templateProvider.GetOrderServiceInterfaceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "IBlogService.cs"),
+            _templateProvider.GetBlogServiceInterfaceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(interfacesPath, "ICartService.cs"),
+            _templateProvider.GetCartServiceInterfaceTemplate()
         );
 
         // Create User Commands/Queries
@@ -444,6 +503,26 @@ public class LayerGenerator
         File.WriteAllText(
             Path.Combine(servicesPath, "SmsService.cs"),
             _templateProvider.GetSmsServiceTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "ProductService.cs"),
+            _templateProvider.GetProductServiceImplementationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "CategoryService.cs"),
+            _templateProvider.GetCategoryServiceImplementationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "OrderService.cs"),
+            _templateProvider.GetOrderServiceImplementationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "CartService.cs"),
+            _templateProvider.GetCartServiceImplementationTemplate()
+        );
+        File.WriteAllText(
+            Path.Combine(servicesPath, "BlogService.cs"),
+            _templateProvider.GetBlogServiceImplementationTemplate()
         );
 
         // Create DependencyInjection
