@@ -1,22 +1,46 @@
 :root {
     --panel-primary: var(--app-user-primary, #15b8a6);
     --panel-primary-strong: var(--app-user-primary-strong, #0e9f92);
-    --panel-accent: rgba(21, 184, 166, 0.16);
+    --panel-accent: color-mix(in srgb, var(--panel-primary) 16%, transparent);
     --panel-surface: #ffffff;
     --panel-muted: #6b7280;
-    --panel-border: rgba(14, 159, 146, 0.12);
-    --panel-shadow: 0 22px 45px rgba(14, 159, 146, 0.14);
+    --panel-border: color-mix(in srgb, var(--panel-primary-strong) 12%, transparent);
+    --panel-shadow: 0 22px 45px color-mix(in srgb, var(--panel-primary-strong) 22%, transparent);
     --panel-radius: 22px;
     --panel-spacing: 1.25rem;
 }
 
 body.panel-demo {
     background:
-        radial-gradient(circle at 10% 20%, rgba(21, 184, 166, 0.08), transparent 38%),
-        radial-gradient(circle at 90% 0%, rgba(79, 209, 197, 0.12), transparent 40%),
-        radial-gradient(circle at 50% 120%, rgba(20, 184, 166, 0.14), transparent 38%),
+        radial-gradient(circle at 10% 20%, color-mix(in srgb, var(--panel-primary) 12%, transparent), transparent 38%),
+        radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--panel-primary) 14%, transparent), transparent 40%),
+        radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--panel-primary-strong) 12%, transparent), transparent 38%),
         var(--app-body-bg, #f5f7fb);
     color: var(--app-text, #0f172a);
+}
+
+body.panel-demo.panel-demo--admin {
+    --panel-primary: var(--app-primary, #6366f1);
+    --panel-primary-strong: var(--app-primary-strong, #4f46e5);
+    --panel-accent: color-mix(in srgb, var(--panel-primary) 18%, transparent);
+    --panel-border: color-mix(in srgb, var(--panel-primary) 14%, transparent);
+    --panel-shadow: 0 22px 45px color-mix(in srgb, var(--panel-primary-strong) 26%, transparent);
+    background:
+        radial-gradient(circle at 12% 22%, color-mix(in srgb, var(--panel-primary) 18%, transparent), transparent 42%),
+        radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--panel-primary-strong) 20%, transparent), transparent 46%),
+        var(--app-body-bg, #eef2ff);
+}
+
+body.panel-demo.panel-demo--seller {
+    --panel-primary: #f97316;
+    --panel-primary-strong: #ea580c;
+    --panel-accent: color-mix(in srgb, var(--panel-primary) 18%, transparent);
+    --panel-border: color-mix(in srgb, var(--panel-primary) 14%, transparent);
+    --panel-shadow: 0 22px 45px color-mix(in srgb, var(--panel-primary-strong) 26%, transparent);
+    background:
+        radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--panel-primary) 20%, transparent), transparent 40%),
+        radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--panel-primary-strong) 18%, transparent), transparent 44%),
+        var(--app-body-bg, #fff7ed);
 }
 
 .panel-shell {
@@ -48,9 +72,11 @@ body.panel-demo {
     display: grid;
     place-items: center;
     border-radius: 16px;
-    background: linear-gradient(145deg, rgba(21, 184, 166, 0.18), rgba(14, 159, 146, 0.12));
+    background: linear-gradient(145deg,
+            color-mix(in srgb, var(--panel-primary) 18%, transparent),
+            color-mix(in srgb, var(--panel-primary-strong) 12%, transparent));
     color: var(--panel-primary-strong);
-    box-shadow: 0 14px 30px rgba(14, 159, 146, 0.16);
+    box-shadow: 0 14px 30px color-mix(in srgb, var(--panel-primary-strong) 16%, transparent);
 }
 
 .panel-grid {
@@ -76,10 +102,12 @@ body.panel-demo {
     position: relative;
     overflow: hidden;
     color: #0f172a;
-    background: linear-gradient(145deg, rgba(21, 184, 166, 0.2), rgba(14, 159, 146, 0.08)),
+    background: linear-gradient(145deg,
+            color-mix(in srgb, var(--panel-primary) 20%, transparent),
+            color-mix(in srgb, var(--panel-primary-strong) 8%, transparent)),
         #ffffff;
     padding: 1.5rem;
-    border: 1px solid rgba(14, 159, 146, 0.08);
+    border: 1px solid color-mix(in srgb, var(--panel-primary) 8%, transparent);
     box-shadow: var(--panel-shadow);
 }
 
@@ -88,7 +116,7 @@ body.panel-demo {
     content: "";
     position: absolute;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(21, 184, 166, 0.18), transparent 55%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--panel-primary) 18%, transparent), transparent 55%);
     pointer-events: none;
     filter: blur(6px);
 }
@@ -113,10 +141,10 @@ body.panel-demo {
     gap: 0.5rem;
     padding: 0.5rem 0.9rem;
     border-radius: 999px;
-    background: rgba(21, 184, 166, 0.12);
+    background: color-mix(in srgb, var(--panel-primary) 12%, transparent);
     color: var(--panel-primary-strong);
     font-weight: 700;
-    box-shadow: 0 10px 22px rgba(14, 159, 146, 0.16);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--panel-primary-strong) 16%, transparent);
 }
 
 .panel-hero__content {
@@ -140,8 +168,8 @@ body.panel-demo {
     height: 84px;
     border-radius: 26px;
     overflow: hidden;
-    box-shadow: 0 18px 40px rgba(14, 159, 146, 0.25);
-    border: 4px solid rgba(21, 184, 166, 0.18);
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--panel-primary-strong) 24%, transparent);
+    border: 4px solid color-mix(in srgb, var(--panel-primary) 18%, transparent);
 }
 
 .panel-user__avatar img {
@@ -192,7 +220,7 @@ body.panel-demo {
 .panel-button--primary {
     background: linear-gradient(135deg, var(--panel-primary-strong), var(--panel-primary));
     color: #ffffff;
-    box-shadow: 0 16px 34px rgba(14, 159, 146, 0.32);
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--panel-primary-strong) 26%, transparent);
 }
 
 .panel-button--ghost {
@@ -206,7 +234,7 @@ body.panel-demo {
 }
 
 .panel-button--ghost:hover {
-    background: rgba(21, 184, 166, 0.08);
+    background: color-mix(in srgb, var(--panel-primary) 10%, transparent);
     box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -226,8 +254,8 @@ body.panel-demo {
 .metric {
     padding: 1rem 1.1rem;
     border-radius: 16px;
-    background: rgba(21, 184, 166, 0.08);
-    border: 1px solid rgba(14, 159, 146, 0.1);
+    background: color-mix(in srgb, var(--panel-primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--panel-primary-strong) 10%, transparent);
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 0.6rem 0.9rem;
@@ -241,9 +269,11 @@ body.panel-demo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(14, 159, 146, 0.16), rgba(21, 184, 166, 0.12));
+    background: linear-gradient(135deg,
+            color-mix(in srgb, var(--panel-primary-strong) 16%, transparent),
+            color-mix(in srgb, var(--panel-primary) 12%, transparent));
     color: var(--panel-primary-strong);
-    box-shadow: 0 10px 20px rgba(14, 159, 146, 0.14);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--panel-primary-strong) 14%, transparent);
 }
 
 .metric__value {
@@ -267,7 +297,7 @@ body.panel-demo {
     padding: 0.9rem 1rem;
     border-radius: 14px;
     background: #f8fafc;
-    border: 1px dashed rgba(14, 159, 146, 0.25);
+    border: 1px dashed color-mix(in srgb, var(--panel-primary) 25%, transparent);
     color: #0f172a;
     font-weight: 700;
 }
@@ -292,8 +322,10 @@ body.panel-demo {
     text-align: center;
     padding: 1.4rem;
     border-radius: 20px;
-    background: linear-gradient(160deg, rgba(21, 184, 166, 0.16), rgba(21, 184, 166, 0.08));
-    border: 1px solid rgba(14, 159, 146, 0.08);
+    background: linear-gradient(160deg,
+            color-mix(in srgb, var(--panel-primary) 16%, transparent),
+            color-mix(in srgb, var(--panel-primary) 8%, transparent));
+    border: 1px solid color-mix(in srgb, var(--panel-primary) 8%, transparent);
     box-shadow: var(--panel-shadow);
 }
 
@@ -303,7 +335,7 @@ body.panel-demo {
     border-radius: 24px;
     overflow: hidden;
     margin: 0 auto 0.75rem;
-    border: 4px solid rgba(14, 159, 146, 0.12);
+    border: 4px solid color-mix(in srgb, var(--panel-primary) 12%, transparent);
 }
 
 .side-profile__avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -324,7 +356,7 @@ body.panel-demo {
 
 .progress-track {
     width: 100%;
-    background: rgba(14, 159, 146, 0.1);
+    background: color-mix(in srgb, var(--panel-primary-strong) 10%, transparent);
     border-radius: 12px;
     height: 10px;
     overflow: hidden;
@@ -349,7 +381,7 @@ body.panel-demo {
     align-items: center;
     padding: 0.6rem 0.75rem;
     border-radius: 12px;
-    background: rgba(14, 159, 146, 0.06);
+    background: color-mix(in srgb, var(--panel-primary) 6%, transparent);
 }
 
 .info-item i { color: var(--panel-primary-strong); }
