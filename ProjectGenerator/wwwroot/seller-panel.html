@@ -3,213 +3,141 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>پنل فروشنده | نمای فروش</title>
+    <title>پیش‌نمایش پنل فروشنده</title>
     <link rel="stylesheet" href="css/site.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/bootstrap-icons.css">
     <link rel="stylesheet" href="css/panel-preview.css">
 </head>
 <body class="app-body panel-demo panel-demo--seller">
-    <div class="panel-shell">
-        <header class="panel-header">
-            <div class="panel-title">
-                <span class="panel-title__icon">
-                    <i class="bi bi-shop"></i>
-                </span>
+    <div class="demo-shell">
+        <header class="demo-header">
+            <div class="brand">
+                <span class="brand__icon"><i class="bi bi-shop"></i></span>
                 <div>
-                    <div class="text-muted fw-semibold">پنل فروشنده</div>
-                    <div>وضعیت لحظه‌ای فروش و موجودی</div>
+                    <div class="brand__title">پنل فروشنده</div>
+                    <div class="brand__subtitle">سفارش‌ها، ارسال‌ها و وضعیت موجودی</div>
                 </div>
             </div>
-            <div class="panel-actions">
-                <button class="panel-button panel-button--ghost"><i class="bi bi-cart-plus"></i> ایجاد محصول</button>
-                <button class="panel-button panel-button--primary"><i class="bi bi-qr-code-scan"></i> ثبت سفارش تلفنی</button>
+            <div class="demo-actions">
+                <button class="demo-button"><i class="bi bi-tags"></i> ساخت تخفیف</button>
+                <button class="demo-button demo-button--primary"><i class="bi bi-bag-plus"></i> اضافه کردن محصول</button>
             </div>
         </header>
 
-        <div class="panel-grid">
-            <div class="panel-stack">
-                <section class="panel-card panel-hero">
-                    <span class="panel-hero__eyebrow"><i class="bi bi-bag-check"></i> خلاصه فروش</span>
-                    <div class="panel-hero__content">
-                        <div class="panel-user">
-                            <div class="panel-user__avatar">
-                                <img src="https://i.pravatar.cc/160?img=57" alt="پروفایل فروشنده">
-                            </div>
-                            <div>
-                                <div class="panel-user__name">فروشگاه طلوع</div>
-                                <div class="panel-user__meta">
-                                    <div><i class="bi bi-receipt"></i> 128 سفارش فعال</div>
-                                    <div><i class="bi bi-cash-stack"></i> 86,450,000 تومان این ماه</div>
-                                    <div><i class="bi bi-box-seam"></i> 42 کالا در انبار</div>
-                                    <div><i class="bi bi-truck"></i> 6 ارسال در حال پردازش</div>
-                                </div>
-                                <div class="panel-actions" style="margin-top: 0.9rem;">
-                                    <button class="panel-button panel-button--primary"><i class="bi bi-graph-up-arrow"></i> گزارش عملکرد</button>
-                                    <button class="panel-button panel-button--ghost"><i class="bi bi-pen"></i> ویرایش فهرست</button>
-                                </div>
-                            </div>
+        <section class="demo-hero">
+            <div class="hero-grid">
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <img src="https://i.pravatar.cc/160?img=45" alt="فروشنده" />
+                    </div>
+                    <div>
+                        <div class="badge-soft"><i class="bi bi-check2-circle"></i> فروشنده تایید شده</div>
+                        <div class="profile-title">فروشگاه طلوع</div>
+                        <div class="profile-subtitle">مدیر فروش: مریم نیک‌پی</div>
+                        <div class="meta-list">
+                            <div><i class="bi bi-bag-check"></i> 128 سفارش فعال</div>
+                            <div><i class="bi bi-cash-coin"></i> 86,450,000 تومان این ماه</div>
+                            <div><i class="bi bi-box2"></i> 42 کالا در انبار</div>
+                            <div><i class="bi bi-truck"></i> 6 ارسال در حال پردازش</div>
                         </div>
-                        <div class="panel-card" style="background: color-mix(in srgb, var(--panel-accent) 40%, #ffffff); border-style: dashed;">
-                            <div class="panel-section-title">کارهای سریع</div>
-                            <div class="info-list">
-                                <div class="info-item">
-                                    <i class="bi bi-clock-history"></i>
-                                    <div>
-                                        <div class="info-item__label">ارسال‌های امروز</div>
-                                        <div class="info-item__value">تحویل 14 بسته تا ساعت 17</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-tags"></i>
-                                    <div>
-                                        <div class="info-item__label">تخفیف فعال</div>
-                                        <div class="info-item__value">کمپین جمعه - 18% میانگین تبدیل</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-box2-heart"></i>
-                                    <div>
-                                        <div class="info-item__label">محصولات جدید</div>
-                                        <div class="info-item__value">3 محصول آماده انتشار</div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="hero-actions" style="margin-top: 0.75rem;">
+                            <span class="badge-light pill"><i class="bi bi-qr-code-scan"></i> ثبت سفارش تلفنی</span>
+                            <span class="badge-light pill"><i class="bi bi-megaphone"></i> کمپین جدید</span>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <section class="panel-card">
-                    <div class="panel-section-title">آمار فروش</div>
-                    <div class="metric-row">
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-basket"></i></div>
-                            <div>
-                                <div class="metric__value">648</div>
-                                <div class="metric__label">سفارش ثبت شده</div>
-                            </div>
+                <div class="hero-side">
+                    <div class="side-chip">
+                        <div>
+                            <strong>وضعیت موجودی</strong>
+                            <span>سطح امن برای 7 روز</span>
                         </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-cash-coin"></i></div>
-                            <div>
-                                <div class="metric__value">12,450,000</div>
-                                <div class="metric__label">میانگین فروش هفتگی (تومان)</div>
-                            </div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-emoji-smile"></i></div>
-                            <div>
-                                <div class="metric__value">4.8</div>
-                                <div class="metric__label">رضایت خریداران</div>
-                            </div>
-                        </div>
+                        <span class="status"><i class="bi bi-box-seam"></i> پایدار</span>
                     </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">گزارش موجودی</div>
-                    <div class="detail-grid">
-                        <div class="detail-item">کفش ورزشی<span>12 عدد</span></div>
-                        <div class="detail-item">کیف چرمی<span>8 عدد</span></div>
-                        <div class="detail-item">ساعت هوشمند<span>22 عدد</span></div>
-                        <div class="detail-item">هدفون بی‌سیم<span>17 عدد</span></div>
-                        <div class="detail-item">پیراهن مردانه<span>32 عدد</span></div>
-                        <div class="detail-item">هودی زنانه<span>15 عدد</span></div>
+                    <div class="side-chip">
+                        <div>
+                            <strong>تسویه بعدی</strong>
+                            <span>امروز ساعت 18:00</span>
+                        </div>
+                            <span class="status"><i class="bi bi-wallet2"></i> در صف</span>
                     </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">آخرین سفارش‌ها</div>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <i class="bi bi-person-circle"></i>
-                            <div>
-                                <div class="info-item__label">سپیده مرادی</div>
-                                <div class="info-item__value">#98231 | ارسال فوری تهران</div>
-                            </div>
+                    <div class="side-chip">
+                        <div>
+                            <strong>درخواست پشتیبانی</strong>
+                            <span>4 تیکت باز</span>
                         </div>
-                        <div class="info-item">
-                            <i class="bi bi-person-circle"></i>
-                            <div>
-                                <div class="info-item__label">محمد رضوی</div>
-                                <div class="info-item__value">#98218 | پرداخت آنلاین - آماده ارسال</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-person-circle"></i>
-                            <div>
-                                <div class="info-item__label">الهام موسوی</div>
-                                <div class="info-item__value">#98196 | مرجوعی در انتظار بررسی</div>
-                            </div>
-                        </div>
+                        <span class="status danger"><i class="bi bi-chat-dots"></i> پیگیری</span>
                     </div>
-                </section>
+                    <div class="hero-actions">
+                        <button class="demo-button"><i class="bi bi-cloud-arrow-down"></i> خروجی اکسل</button>
+                        <button class="demo-button demo-button--primary"><i class="bi bi-graph-up-arrow"></i> گزارش عملکرد</button>
+                    </div>
+                </div>
             </div>
+        </section>
 
-            <aside class="side-card">
-                <div class="side-profile">
-                    <div class="side-profile__avatar">
-                        <img src="https://i.pravatar.cc/160?img=45" alt="سرویس فروشنده">
-                    </div>
-                    <div class="side-profile__name">مریم نیک‌پی</div>
-                    <div class="side-profile__meta">
-                        <span>مدیر فروش</span>
-                        <span>nickpey.shop@example.com</span>
-                        <span>0990 555 2211</span>
-                    </div>
-                    <div class="text-muted small">پیشرفت اهداف ماه</div>
-                    <div class="progress-track" aria-label="پیشرفت اهداف">
-                        <div class="progress-track__bar" style="width: 76%"></div>
-                    </div>
-                    <div class="info-list" style="margin-top: 0.9rem;">
-                        <div class="info-item">
-                            <i class="bi bi-truck"></i>
-                            <div>
-                                <div class="info-item__label">تحویل‌ها</div>
-                                <div class="info-item__value">24 بسته امروز ارسال شد</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-chat-dots"></i>
-                            <div>
-                                <div class="info-item__label">پیام‌های پشتیبانی</div>
-                                <div class="info-item__value">4 گفتگوی جدید</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-actions" style="justify-content: center; margin-top: 0.75rem;">
-                        <button class="panel-button panel-button--ghost"><i class="bi bi-cloud-arrow-down"></i> خروجی اکسل</button>
-                        <button class="panel-button panel-button--primary"><i class="bi bi-megaphone"></i> کمپین جدید</button>
-                    </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>سفارش‌های ثبت شده</h3>
+                <div class="stat-value">648</div>
+                <p>میانگین روزانه 32 سفارش</p>
+                <div class="progress-track" aria-label="پیشرفت سفارش">
+                    <div class="progress-track__bar" style="width: 72%"></div>
                 </div>
+                <span class="stat-hint">+8% نسبت به هفته قبل</span>
+            </div>
+            <div class="info-card">
+                <h3>میانگین فروش هفتگی</h3>
+                <div class="stat-value">12,450,000</div>
+                <p>تومان</p>
+                <div class="progress-track" aria-label="فروش">
+                    <div class="progress-track__bar" style="width: 64%"></div>
+                </div>
+                <span class="stat-hint">2 روز تا تسویه</span>
+            </div>
+            <div class="info-card">
+                <h3>رضایت خریداران</h3>
+                <div class="stat-value">4.8</div>
+                <p>امتیاز میانگین</p>
+                <div class="progress-track" aria-label="رضایت">
+                    <div class="progress-track__bar" style="width: 92%"></div>
+                </div>
+                <span class="stat-hint">+3 نظر جدید</span>
+            </div>
+        </div>
 
-                <div class="panel-card">
-                    <div class="panel-section-title">کانال‌های فروش</div>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <i class="bi bi-phone"></i>
-                            <div>
-                                <div class="info-item__label">اپلیکیشن موبایل</div>
-                                <div class="info-item__value">48% سفارشات امروز</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-browser-chrome"></i>
-                            <div>
-                                <div class="info-item__label">وب‌سایت</div>
-                                <div class="info-item__value">39% با میانگین تبدیل 4.2%</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-instagram"></i>
-                            <div>
-                                <div class="info-item__label">شبکه‌های اجتماعی</div>
-                                <div class="info-item__value">13% از فروش - رشد 3% هفتگی</div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="tile-grid" style="margin-top: 1.35rem;">
+            <div class="tile">ارسال‌های امروز <span>14 بسته تا ساعت 17</span></div>
+            <div class="tile">تخفیف جمعه <span>میانگین تبدیل 18%</span></div>
+            <div class="tile">محصولات جدید <span>3 مورد آماده انتشار</span></div>
+            <div class="tile">کمپین شبکه‌های اجتماعی <span>رشد 3% هفتگی</span></div>
+        </div>
+
+        <div class="section-title" style="margin-top: 1.5rem;">آخرین سفارش‌ها</div>
+        <div class="list-card">
+            <div class="list-item">
+                <div>
+                    <strong>سپیده مرادی</strong>
+                    <span>#98231 | ارسال فوری تهران</span>
                 </div>
-            </aside>
+                <span class="badge-light"><i class="bi bi-truck"></i> در حال ارسال</span>
+            </div>
+            <div class="list-item">
+                <div>
+                    <strong>محمد رضوی</strong>
+                    <span>#98218 | پرداخت آنلاین - آماده ارسال</span>
+                </div>
+                <span class="badge-light"><i class="bi bi-box"></i> آماده‌سازی</span>
+            </div>
+            <div class="list-item">
+                <div>
+                    <strong>الهام موسوی</strong>
+                    <span>#98196 | مرجوعی در انتظار بررسی</span>
+                </div>
+                <span class="badge-light"><i class="bi bi-arrow-counterclockwise"></i> مرجوعی</span>
+            </div>
         </div>
     </div>
 </body>

@@ -3,213 +3,141 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>داشبورد مدیریت | پنل مدرن</title>
+    <title>پیش‌نمایش پنل ادمین</title>
     <link rel="stylesheet" href="css/site.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/bootstrap-icons.css">
     <link rel="stylesheet" href="css/panel-preview.css">
 </head>
 <body class="app-body panel-demo panel-demo--admin">
-    <div class="panel-shell">
-        <header class="panel-header">
-            <div class="panel-title">
-                <span class="panel-title__icon">
-                    <i class="bi bi-shield-check"></i>
-                </span>
+    <div class="demo-shell">
+        <header class="demo-header">
+            <div class="brand">
+                <span class="brand__icon"><i class="bi bi-shield-check"></i></span>
                 <div>
-                    <div class="text-muted fw-semibold">پنل ادمین</div>
-                    <div>نمای کلی سلامت سامانه</div>
+                    <div class="brand__title">پنل مدیریت سیستم</div>
+                    <div class="brand__subtitle">سلامت سرویس‌ها، دسترسی‌ها و هشدارها</div>
                 </div>
             </div>
-            <div class="panel-actions">
-                <button class="panel-button panel-button--ghost"><i class="bi bi-gear"></i> تنظیمات سیستم</button>
-                <button class="panel-button panel-button--primary"><i class="bi bi-plus-lg"></i> ایجاد نقش</button>
+            <div class="demo-actions">
+                <button class="demo-button"><i class="bi bi-diagram-3"></i> تغییر نقش‌ها</button>
+                <button class="demo-button demo-button--primary"><i class="bi bi-plus-circle"></i> افزودن سرویس جدید</button>
             </div>
         </header>
 
-        <div class="panel-grid">
-            <div class="panel-stack">
-                <section class="panel-card panel-hero">
-                    <span class="panel-hero__eyebrow"><i class="bi bi-cpu"></i> وضعیت لحظه‌ای</span>
-                    <div class="panel-hero__content">
-                        <div class="panel-user">
-                            <div class="panel-user__avatar">
-                                <img src="https://i.pravatar.cc/160?img=12" alt="مدیر سیستم">
-                            </div>
-                            <div>
-                                <div class="panel-user__name">مدیر سیستم</div>
-                                <div class="panel-user__meta">
-                                    <div><i class="bi bi-shield-lock"></i> دسترسی سطح ریشه</div>
-                                    <div><i class="bi bi-activity"></i> 2 رخداد بحرانی باز</div>
-                                    <div><i class="bi bi-hdd-network"></i> 18 سرویس فعال</div>
-                                    <div><i class="bi bi-clock-history"></i> آخرین ورود: 08:45</div>
-                                </div>
-                                <div class="panel-actions" style="margin-top: 0.9rem;">
-                                    <button class="panel-button panel-button--primary"><i class="bi bi-lightning-charge"></i> اجرای مانیتورینگ</button>
-                                    <button class="panel-button panel-button--ghost"><i class="bi bi-arrow-repeat"></i> بروزرسانی نقش‌ها</button>
-                                </div>
-                            </div>
+        <section class="demo-hero">
+            <div class="hero-grid">
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <img src="https://i.pravatar.cc/160?img=18" alt="ادمین" />
+                    </div>
+                    <div>
+                        <div class="badge-soft"><i class="bi bi-check2-circle"></i> دسترسی سطح ریشه</div>
+                        <div class="profile-title">مریم کاردان</div>
+                        <div class="profile-subtitle">مدیر عملیات و زیرساخت</div>
+                        <div class="meta-list">
+                            <div><i class="bi bi-wifi"></i> دسترس‌پذیری امروز: 99.94%</div>
+                            <div><i class="bi bi-cpu"></i> 18 سرویس فعال</div>
+                            <div><i class="bi bi-shield-shaded"></i> 2 هشدار بحرانی باز</div>
+                            <div><i class="bi bi-clock-history"></i> آخرین ورود: 08:45</div>
                         </div>
-                        <div class="panel-card" style="background: color-mix(in srgb, var(--panel-accent) 40%, #ffffff); border-style: dashed;">
-                            <div class="panel-section-title">اقدامات فوری</div>
-                            <div class="info-list">
-                                <div class="info-item">
-                                    <i class="bi bi-shield-check"></i>
-                                    <div>
-                                        <div class="info-item__label">کنترل امنیت</div>
-                                        <div class="info-item__value">2 هشدار نیازمند بررسی</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-people"></i>
-                                    <div>
-                                        <div class="info-item__label">مدیریت کاربران</div>
-                                        <div class="info-item__value">6 درخواست دسترسی جدید</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-database-up"></i>
-                                    <div>
-                                        <div class="info-item__label">پشتیبان‌گیری</div>
-                                        <div class="info-item__value">آخرین نسخه: 10 دقیقه پیش</div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="hero-actions" style="margin-top: 0.75rem;">
+                            <span class="badge-light pill"><i class="bi bi-lightning-charge"></i> بروزرسانی مانیتورینگ</span>
+                            <span class="badge-light pill"><i class="bi bi-cloud-download"></i> دریافت گزارش SLA</span>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <section class="panel-card">
-                    <div class="panel-section-title">شاخص‌های کلیدی</div>
-                    <div class="metric-row">
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-people"></i></div>
-                            <div>
-                                <div class="metric__value">4,128</div>
-                                <div class="metric__label">کاربران فعال</div>
-                            </div>
+                <div class="hero-side">
+                    <div class="side-chip">
+                        <div>
+                            <strong>وضعیت امنیت</strong>
+                            <span>WAF و MFA فعال</span>
                         </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-wifi"></i></div>
-                            <div>
-                                <div class="metric__value">99.94%</div>
-                                <div class="metric__label">دسترس‌پذیری</div>
-                            </div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-bug"></i></div>
-                            <div>
-                                <div class="metric__value">12</div>
-                                <div class="metric__label">خطاهای بحرانی فعال</div>
-                            </div>
-                        </div>
+                        <span class="status"><i class="bi bi-shield-lock"></i> پایدار</span>
                     </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">برنامه روز</div>
-                    <div class="detail-grid">
-                        <div class="detail-item">بازبینی امنیت پایگاه داده<span>09:00</span></div>
-                        <div class="detail-item">تأیید دسترسی مدیران جدید<span>10:30</span></div>
-                        <div class="detail-item">به‌روزرسانی سرویس لاگینگ<span>12:00</span></div>
-                        <div class="detail-item">گزارش SLA به هیئت مدیره<span>14:00</span></div>
-                        <div class="detail-item">هماهنگی پشتیبان گیری کامل<span>16:30</span></div>
-                        <div class="detail-item">بررسی رخدادهای SOC<span>18:00</span></div>
+                    <div class="side-chip">
+                        <div>
+                            <strong>آخرین پشتیبان</strong>
+                            <span>10 دقیقه پیش</span>
+                        </div>
+                        <span class="status"><i class="bi bi-hdd-network"></i> هماهنگ</span>
                     </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">رخدادهای اخیر</div>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <i class="bi bi-shield-exclamation"></i>
-                            <div>
-                                <div class="info-item__label">افزایش ترافیک غیرعادی</div>
-                                <div class="info-item__value">مسدود شدن خودکار روی لایه WAF</div>
-                            </div>
+                    <div class="side-chip">
+                        <div>
+                            <strong>پنجره نگهداری</strong>
+                            <span>امشب 02:00</span>
                         </div>
-                        <div class="info-item">
-                            <i class="bi bi-server"></i>
-                            <div>
-                                <div class="info-item__label">به‌روزرسانی سرویس پرداخت</div>
-                                <div class="info-item__value">نسخه 2.3.1 بدون خطا مستقر شد</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-gear-wide-connected"></i>
-                            <div>
-                                <div class="info-item__label">هماهنگی یکپارچه‌سازی</div>
-                                <div class="info-item__value">اتصال سرویس پیامک با موفقیت فعال شد</div>
-                            </div>
-                        </div>
+                        <span class="status danger"><i class="bi bi-exclamation-triangle"></i> هشدار</span>
                     </div>
-                </section>
+                    <div class="hero-actions">
+                        <button class="demo-button"><i class="bi bi-gear"></i> تنظیمات</button>
+                        <button class="demo-button demo-button--primary"><i class="bi bi-megaphone"></i> ثبت اعلان</button>
+                    </div>
+                </div>
             </div>
+        </section>
 
-            <aside class="side-card">
-                <div class="side-profile">
-                    <div class="side-profile__avatar">
-                        <img src="https://i.pravatar.cc/160?img=29" alt="پروفایل ادمین">
-                    </div>
-                    <div class="side-profile__name">مریم کاردان</div>
-                    <div class="side-profile__meta">
-                        <span>مدیر عملیات</span>
-                        <span>maryam.kardan@example.com</span>
-                        <span>0912 123 4567</span>
-                    </div>
-                    <div class="text-muted small">پیشرفت وظایف امروز</div>
-                    <div class="progress-track" aria-label="پیشرفت وظایف">
-                        <div class="progress-track__bar" style="width: 68%"></div>
-                    </div>
-                    <div class="info-list" style="margin-top: 0.9rem;">
-                        <div class="info-item">
-                            <i class="bi bi-lock"></i>
-                            <div>
-                                <div class="info-item__label">سیاست امنیتی</div>
-                                <div class="info-item__value">MFA برای همه نقش‌ها فعال است</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-diagram-3"></i>
-                            <div>
-                                <div class="info-item__label">نقش‌های تعریف شده</div>
-                                <div class="info-item__value">ادمین / پشتیبانی / مشاهده‌گر</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-actions" style="justify-content: center; margin-top: 0.75rem;">
-                        <button class="panel-button panel-button--ghost"><i class="bi bi-journal-check"></i> گزارش هفتگی</button>
-                        <button class="panel-button panel-button--primary"><i class="bi bi-lightbulb"></i> ایجاد هشدار</button>
-                    </div>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>کاربران فعال</h3>
+                <div class="stat-value">4,128</div>
+                <p>مدیریت دسترسی و ورود دو مرحله‌ای</p>
+                <div class="progress-track" aria-label="پیشرفت کاربران">
+                    <div class="progress-track__bar" style="width: 78%"></div>
                 </div>
+                <span class="stat-hint">+12% رشد هفتگی</span>
+            </div>
+            <div class="info-card">
+                <h3>رخدادهای بحرانی</h3>
+                <div class="stat-value">12</div>
+                <p>اولویت‌بندی شده برای تیم SOC</p>
+                <div class="progress-track" aria-label="وضعیت رسیدگی">
+                    <div class="progress-track__bar" style="width: 42%"></div>
+                </div>
+                <span class="stat-hint">4 مورد در حال بررسی</span>
+            </div>
+            <div class="info-card">
+                <h3>دسترس‌پذیری</h3>
+                <div class="stat-value">99.94%</div>
+                <p>میانگین 24 ساعته سرویس‌ها</p>
+                <div class="progress-track" aria-label="پایداری">
+                    <div class="progress-track__bar" style="width: 94%"></div>
+                </div>
+                <span class="stat-hint">آخرین خطا: 30 دقیقه پیش</span>
+            </div>
+        </div>
 
-                <div class="panel-card">
-                    <div class="panel-section-title">وضعیت سرویس‌ها</div>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <i class="bi bi-check-circle"></i>
-                            <div>
-                                <div class="info-item__label">API درگاه اصلی</div>
-                                <div class="info-item__value">پایدار - پاسخ 210ms</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-activity"></i>
-                            <div>
-                                <div class="info-item__label">سرویس گزارش‌گیری</div>
-                                <div class="info-item__value">2 هشدار ظرفیت - اقدام مورد نیاز</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-shield-shaded"></i>
-                            <div>
-                                <div class="info-item__label">دیوار آتش</div>
-                                <div class="info-item__value">قوانین بروزرسانی شد 12 دقیقه پیش</div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="tile-grid" style="margin-top: 1.35rem;">
+            <div class="tile">بازبینی امنیت پایگاه داده <span>09:00</span></div>
+            <div class="tile">تأیید دسترسی مدیران جدید <span>10:30</span></div>
+            <div class="tile">گزارش SLA برای هیئت مدیره <span>14:00</span></div>
+            <div class="tile">هماهنگی پشتیبان‌گیری کامل <span>16:30</span></div>
+        </div>
+
+        <div class="section-title" style="margin-top: 1.5rem;">رخدادهای اخیر</div>
+        <div class="list-card">
+            <div class="list-item">
+                <div>
+                    <strong>افزایش ترافیک غیرعادی</strong>
+                    <span>مسدود شدن خودکار روی لایه WAF</span>
                 </div>
-            </aside>
+                <span class="badge-light"><i class="bi bi-shield-exclamation"></i> امنیت</span>
+            </div>
+            <div class="list-item">
+                <div>
+                    <strong>به‌روزرسانی سرویس پرداخت</strong>
+                    <span>نسخه 2.3.1 بدون خطا مستقر شد</span>
+                </div>
+                <span class="badge-light"><i class="bi bi-cloud-upload"></i> انتشار</span>
+            </div>
+            <div class="list-item">
+                <div>
+                    <strong>هماهنگی یکپارچه‌سازی</strong>
+                    <span>اتصال سرویس پیامک فعال شد</span>
+                </div>
+                <span class="badge-light"><i class="bi bi-diagram-3"></i> سرویس</span>
+            </div>
         </div>
     </div>
 </body>
