@@ -214,23 +214,208 @@ footer a:hover {{
     color: white !important;
 }}
 
-/* Hero Section */
-.hero-section {{
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
+        /* Hero Section */
+.landing-hero {{
+    background: linear-gradient(120deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: #fff;
     padding: 80px 0;
-    text-align: center;
-    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}}
+
+.landing-hero::after {{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12), transparent 40%),
+                radial-gradient(circle at 80% 0%, rgba(255,255,255,0.1), transparent 35%);
+    pointer-events: none;
+}}
+
+.hero-content {{
+    position: relative;
+    z-index: 1;
+}}
+
+.hero-title {{
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 1.4;
+}}
+
+.hero-subtitle {{
+    color: rgba(255,255,255,0.85);
+    font-size: 16px;
+    margin: 1rem 0 1.5rem;
+}}
+
+.hero-actions {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}}
+
+.glass-card {{
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    backdrop-filter: blur(8px);
+}}
+
+.stats-badges {{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}}
+
+.stats-badge {{
+    background: rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #fff;
+}}
+
+.stats-badge i {{
+    font-size: 18px;
+    opacity: 0.9;
+}}
+
+.stats-badge .value {{
+    font-weight: 700;
+    font-size: 18px;
+}}
+
+.panel-card {{
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.25rem;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+}}
+
+.panel-card:hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+}}
+
+.panel-card .panel-meta {{
+    color: #6c757d;
+    font-size: 13px;
+    margin-top: 0.35rem;
+}}
+
+.panel-card .panel-link {{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}}
+
+.section-header {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}}
+
+.section-title {{
+    font-weight: 700;
+    font-size: 22px;
+    color: #2c3e50;
+    margin: 0;
+}}
+
+.section-subtitle {{
+    color: #6c757d;
+    margin: 0;
+}}
+
+.feature-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}}
+
+.feature-card {{
+    border-radius: 14px;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+}}
+
+.feature-card:hover {{
+    transform: translateY(-4px);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.08);
+}}
+
+.feature-icon {{
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 20px;
+    margin-bottom: 0.75rem;
+}}
+
+.cta-section {{
+    background: linear-gradient(120deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+    border: 1px solid #e8e8e8;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+}}
+
+.cta-badges {{
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}}
+
+.cta-badge {{
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #555;
 }}
 
 /* Responsive */
-@media (max-width: 768px) {{
-    .hero-section {{
-        padding: 40px 0;
+@media (max-width: 992px) {{
+    .stats-badges {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }}
-    
-    .card {{
-        margin-bottom: 1rem;
+}}
+
+@media (max-width: 768px) {{
+    .landing-hero {{
+        padding: 48px 0;
+    }}
+
+    .stats-badges {{
+        grid-template-columns: 1fr;
+    }}
+
+    .feature-grid {{
+        grid-template-columns: 1fr;
     }}
 }}
 ";
@@ -589,179 +774,147 @@ body {{
 
 /* Profile Page */
 .profile-page {{
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background: transparent;
 }}
 
-.page-header {{
-    margin-bottom: 2rem;
+.profile-shell {{
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 1rem;
 }}
 
-.page-title {{
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}}
-
-.user-info-card {{
-    background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
-    padding: 2rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
+.profile-hero {{
+    background: linear-gradient(135deg, #e0f2fe 0%, #f8fbff 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e5efff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
     position: relative;
-    border: 1px solid #e0e0e0;
 }}
 
-.card-label {{
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: var(--primary-color);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-}}
-
-.user-info-content {{
-    padding-right: 150px;
-}}
-
-.user-name {{
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}}
-
-.user-contact-details {{
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}}
-
-.contact-detail-item {{
-    display: flex;
+.profile-hero .hero-row {{
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
     align-items: center;
-    gap: 0.75rem;
-    color: #666;
 }}
 
-.contact-detail-item i {{
-    color: var(--primary-color);
-    width: 20px;
+.profile-hero .hero-chip {{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    background: #fff;
+    border: 1px dashed #cfd8ff;
+    border-radius: 12px;
+    font-weight: 700;
+    color: #1e3a8a;
+    font-size: 12px;
 }}
 
-.user-meta-info {{
+.profile-hero h2 {{
+    margin: 0.35rem 0;
+    color: #0f172a;
+    font-weight: 800;
+}}
+
+.profile-hero .hero-meta {{
+    color: #475569;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.5rem;
+}}
+
+.profile-hero .avatar-circle-large {{
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #1a73e8 0%, #0d47a1 100%);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 36px;
+    box-shadow: 0 12px 30px rgba(13, 71, 161, 0.28);
+}}
+
+.profile-hero .contact-detail-item i {{
+    color: #1a73e8;
+}}
+
+.profile-actions {{
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
     margin-top: 1rem;
 }}
 
-.meta-item {{
-    display: flex;
-    gap: 0.5rem;
-    font-size: 14px;
-}}
-
-.meta-label {{
-    color: #999;
-}}
-
-.meta-value {{
-    color: #2c3e50;
-    font-weight: 500;
-}}
-
-.user-avatar-card {{
-    position: absolute;
-    left: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-}}
-
-.avatar-circle-large {{
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 64px;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}}
-
-/* Action Buttons */
-.action-buttons-row {{
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}}
-
-.btn-edit-profile {{
-    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+.profile-actions .btn-edit-profile {{
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
     color: white;
     border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 8px;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(13, 71, 161, 0.26);
 }}
 
-.btn-edit-profile:hover {{
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-    color: white;
+.profile-actions .btn-account-details {{
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    color: #111827;
 }}
 
-.btn-account-details {{
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    color: white;
-    border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 8px;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
+.info-pills {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.25rem;
 }}
 
-.btn-account-details:hover {{
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-    color: white;
+.info-pill {{
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }}
 
-/* Info Cards */
+.info-pill .label {{
+    color: #94a3b8;
+    font-size: 12px;
+}}
+
+.info-pill .value {{
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+}}
+
+.info-pill .desc {{
+    color: #9ca3af;
+    font-size: 12px;
+}}
+
 .info-cards-row {{
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1.25rem;
 }}
 
 .info-card {{
     background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
+    padding: 1.25rem;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
     transition: all 0.3s;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }}
 
 .info-card:hover {{
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
     transform: translateY(-2px);
 }}
 
@@ -773,27 +926,27 @@ body {{
 }}
 
 .info-card-header i {{
-    color: var(--primary-color);
+    color: #1a73e8;
     font-size: 20px;
 }}
 
 .info-card-header h6 {{
     margin: 0;
-    color: #2c3e50;
-    font-weight: 600;
+    color: #0f172a;
+    font-weight: 700;
     font-size: 14px;
 }}
 
 .info-value {{
-    font-size: 24px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.35rem;
 }}
 
 .info-description {{
     font-size: 12px;
-    color: #999;
+    color: #94a3b8;
 }}
 
 /* Bottom Sections */
@@ -829,6 +982,215 @@ body {{
 
 .progress-link:hover {{
     text-decoration: underline;
+}}
+
+/* Dashboard Widgets */
+.section-title-bar {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}}
+
+.dashboard-hero {{
+    background: linear-gradient(135deg, #f2f6ff 0%, #dbe8ff 100%);
+    border-radius: 18px;
+    padding: 1.5rem;
+    border: 1px solid #e3ebff;
+    box-shadow: 0 10px 30px rgba(25, 118, 210, 0.08);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}}
+
+.dashboard-hero .hero-label {{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(33, 150, 243, 0.12);
+    color: #1565c0;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+}}
+
+.dashboard-hero h3 {{
+    margin: 0.5rem 0;
+    font-weight: 800;
+    color: #0f172a;
+}}
+
+.dashboard-hero p {{
+    color: #4b5563;
+    margin: 0;
+    line-height: 1.7;
+}}
+
+.hero-meta {{
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}}
+
+.meta-chip {{
+    padding: 0.35rem 0.75rem;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px dashed #cbd5e1;
+    color: #0f172a;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}}
+
+.stat-stack {{
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}}
+
+.stat-circle {{
+    width: 78px;
+    height: 78px;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #1a73e8 0%, #0d47a1 100%);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 26px;
+    box-shadow: 0 12px 30px rgba(13, 71, 161, 0.3);
+}}
+
+.stat-note {{
+    font-size: 13px;
+    color: #1f2937;
+    display: grid;
+    gap: 0.15rem;
+}}
+
+.dashboard-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}}
+
+.summary-card {{
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.2rem;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}}
+
+.summary-card:hover {{
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}}
+
+.summary-card .icon-badge {{
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: 0.5rem;
+}}
+
+.summary-card .label {{
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 600;
+}}
+
+.summary-card .value {{
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0.15rem 0;
+}}
+
+.summary-card .desc {{
+    color: #9ca3af;
+    font-size: 12px;
+    margin: 0;
+}}
+
+.summary-card.primary {{
+    border-color: rgba(102, 126, 234, 0.35);
+}}
+
+.summary-card.primary .icon-badge {{
+    background: linear-gradient(135deg, #009ef7 0%, #1a5ed8 100%);
+    box-shadow: 0 8px 20px rgba(0, 158, 247, 0.3);
+}}
+
+.summary-card.success {{
+    border-color: rgba(39, 174, 96, 0.35);
+}}
+
+.summary-card.success .icon-badge {{
+    background: linear-gradient(135deg, #0bb783 0%, #1bc5bd 100%);
+    box-shadow: 0 8px 20px rgba(27, 197, 189, 0.26);
+}}
+
+.summary-card.warning {{
+    border-color: rgba(255, 193, 7, 0.35);
+}}
+
+.summary-card.warning .icon-badge {{
+    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    box-shadow: 0 8px 20px rgba(243, 156, 18, 0.25);
+}}
+
+.summary-card.info {{
+    border-color: rgba(52, 152, 219, 0.35);
+}}
+
+.summary-card.info .icon-badge {{
+    background: linear-gradient(135deg, #50cd89 0%, #1da1f2 100%);
+    box-shadow: 0 8px 20px rgba(80, 205, 137, 0.26);
+}}
+
+.action-card {{
+    background: white;
+    border-radius: 14px;
+    padding: 1.25rem;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}}
+
+.action-card .list-group {{
+    margin-bottom: 0;
+}}
+
+.action-card .list-group-item {{
+    border: none;
+    padding: 0.8rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: #111827;
+}}
+
+.action-card .list-group-item + .list-group-item {{
+    border-top: 1px solid #f1f5f9;
+}}
+
+.action-card .list-group-item i {{
+    color: var(--primary-color);
 }}
 
 /* Responsive */

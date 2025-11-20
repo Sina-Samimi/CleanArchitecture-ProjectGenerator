@@ -1,0 +1,454 @@
+/* Teacher Panel Customizations - Based on admin.css */
+
+:root {
+    --app-teacher-primary: #f59e0b;
+    --app-teacher-primary-strong: #d97706;
+    --app-teacher-secondary: #fb923c;
+    --app-teacher-accent: rgba(245, 158, 11, 0.12);
+    --app-teacher-gradient: linear-gradient(135deg, #f59e0b, #fb923c);
+}
+
+body.app-body--teacher {
+    background:
+        radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 55%),
+        radial-gradient(circle at bottom left, rgba(251, 146, 60, 0.15), transparent 60%),
+        var(--app-body-bg);
+}
+
+.app-body--teacher .app-aside {
+    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+    border-inline-end-color: rgba(245, 158, 11, 0.12);
+}
+
+.app-body--teacher .app-brand__logo {
+    background: linear-gradient(135deg, #fde68a, #fbbf24);
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .app-user--profile {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 146, 60, 0.06));
+}
+
+.app-body--teacher .app-user__avatar .avatar {
+    box-shadow: 0 16px 35px rgba(245, 158, 11, 0.25);
+}
+
+.app-body--teacher .app-user__meta i {
+    color: var(--app-teacher-primary);
+}
+
+.app-body--teacher .app-progress__value {
+    background: var(--app-teacher-gradient);
+}
+
+.app-body--teacher .app-menu__link:hover,
+.app-body--teacher .app-menu__link:focus {
+    color: var(--app-teacher-primary);
+    background: var(--app-teacher-accent);
+}
+
+.app-body--teacher .app-menu__link:hover::before,
+.app-body--teacher .app-menu__link.is-active::before {
+    background: var(--app-teacher-gradient);
+}
+
+.app-body--teacher .app-menu__link.is-active {
+    color: var(--app-teacher-primary);
+    background: rgba(245, 158, 11, 0.16);
+    box-shadow: inset 0 1px 0 rgba(245, 158, 11, 0.15);
+}
+
+.app-body--teacher .app-quick-link:hover,
+.app-body--teacher .app-quick-link:focus {
+    background: var(--app-teacher-accent);
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .app-quick-link__icon {
+    background: var(--app-teacher-accent);
+}
+
+.app-body--teacher .avatar.text-bg-primary {
+    background: var(--app-teacher-accent) !important;
+    color: var(--app-teacher-primary-strong) !important;
+}
+
+.app-body--teacher .btn-primary {
+    background: var(--app-teacher-gradient);
+    border: none;
+    box-shadow: 0 18px 36px rgba(245, 158, 11, 0.3);
+}
+
+.app-body--teacher .btn-primary:hover,
+.app-body--teacher .btn-primary:focus {
+    background: linear-gradient(135deg, #d97706, #ea580c);
+    box-shadow: 0 22px 44px rgba(217, 119, 6, 0.4);
+}
+
+.app-body--teacher .btn-outline-primary {
+    border-color: var(--app-teacher-primary);
+    color: var(--app-teacher-primary);
+}
+
+.app-body--teacher .btn-outline-primary:hover,
+.app-body--teacher .btn-outline-primary:focus {
+    background: var(--app-teacher-primary);
+    border-color: var(--app-teacher-primary);
+    color: #ffffff;
+}
+
+.app-body--teacher .notification-dot {
+    background: #f59e0b;
+}
+
+.app-body--teacher .app-header {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+}
+
+.app-body--teacher .app-greeting__title {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .profile-hero__eyebrow {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .profile-hero__meta-item i {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .profile-stat__note {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .profile-progress__bar .progress-bar {
+    background: var(--app-teacher-primary);
+}
+
+.app-body--teacher .profile-tips i {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .profile-support i {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .metric-card--primary .metric-card__icon {
+    background: var(--app-teacher-gradient);
+}
+
+.app-body--teacher .badge-solid--primary {
+    background: var(--app-teacher-primary);
+}
+
+.app-body--teacher .app-alert--info {
+    --app-alert-ring: #f59e0b;
+    --app-alert-confirm-bg: #d97706;
+    --app-alert-confirm-hover: #b45309;
+}
+
+.app-body--teacher a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link) {
+    color: var(--app-teacher-primary);
+}
+
+.app-body--teacher a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link):hover,
+.app-body--teacher a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link):focus {
+    color: var(--app-teacher-primary-strong);
+}
+
+.app-body--teacher .form-control:focus,
+.app-body--teacher .form-select:focus {
+    border-color: var(--app-teacher-primary);
+    box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+}
+
+.app-body--teacher .text-primary {
+    color: var(--app-teacher-primary) !important;
+}
+
+.app-body--teacher .bg-primary {
+    background-color: var(--app-teacher-primary) !important;
+}
+
+.app-body--teacher .border-primary {
+    border-color: var(--app-teacher-primary) !important;
+}
+
+/* Avatar size controls for Teacher Panel */
+.app-body--teacher .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--app-teacher-primary-strong);
+    background: var(--app-teacher-accent);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.app-body--teacher .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.app-body--teacher .avatar-lg {
+    width: 52px;
+    height: 52px;
+    border-radius: 1.1rem;
+    font-size: 1.2rem;
+}
+
+.app-body--teacher .avatar-md {
+    width: 44px;
+    height: 44px;
+    border-radius: 1rem;
+    font-size: 1rem;
+}
+
+.app-body--teacher .avatar-sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.9rem;
+    font-size: 0.85rem;
+}
+
+/* Teacher profile specific avatar */
+.app-body--teacher .app-user__avatar .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 1.5rem;
+    font-size: 1.5rem;
+}
+
+/* Profile hero avatar */
+.app-body--teacher .profile-hero__avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 1.75rem;
+    font-size: 1.75rem;
+}
+
+.app-body--teacher .profile-hero__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Teacher Stat Cards */
+.teacher-stat-card {
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.teacher-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15) !important;
+}
+
+.teacher-stat-card .card-body {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+}
+
+.teacher-stat-card__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.teacher-stat-card__label {
+    font-size: 0.9rem;
+    color: var(--app-muted);
+    margin-bottom: 0.5rem;
+}
+
+.teacher-stat-card__value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--app-text);
+    margin-bottom: 0.25rem;
+}
+
+.teacher-stat-card__value--sm {
+    font-size: 1.5rem;
+}
+
+.teacher-stat-card__hint {
+    font-size: 0.85rem;
+    color: var(--app-muted);
+    margin: 0;
+}
+
+/* Teacher Product Grid */
+.teacher-product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.teacher-product-card {
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+}
+
+.teacher-product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15) !important;
+}
+
+.teacher-product-card__media {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+.teacher-product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.teacher-product-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--app-muted);
+    font-size: 0.9rem;
+}
+
+.teacher-product-card__placeholder i {
+    font-size: 2.5rem;
+}
+
+.teacher-product-card__status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    backdrop-filter: blur(8px);
+}
+
+.teacher-product-card__body {
+    padding: 1.25rem;
+}
+
+.teacher-product-card__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.teacher-product-card__title h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.teacher-product-card__type {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.teacher-product-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: var(--app-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.85rem;
+}
+
+.teacher-product-card__category,
+.teacher-product-card__price {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.teacher-product-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.teacher-product-card__tag {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: rgba(15, 23, 42, 0.06);
+    color: var(--app-muted);
+}
+
+.teacher-product-card__tag--empty {
+    font-style: italic;
+}
+
+.teacher-product-card__footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.teacher-product-card__dates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.teacher-product-card__date {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--app-text);
+}
+
+@media (max-width: 767.98px) {
+    .teacher-product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-stat-card .card-body {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .teacher-stat-card__icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.3rem;
+    }
+}
