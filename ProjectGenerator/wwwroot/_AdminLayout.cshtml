@@ -1,0 +1,328 @@
+@using System
+@using System.Text.Json
+@using Microsoft.AspNetCore.Http
+@{
+    var title = ViewData["Title"] as string ?? "مدیریت سیستم";
+    var subtitle = ViewData["Subtitle"] as string;
+    var alertMessage = TempData["Alert.Message"] as string;
+    var alertTitle = TempData["Alert.Title"] as string;
+    var alertType = TempData["Alert.Type"] as string;
+    var alertConfirmText = TempData["Alert.ConfirmText"] as string;
+    var hasAlert = !string.IsNullOrWhiteSpace(alertMessage);
+    string alertJson = string.Empty;
+
+    if (hasAlert)
+    {
+        var payload = new
+        {
+            title = string.IsNullOrWhiteSpace(alertTitle) ? "اعلان سیستم" : alertTitle,
+            message = alertMessage,
+            type = string.IsNullOrWhiteSpace(alertType) ? "info" : alertType,
+            confirmText = string.IsNullOrWhiteSpace(alertConfirmText) ? "باشه" : alertConfirmText
+        };
+
+        alertJson = JsonSerializer.Serialize(payload);
+    }
+
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    var greetingInitial = (ViewData["GreetingInitial"] as string)?.Trim();
+    var greetingAvatarUrl = ViewData["GreetingAvatarUrl"] as string;
+    var greetingTitle = ViewData["GreetingTitle"] as string ?? "سلام، مدیر سیستم 👋";
+    var greetingSubtitle = ViewData["GreetingSubtitle"] as string ?? "به پنل مدیریت خوش آمدید";
+    var searchPlaceholder = ViewData["SearchPlaceholder"] as string ?? "جستجو در مدیریت";
+    var showSearch = ViewData["ShowSearch"] is bool showSearchValue ? showSearchValue : true;
+    var accountName = ViewData["AccountName"] as string ?? "مدیر سیستم";
+    var accountInitial = (ViewData["AccountInitial"] as string)?.Trim();
+    var accountAvatarUrl = ViewData["AccountAvatarUrl"] as string ?? greetingAvatarUrl;
+    var titleSuffix = ViewData["TitleSuffix"] as string ?? "بخش مدیریت";
+    var persianYear = DateTime.Now.ToPersianDateString().Split('/')[0];
+
+    var request = ViewContext?.HttpContext?.Request;
+    string? logoutReturnUrl = null;
+
+    if (request is not null && HttpMethods.IsGet(request.Method))
+    {
+        var candidate = request.Path.Value ?? string.Empty;
+
+        if (request.QueryString.HasValue)
+        {
+            candidate += request.QueryString.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(candidate) && Url.IsLocalUrl(candidate))
+        {
+            logoutReturnUrl = candidate;
+        }
+    }
+
+    if (string.IsNullOrEmpty(greetingInitial))
+    {
+        greetingInitial = "م";
+    }
+
+    if (string.IsNullOrEmpty(accountInitial))
+    {
+        accountInitial = greetingInitial;
+    }
+
+    var greetingAvatar = !string.IsNullOrWhiteSpace(greetingAvatarUrl) ? greetingAvatarUrl : accountAvatarUrl;
+    var hasGreetingSubtitle = !string.IsNullOrWhiteSpace(greetingSubtitle);
+    var hasAccountAvatar = !string.IsNullOrWhiteSpace(accountAvatarUrl);
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title - @titleSuffix</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+	<link href="~/css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/font/iransans/style.css" rel="stylesheet" />
+    <link href="/font/iransans/fontiran.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @RenderSection("Head", required: false)
+</head>
+<body class="app-body">
+    <div class="app-shell" id="appShell">
+        @await Component.InvokeAsync("AdminSidebar", new { currentArea, currentController, currentAction })
+        <button class="app-aside__handle d-lg-none" id="appAsideEdgeToggle" type="button" aria-controls="appAside" aria-expanded="false" aria-label="باز کردن منو">
+            <span class="visually-hidden">باز و بسته کردن منو</span>
+            <i class="bi bi-list" aria-hidden="true" data-icon-closed></i>
+            <i class="bi bi-x-lg" aria-hidden="true" data-icon-open></i>
+        </button>
+        <div class="app-aside__overlay" id="appAsideOverlay" data-app-aside-close></div>
+        <div class="app-content">
+            <header class="app-header" id="appHeader">
+                <div class="container-xxl">
+                    <div class="app-header__inner">
+                        <div class="app-header__start">
+                            <button class="btn btn-icon btn-ghost d-lg-none" id="appAsideToggle" type="button" aria-controls="appAside" aria-expanded="false" aria-label="باز کردن منو">
+                                <i class="bi bi-list"></i>
+                            </button>
+                            <div class="app-greeting">
+                                @if (!string.IsNullOrWhiteSpace(greetingAvatar))
+                                {
+                                    <span class="avatar avatar-lg">
+                                        <img src="@greetingAvatar" alt="@accountName" />
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="avatar avatar-lg text-bg-primary">@greetingInitial</span>
+                                }
+                                <div>
+                                    <div class="app-greeting__title">@greetingTitle</div>
+                                    @if (hasGreetingSubtitle)
+                                    {
+                                        <div class="app-greeting__subtitle">@greetingSubtitle</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-header__center">
+                            @if (showSearch)
+                            {
+                                <label class="app-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="search" class="form-control" placeholder="@searchPlaceholder" aria-label="@searchPlaceholder" />
+                                </label>
+                            }
+                        </div>
+                        <div class="app-header__end">
+                            <button class="btn btn-icon btn-ghost" type="button" aria-label="اعلان‌ها">
+                                <i class="bi bi-bell"></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                            <button class="btn btn-icon btn-ghost d-none d-md-inline-flex" type="button" aria-label="تنظیمات سریع">
+                                <i class="bi bi-sliders"></i>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @if (hasAccountAvatar)
+                                    {
+                                        <span class="avatar avatar-sm">
+                                            <img src="@accountAvatarUrl" alt="@accountName" />
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar avatar-sm text-bg-primary">@accountInitial</span>
+                                    }
+                                    <span class="d-none d-sm-inline">@accountName</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#">پروفایل</a></li>
+                                    <li><a class="dropdown-item" href="#">تنظیمات</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="dropdown-item-form">
+                                            @Html.AntiForgeryToken()
+                                            @if (!string.IsNullOrEmpty(logoutReturnUrl))
+                                            {
+                                                <input type="hidden" name="returnUrl" value="@logoutReturnUrl" />
+                                            }
+                                            <button type="submit" class="dropdown-item text-danger">خروج</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="app-toolbar" id="appToolbar">
+                <div class="container-xxl">
+                    <div class="app-toolbar__inner">
+                        <div>
+                            <div class="app-page-title">@title</div>
+                            @if (!string.IsNullOrWhiteSpace(subtitle))
+                            {
+                                <div class="app-page-subtitle">@subtitle</div>
+                            }
+                            @if (IsSectionDefined("Breadcrumb"))
+                            {
+                                <nav aria-label="مسیر دسترسی" class="app-breadcrumb">
+                                    <ol class="breadcrumb mb-0">
+                                        @RenderSection("Breadcrumb", required: false)
+                                    </ol>
+                                </nav>
+                            }
+                        </div>
+                        @if (IsSectionDefined("Toolbar"))
+                        {
+                            <div class="app-toolbar__actions">
+                                @RenderSection("Toolbar", required: false)
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <main class="app-main" id="appMain">
+                <div class="app-container container-xxl">
+                    @RenderBody()
+                </div>
+            </main>
+            <footer class="app-footer">
+                <div class="container-xxl">
+                    <div class="app-footer__inner">
+                        <span>&copy; @persianYear پلتفرم تحلیل استعداد آرسیس</span>
+                        <span>طراحی‌شده با الهام از مت‌رونیک</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    @await Html.PartialAsync("_AlertModal")
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const shell = document.getElementById('appShell');
+            const aside = document.getElementById('appAside');
+            const overlay = document.getElementById('appAsideOverlay');
+            const toggle = document.getElementById('appAsideToggle');
+            const dismissors = document.querySelectorAll('[data-app-aside-close]');
+            const menuGroups = aside ? aside.querySelectorAll('[data-menu-group]') : [];
+
+            const setGroupState = (group, expanded) => {
+                group.classList.toggle('is-open', expanded);
+                const button = group.querySelector('[data-menu-toggle]');
+                const submenu = group.querySelector('.app-submenu');
+                if (button) {
+                    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                }
+                if (submenu) {
+                    submenu.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+                    submenu.style.maxHeight = expanded ? `${submenu.scrollHeight}px` : '0px';
+                }
+            };
+
+            const openAside = () => {
+                if (!shell || !aside || !overlay) {
+                    return;
+                }
+                shell.classList.add('app-shell--aside-open');
+                aside.classList.add('is-open');
+                overlay.classList.add('is-active');
+            };
+
+            const closeAside = () => {
+                if (!shell || !aside || !overlay) {
+                    return;
+                }
+                shell.classList.remove('app-shell--aside-open');
+                aside.classList.remove('is-open');
+                overlay.classList.remove('is-active');
+            };
+
+            if (toggle) {
+                toggle.addEventListener('click', openAside);
+            }
+
+            dismissors.forEach(btn => btn.addEventListener('click', closeAside));
+
+            menuGroups.forEach(group => {
+                const button = group.querySelector('[data-menu-toggle]');
+                if (!button) {
+                    return;
+                }
+
+                const initialState = group.classList.contains('is-open');
+                setGroupState(group, initialState);
+
+                button.addEventListener('click', () => {
+                    const willOpen = !group.classList.contains('is-open');
+                    menuGroups.forEach(other => {
+                        if (other !== group) {
+                            setGroupState(other, false);
+                        }
+                    });
+                    setGroupState(group, willOpen);
+                });
+            });
+
+            if (aside) {
+                aside.querySelectorAll('a.app-menu__link, a.app-submenu__link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (window.innerWidth < 992) {
+                            closeAside();
+                        }
+                    });
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
+                    closeAside();
+                }
+
+                menuGroups.forEach(group => {
+                    if (group.classList.contains('is-open')) {
+                        const submenu = group.querySelector('.app-submenu');
+                        if (submenu) {
+                            submenu.style.maxHeight = `${submenu.scrollHeight}px`;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    @if (hasAlert && !string.IsNullOrEmpty(alertJson))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.AppAlert) {
+                    window.AppAlert.show(@Html.Raw(alertJson));
+                }
+            });
+        </script>
+    }
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
