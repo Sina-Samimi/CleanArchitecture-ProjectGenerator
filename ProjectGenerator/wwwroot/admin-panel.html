@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>پنل مدیریت</title>
+    <link rel="stylesheet" href="css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="css/bootstrap-icons.css" />
+    <link rel="stylesheet" href="font/iransans/style.css" />
+    <link rel="stylesheet" href="font/iransans/fontiran.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="css/admin/users-index.css" />
+</head>
+<body class="app-body">
+    <div class="app-shell">
+        <aside class="app-aside" id="appAside" aria-label="منوی مدیریت">
+            <div class="app-aside__brand">
+                <span class="avatar avatar-md text-bg-primary">م</span>
+                <div>
+                    <div class="fw-bold">آرسیس تست</div>
+                    <small class="text-muted">پنل مدیریت</small>
+                </div>
+            </div>
+            <nav class="app-aside__nav">
+                <a class="app-aside__link is-active" href="#"><i class="bi bi-people"></i><span>کاربران</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-grid"></i><span>دسته‌بندی‌ها</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-receipt"></i><span>سفارش‌ها</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-gear"></i><span>تنظیمات</span></a>
+            </nav>
+        </aside>
+
+        <div class="app-content">
+            <header class="app-header">
+                <div class="container-xxl">
+                    <div class="app-header__inner">
+                        <div class="app-header__start">
+                            <div class="app-greeting">
+                                <span class="avatar avatar-lg text-bg-primary">س</span>
+                                <div>
+                                    <div class="app-greeting__title">سلام، مدیر سیستم 👋</div>
+                                    <div class="app-greeting__subtitle">به پنل مدیریت خوش آمدید</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-header__center">
+                            <label class="app-search">
+                                <i class="bi bi-search"></i>
+                                <input type="search" class="form-control" placeholder="جستجو در مدیریت" aria-label="جستجو" />
+                            </label>
+                        </div>
+                        <div class="app-header__end">
+                            <button class="btn btn-icon btn-ghost" type="button" aria-label="اعلان‌ها">
+                                <i class="bi bi-bell"></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="avatar avatar-sm text-bg-primary">م</span>
+                                    <span class="d-none d-sm-inline">مدیر سیستم</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#">پروفایل</a></li>
+                                    <li><a class="dropdown-item" href="#">تنظیمات</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item text-danger" href="#">خروج</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-toolbar">
+                <div class="container-xxl">
+                    <div class="app-toolbar__inner">
+                        <div>
+                            <div class="app-page-title">مدیریت کاربران</div>
+                            <div class="app-page-subtitle">مرور وضعیت ثبت‌نام و فعالیت کاربران</div>
+                        </div>
+                        <div class="app-toolbar__actions">
+                            <button class="btn btn-outline-secondary"><i class="bi bi-sliders"></i> فیلترها</button>
+                            <button class="btn btn-primary"><i class="bi bi-plus-lg"></i> کاربر جدید</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main class="app-main">
+                <div class="container-xxl">
+                    <div class="metrics-grid">
+                        <article class="metric-card metric-card--primary">
+                            <div class="metric-card__top">
+                                <div class="metric-card__heading">
+                                    <span class="metric-card__title">کل کاربران</span>
+                                    <span class="metric-card__subtitle">آخرین ۳۰ روز</span>
+                                </div>
+                                <div class="metric-card__meta">
+                                    <span class="metric-card__badge">+12%</span>
+                                    <span class="metric-card__icon"><i class="bi bi-people"></i></span>
+                                </div>
+                            </div>
+                            <div class="metric-card__value">12,480</div>
+                            <div class="metric-card__hint">۴,۳۲۰ کاربر جدید</div>
+                            <div class="metric-card__footer">
+                                <span class="metric-card__chip metric-card__chip--positive">
+                                    <i class="bi bi-person-check"></i>
+                                    9,240 فعال
+                                </span>
+                                <span class="metric-card__chip metric-card__chip--muted">
+                                    <i class="bi bi-hourglass"></i>
+                                    620 منتظر تایید
+                                </span>
+                            </div>
+                        </article>
+                        <article class="metric-card metric-card--success">
+                            <div class="metric-card__top">
+                                <div class="metric-card__heading">
+                                    <span class="metric-card__title">احراز هویت</span>
+                                    <span class="metric-card__subtitle">پیشرفت فرآیند</span>
+                                </div>
+                                <div class="metric-card__meta">
+                                    <span class="metric-card__badge metric-card__badge--success">78%</span>
+                                    <span class="metric-card__icon"><i class="bi bi-shield-check"></i></span>
+                                </div>
+                            </div>
+                            <div class="metric-card__value">245</div>
+                            <div class="metric-card__hint">در انتظار تایید نهایی</div>
+                            <div class="metric-card__footer">
+                                <span class="metric-card__chip metric-card__chip--positive">
+                                    <i class="bi bi-check-circle"></i>
+                                    1,220 تایید شده
+                                </span>
+                                <span class="metric-card__chip metric-card__chip--muted">
+                                    <i class="bi bi-clock"></i>
+                                    85 در صف بررسی
+                                </span>
+                            </div>
+                        </article>
+                        <article class="metric-card metric-card--danger">
+                            <div class="metric-card__top">
+                                <div class="metric-card__heading">
+                                    <span class="metric-card__title">کاربران حذف‌شده</span>
+                                    <span class="metric-card__subtitle">در دسترس برای بازیابی</span>
+                                </div>
+                                <div class="metric-card__meta">
+                                    <span class="metric-card__badge metric-card__badge--danger">5%</span>
+                                    <span class="metric-card__icon"><i class="bi bi-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="metric-card__value">315</div>
+                            <div class="metric-card__hint">حساب‌های غیرفعال‌شده توسط مدیر</div>
+                            <div class="metric-card__footer">
+                                <span class="metric-card__chip metric-card__chip--danger">
+                                    <i class="bi bi-trash3"></i>
+                                    210 حذف‌شده
+                                </span>
+                                <span class="metric-card__chip metric-card__chip--muted">
+                                    <i class="bi bi-shield-check"></i>
+                                    95 نگهداشت
+                                </span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="users-card app-card">
+                        <div class="users-card__header">
+                            <div>
+                                <h2 class="users-card__title">لیست کاربران</h2>
+                                <span class="users-card__subtitle">نمایش 8 کاربر نمونه</span>
+                            </div>
+                            <div class="users-card__actions">
+                                <div class="users-card__buttons">
+                                    <button type="button" class="btn-action"><i class="bi bi-funnel me-1"></i> فیلتر</button>
+                                    <button type="button" class="btn-action"><i class="bi bi-box-arrow-up me-1"></i> خروجی</button>
+                                    <button type="button" class="btn-action"><i class="bi bi-person-plus-fill me-1"></i> افزودن کاربر</button>
+                                </div>
+                                <div class="users-card__search">
+                                    <label class="app-search app-search--pill">
+                                        <i class="bi bi-search"></i>
+                                        <input type="search" class="form-control" placeholder="جستجو بر اساس نام، ایمیل یا نقش" aria-label="جستجوی کاربران" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table users-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">کاربر</th>
+                                        <th scope="col">نقش/موقعیت</th>
+                                        <th scope="col">وضعیت</th>
+                                        <th scope="col">آخرین تغییر</th>
+                                        <th scope="col" class="text-end">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="users-table__user">
+                                                <span class="avatar avatar-md">
+                                                    <img src="https://i.pravatar.cc/80?img=32" alt="نیلوفر امانی" />
+                                                </span>
+                                                <div>
+                                                    <div class="users-table__name">نیلوفر امانی</div>
+                                                    <div class="users-table__email">niloufar@example.com</div>
+                                                    <div class="users-table__phone">09121234567</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="users-role">مدیر ارشد</div>
+                                            <div class="users-role">پشتیبانی</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-chip badge-chip--success"><i class="bi bi-check-circle"></i> فعال</span>
+                                            <div class="text-muted small">آخرین ورود: ۱۴۰۳/۰۸/۱۲</div>
+                                        </td>
+                                        <td>
+                                            <div class="users-table__date">۱۴۰۳/۰۸/۱۲ - ۱۰:۲۲</div>
+                                            <div class="text-muted small">تغییر نقش توسط مدیر</div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary">ویرایش</button>
+                                                <button class="btn btn-sm btn-outline-secondary">غیرفعال</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="users-table__user">
+                                                <span class="avatar avatar-md text-bg-secondary">س</span>
+                                                <div>
+                                                    <div class="users-table__name">سعید رستگار</div>
+                                                    <div class="users-table__email">saeed@example.com</div>
+                                                    <div class="users-table__phone">09124567891</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="users-role">کارشناس محتوا</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-chip badge-chip--pending"><i class="bi bi-slash-circle"></i> غیرفعال</span>
+                                            <div class="text-muted small">آخرین تغییر: ۱۴۰۳/۰۸/۰۵</div>
+                                        </td>
+                                        <td>
+                                            <div class="users-table__date">۱۴۰۳/۰۸/۰۵ - ۱۷:۴۰</div>
+                                            <div class="text-muted small">توقف دسترسی موقت</div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary">ویرایش</button>
+                                                <button class="btn btn-sm btn-outline-secondary">فعال‌سازی</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="users-table__user">
+                                                <span class="avatar avatar-md text-bg-danger">م</span>
+                                                <div>
+                                                    <div class="users-table__name">مینا مرادی</div>
+                                                    <div class="users-table__email">mina@example.com</div>
+                                                    <div class="users-table__phone">09129876543</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="users-role">پشتیبان</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-chip badge-chip--danger"><i class="bi bi-trash"></i> حذف شده</span>
+                                            <div class="text-muted small">آخرین تغییر: ۱۴۰۳/۰۷/۲۸</div>
+                                        </td>
+                                        <td>
+                                            <div class="users-table__date">۱۴۰۳/۰۷/۲۸ - ۱۲:۱۰</div>
+                                            <div class="text-muted small">حذف توسط مدیر</div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary">بازیابی</button>
+                                                <button class="btn btn-sm btn-outline-secondary">جزئیات</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,208 +1,225 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-bs-theme="light">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>پروفایل کاربری | پنل مدرن</title>
-    <link rel="stylesheet" href="css/site.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/user.css">
-    <link rel="stylesheet" href="css/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/panel-preview.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>پنل کاربری</title>
+    <link rel="stylesheet" href="css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="css/bootstrap-icons.css" />
+    <link rel="stylesheet" href="font/iransans/style.css" />
+    <link rel="stylesheet" href="font/iransans/fontiran.css" />
+    <link rel="stylesheet" href="css/admin.css" />
 </head>
-<body class="app-body app-body--user panel-demo">
-    <div class="panel-shell">
-        <header class="panel-header">
-            <div class="panel-title">
-                <span class="panel-title__icon">
-                    <i class="bi bi-person-check"></i>
-                </span>
-                <div>
-                    <div class="text-muted fw-semibold">پنل کاربران</div>
-                    <div>نمای کلی پروفایل شخصی</div>
-                </div>
-            </div>
-            <div class="panel-actions">
-                <button class="panel-button panel-button--ghost"><i class="bi bi-chat-left-text"></i> پیام مستقیم</button>
-                <button class="panel-button panel-button--primary"><i class="bi bi-plus-lg"></i> ایجاد کاربر</button>
-            </div>
-        </header>
-
-        <div class="panel-grid">
-            <div class="panel-stack">
-                <section class="panel-card panel-hero">
-                    <span class="panel-hero__eyebrow"><i class="bi bi-person-circle"></i> پروفایل کاربران</span>
-                    <div class="panel-hero__content">
-                        <div class="panel-user">
-                            <div class="panel-user__avatar">
-                                <img src="https://i.pravatar.cc/160?img=68" alt="تصویر پروفایل">
-                            </div>
-                            <div>
-                                <div class="panel-user__name">سینا صمیمی</div>
-                                <div class="panel-user__meta">
-                                    <div><i class="bi bi-envelope"></i> samimisina7@gmail.com</div>
-                                    <div><i class="bi bi-telephone"></i> 09307227997</div>
-                                    <div><i class="bi bi-gem"></i> کاربر ویژه</div>
-                                    <div><i class="bi bi-calendar-week"></i> عضویت از 1402/08/05</div>
-                                </div>
-                                <div class="panel-actions" style="margin-top: 0.9rem;">
-                                    <button class="panel-button panel-button--primary"><i class="bi bi-box-arrow-up-right"></i> جزئیات حساب</button>
-                                    <button class="panel-button panel-button--ghost"><i class="bi bi-arrow-repeat"></i> بروزرسانی پروفایل</button>
+<body class="app-body">
+    <div class="app-shell">
+        <div class="app-content w-100">
+            <header class="app-header">
+                <div class="container-xxl">
+                    <div class="app-header__inner">
+                        <div class="app-header__start">
+                            <div class="app-greeting">
+                                <span class="avatar avatar-lg text-bg-primary">ک</span>
+                                <div>
+                                    <div class="app-greeting__title">سلام، کاربر جدید 👋</div>
+                                    <div class="app-greeting__subtitle">پروفایل خود را کامل نگه دارید</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="panel-card" style="background: #f9fdfa; border-style: dashed;">
-                            <div class="panel-section-title">اقدامات سریع</div>
-                            <div class="info-list">
-                                <div class="info-item">
-                                    <i class="bi bi-person-vcard"></i>
-                                    <div>
-                                        <div class="info-item__label">شماره شناسایی حساب</div>
-                                        <div class="info-item__value">2345435</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-shield-check"></i>
-                                    <div>
-                                        <div class="info-item__label">احراز هویت</div>
-                                        <div class="info-item__value">تأیید شده و فعال</div>
-                                    </div>
-                                </div>
-                                <div class="info-item">
-                                    <i class="bi bi-gear"></i>
-                                    <div>
-                                        <div class="info-item__label">مدیریت نقش‌ها</div>
-                                        <div class="info-item__value">ادمین / فروشنده / کاربر ویژه</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">آمار کاربر</div>
-                    <div class="metric-row">
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-calendar-check"></i></div>
-                            <div>
-                                <div class="metric__value">1408/01/18</div>
-                                <div class="metric__label">تاریخ ایجاد حساب</div>
-                            </div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-person-badge"></i></div>
-                            <div>
-                                <div class="metric__value">14</div>
-                                <div class="metric__label">درخواست‌های باز</div>
-                            </div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric__icon"><i class="bi bi-check-circle"></i></div>
-                            <div>
-                                <div class="metric__value">100%</div>
-                                <div class="metric__label">سطح فعالیت</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="panel-card">
-                    <div class="panel-section-title">پروفایل اطلاعات تکمیلی</div>
-                    <div class="detail-grid">
-                        <div class="detail-item">سینا صمیمی<span>نام</span></div>
-                        <div class="detail-item">#58399374<span>کد ملی</span></div>
-                        <div class="detail-item">استان تهران<span>کشور/استان</span></div>
-                        <div class="detail-item">تهران<span>شهر</span></div>
-                        <div class="detail-item">رهنما بازرگان<span>مجموعه</span></div>
-                        <div class="detail-item">samimisina7@gmail.com<span>ایمیل</span></div>
-                        <div class="detail-item">28 سال<span>سن</span></div>
-                        <div class="detail-item">کارمند<span>شغل</span></div>
-                        <div class="detail-item">گروه حسابداری<span>دپارتمان</span></div>
-                        <div class="detail-item">تهران، میدان ولیعصر<span>آدرس</span></div>
-                    </div>
-                </section>
-            </div>
-
-            <aside class="side-card">
-                <div class="side-profile">
-                    <div class="side-profile__avatar">
-                        <img src="https://i.pravatar.cc/160?img=65" alt="پروفایل کاربر">
-                    </div>
-                    <div class="side-profile__name">سینا صمیمی</div>
-                    <div class="side-profile__meta">
-                        <span>کارمند</span>
-                        <span>samimisina7@gmail.com</span>
-                        <span>09307227997</span>
-                    </div>
-                    <div class="text-muted small">سطح دسترسی</div>
-                    <div class="progress-track" aria-label="پیشرفت دسترسی">
-                        <div class="progress-track__bar" style="width: 74%"></div>
-                    </div>
-                    <div class="info-list" style="margin-top: 0.9rem;">
-                        <div class="info-item">
-                            <i class="bi bi-person-vcard"></i>
-                            <div>
-                                <div class="info-item__label">اطلاعات تأیید شده</div>
-                                <div class="info-item__value">کارت ملی</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-file-earmark-text"></i>
-                            <div>
-                                <div class="info-item__label">سندهای تایید</div>
-                                <div class="info-item__value">ثبت شده</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-shield-lock"></i>
-                            <div>
-                                <div class="info-item__label">احراز هویت</div>
-                                <div class="info-item__value">حساب تایید شده</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-actions" style="justify-content: center; margin-top: 0.75rem;">
-                        <button class="panel-button panel-button--ghost"><i class="bi bi-pen"></i> ویرایش کاربر</button>
-                        <button class="panel-button panel-button--primary"><i class="bi bi-star"></i> ارتقا به کاربر ویژه</button>
-                    </div>
-                </div>
-
-                <div class="panel-card">
-                    <div class="panel-section-title">اطلاعات ورود</div>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <i class="bi bi-clock-history"></i>
-                            <div>
-                                <div class="info-item__label">آخرین ورود</div>
-                                <div class="info-item__value">16/06/18</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-geo-alt"></i>
-                            <div>
-                                <div class="info-item__label">ورود فعلی</div>
-                                <div class="info-item__value">تهران</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-terminal"></i>
-                            <div>
-                                <div class="info-item__label">سیستم ورود</div>
-                                <div class="info-item__value">ویندوز 10</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <i class="bi bi-phone"></i>
-                            <div>
-                                <div class="info-item__label">تعداد دستگاه فعال</div>
-                                <div class="info-item__value">2</div>
-                            </div>
+                        <div class="app-header__center"></div>
+                        <div class="app-header__end">
+                            <button class="btn btn-icon btn-ghost" type="button" aria-label="اعلان‌ها">
+                                <i class="bi bi-bell"></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" type="button">
+                                <i class="bi bi-pencil-square"></i>
+                                ویرایش سریع
+                            </button>
                         </div>
                     </div>
                 </div>
-            </aside>
+            </header>
+
+            <div class="app-toolbar">
+                <div class="container-xxl">
+                    <div class="app-toolbar__inner">
+                        <div>
+                            <div class="app-page-title">پنل کاربری</div>
+                            <div class="app-page-subtitle">نمای کلی از اطلاعات حساب</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main class="app-main">
+                <div class="container-xxl">
+                    <div class="profile-dashboard" data-profile>
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="app-card profile-hero">
+                                    <div class="profile-hero__top">
+                                        <div class="profile-hero__identity">
+                                            <div class="profile-hero__avatar" aria-hidden="true">
+                                                <span>ک</span>
+                                            </div>
+                                            <div>
+                                                <span class="profile-hero__eyebrow">پنل کاربری</span>
+                                                <h1 class="profile-hero__title">کاربر نمونه</h1>
+                                                <div class="profile-hero__meta" aria-label="اطلاعات تماس">
+                                                    <div class="profile-hero__meta-item">
+                                                        <i class="bi bi-envelope"></i>
+                                                        <span>user@example.com</span>
+                                                    </div>
+                                                    <div class="profile-hero__meta-item">
+                                                        <i class="bi bi-phone"></i>
+                                                        <span>09120000000</span>
+                                                    </div>
+                                                </div>
+                                                <div class="profile-hero__timeline">
+                                                    <div>
+                                                        <span>عضویت از</span>
+                                                        <strong>۱۴۰۳/۰۵/۲۰</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>آخرین بروزرسانی</span>
+                                                        <strong>۱۴۰۳/۰۸/۱۰</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="profile-hero__actions">
+                                            <a class="btn btn-primary" style="color:white" href="#">
+                                                <i class="bi bi-pencil-square"></i>
+                                                <span>ویرایش پروفایل</span>
+                                            </a>
+                                            <a class="btn btn-outline-primary" href="#">
+                                                <i class="bi bi-card-list"></i>
+                                                <span>جزئیات حساب</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 profile-hero__stats" aria-label="آمار حساب">
+                                        <div class="col-12 col-md-4">
+                                            <div class="profile-stat">
+                                                <span class="profile-stat__label">درصد تکمیل</span>
+                                                <strong class="profile-stat__value">78%</strong>
+                                                <small class="profile-stat__note">رو به تکمیل</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="profile-stat">
+                                                <span class="profile-stat__label">روزهای همراهی</span>
+                                                <strong class="profile-stat__value">120</strong>
+                                                <small class="profile-stat__note">از ۱۴۰۳/۰۵/۲۰</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="profile-stat">
+                                                <span class="profile-stat__label">آخرین ورود</span>
+                                                <strong class="profile-stat__value">۱۴۰۳/۰۸/۱۰</strong>
+                                                <small class="profile-stat__note">ورود با کد یک‌بارمصرف</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-8">
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <div class="app-card profile-card profile-card--form">
+                                            <div class="profile-card__header">
+                                                <div>
+                                                    <h2>به‌روزرسانی اطلاعات کاربری</h2>
+                                                    <p>اطلاعات حساب خود را تازه نگه دارید تا گزارش‌های استعداد دقیق‌تری دریافت کنید.</p>
+                                                </div>
+                                                <span class="profile-card__timestamp">آخرین ویرایش: ۱۴۰۳/۰۸/۱۰</span>
+                                            </div>
+
+                                            <form class="profile-form">
+                                                <div class="row g-4 align-items-start">
+                                                    <div class="col-12 col-md-4">
+                                                        <label class="form-label">تصویر پروفایل</label>
+                                                        <div class="profile-avatar-upload">
+                                                            <div class="profile-avatar-upload__preview">
+                                                                <span>ک</span>
+                                                            </div>
+                                                            <input type="file" class="form-control" />
+                                                            <small class="text-muted d-block mt-2">فرمت‌های مجاز: png, jpg, jpeg, webp - حداکثر 2 مگابایت</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-md-8">
+                                                        <div class="row g-3">
+                                                            <div class="col-12">
+                                                                <label class="form-label">نام و نام خانوادگی</label>
+                                                                <input class="form-control" value="کاربر نمونه" />
+                                                            </div>
+                                                            <div class="col-12 col-md-6">
+                                                                <label class="form-label">ایمیل</label>
+                                                                <input class="form-control" value="user@example.com" />
+                                                            </div>
+                                                            <div class="col-12 col-md-6">
+                                                                <label class="form-label">شماره تماس</label>
+                                                                <input class="form-control" value="09120000000" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="profile-form__footer">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span class="badge rounded-pill text-bg-success">تایید شده</span>
+                                                        <span class="text-muted">آخرین ورود: ۱۴۰۳/۰۸/۱۰</span>
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-outline-secondary">انصراف</button>
+                                                        <button type="button" class="btn btn-primary">ذخیره تغییرات</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-4">
+                                <div class="app-card profile-card">
+                                    <div class="profile-card__header">
+                                        <div>
+                                            <h2>جزئیات حساب</h2>
+                                            <p>گزارش سریع از وضعیت حساب شما.</p>
+                                        </div>
+                                    </div>
+                                    <div class="profile-summary">
+                                        <div class="profile-summary__item">
+                                            <span class="text-muted">سطح دسترسی</span>
+                                            <strong>کاربر تایید شده</strong>
+                                            <span class="badge bg-primary-subtle text-primary-emphasis">KYC تکمیل شده</span>
+                                        </div>
+                                        <div class="profile-summary__item">
+                                            <span class="text-muted">نوع حساب</span>
+                                            <strong>شخص حقیقی</strong>
+                                            <small class="text-muted">محدودیت ماهانه ۳۰ میلیون تومان</small>
+                                        </div>
+                                        <div class="profile-summary__item">
+                                            <span class="text-muted">آخرین دسترسی</span>
+                                            <strong>۱۴۰۳/۰۸/۱۰ - ۱۰:۱۵</strong>
+                                            <small class="text-muted">ورود از دستگاه وب</small>
+                                        </div>
+                                        <div class="profile-summary__item">
+                                            <span class="text-muted">وضعیت امنیت</span>
+                                            <strong>فعال</strong>
+                                            <small class="text-muted">احراز دو مرحله‌ای روشن</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
+
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>پنل فروشنده</title>
+    <link rel="stylesheet" href="css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="css/bootstrap-icons.css" />
+    <link rel="stylesheet" href="font/iransans/style.css" />
+    <link rel="stylesheet" href="font/iransans/fontiran.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="css/teacher/product-index.css" />
+</head>
+<body class="app-body">
+    <div class="app-shell">
+        <aside class="app-aside" aria-label="منوی فروشنده">
+            <div class="app-aside__brand">
+                <span class="avatar avatar-md text-bg-success">ف</span>
+                <div>
+                    <div class="fw-bold">فروشگاه آریانا</div>
+                    <small class="text-muted">پنل فروشندگان</small>
+                </div>
+            </div>
+            <nav class="app-aside__nav">
+                <a class="app-aside__link is-active" href="#"><i class="bi bi-box-seam"></i><span>محصولات</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-clipboard-check"></i><span>سفارش‌ها</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-cash-coin"></i><span>تسویه</span></a>
+                <a class="app-aside__link" href="#"><i class="bi bi-chat-dots"></i><span>پیام‌ها</span></a>
+            </nav>
+        </aside>
+
+        <div class="app-content">
+            <header class="app-header">
+                <div class="container-xxl">
+                    <div class="app-header__inner">
+                        <div class="app-header__start">
+                            <div class="app-greeting">
+                                <span class="avatar avatar-lg text-bg-success">الف</span>
+                                <div>
+                                    <div class="app-greeting__title">سلام، فروشنده عزیز 👋</div>
+                                    <div class="app-greeting__subtitle">وضعیت محصولات و درخواست‌ها را بررسی کنید</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-header__center">
+                            <label class="app-search">
+                                <i class="bi bi-search"></i>
+                                <input type="search" class="form-control" placeholder="جستجو در محصولات" aria-label="جستجو" />
+                            </label>
+                        </div>
+                        <div class="app-header__end">
+                            <button class="btn btn-icon btn-ghost" type="button" aria-label="اعلان‌ها">
+                                <i class="bi bi-bell"></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" type="button">
+                                <i class="bi bi-plus-lg"></i>
+                                درخواست محصول جدید
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="app-toolbar">
+                <div class="container-xxl">
+                    <div class="app-toolbar__inner">
+                        <div>
+                            <div class="app-page-title">محصولات ثبت‌شده</div>
+                            <div class="app-page-subtitle">وضعیت تایید و انتشار کالاها</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-success"><i class="bi bi-funnel"></i> فیلتر</button>
+                            <button class="btn btn-outline-secondary"><i class="bi bi-arrow-repeat"></i> ریست</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main class="app-main">
+                <div class="container-xxl">
+                    <div class="alert alert-primary-subtle border-0 shadow-sm d-flex flex-column flex-lg-row gap-3 align-items-lg-center justify-content-between mb-4">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="fw-semibold text-primary">فیلترهای فعال:</span>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">جستجو: واکسن</span>
+                            <span class="badge bg-info-subtle text-info-emphasis">نوع: دانلودی</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis">وضعیت: در انتظار تایید</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">حذف فیلترها</button>
+                    </div>
+
+                    <div class="table-responsive shadow-sm bg-white rounded-4 p-3">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">محصول</th>
+                                    <th scope="col">نوع</th>
+                                    <th scope="col">وضعیت</th>
+                                    <th scope="col">تاریخ بروزرسانی</th>
+                                    <th scope="col" class="text-end">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="product-thumb bg-light rounded-3 p-2">
+                                                <img src="https://via.placeholder.com/80x80" alt="دوره آموزش فروش" class="img-fluid rounded" />
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">دوره آموزش فروش پیشرفته</div>
+                                                <div class="text-muted small">کد محصول: PR-48201</div>
+                                                <div class="text-muted small">قیمت: ۸۹۰,۰۰۰ تومان</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-info-subtle text-info-emphasis">دانلودی</span></td>
+                                    <td><span class="badge bg-warning-subtle text-warning-emphasis">در انتظار تایید</span></td>
+                                    <td>
+                                        <div class="fw-semibold">۱۴۰۳/۰۸/۱۵</div>
+                                        <div class="text-muted small">آخرین ویرایش: ۱۰:۴۵</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-success">ویرایش</button>
+                                            <button class="btn btn-sm btn-outline-secondary">جزئیات</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="product-thumb bg-light rounded-3 p-2">
+                                                <img src="https://via.placeholder.com/80x80" alt="پکیج جامع بازاریابی" class="img-fluid rounded" />
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">پکیج جامع بازاریابی</div>
+                                                <div class="text-muted small">کد محصول: PR-30219</div>
+                                                <div class="text-muted small">قیمت: ۱,۵۹۰,۰۰۰ تومان</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-primary-subtle text-primary-emphasis">فیزیکی</span></td>
+                                    <td><span class="badge bg-success-subtle text-success-emphasis">منتشر شده</span></td>
+                                    <td>
+                                        <div class="fw-semibold">۱۴۰۳/۰۸/۱۲</div>
+                                        <div class="text-muted small">آخرین ویرایش: ۱۸:۲۵</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-success">ویرایش</button>
+                                            <button class="btn btn-sm btn-outline-secondary">مشاهده</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="product-thumb bg-light rounded-3 p-2">
+                                                <img src="https://via.placeholder.com/80x80" alt="دوره آموزش ارتباط" class="img-fluid rounded" />
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">کارگاه مهارت ارتباط موثر</div>
+                                                <div class="text-muted small">کد محصول: PR-11807</div>
+                                                <div class="text-muted small">قیمت: ۴۲۰,۰۰۰ تومان</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-info-subtle text-info-emphasis">دانلودی</span></td>
+                                    <td><span class="badge bg-secondary-subtle text-secondary-emphasis">در حال آماده‌سازی</span></td>
+                                    <td>
+                                        <div class="fw-semibold">۱۴۰۳/۰۸/۱۰</div>
+                                        <div class="text-muted small">آخرین ویرایش: ۰۹:۱۰</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-success">ویرایش</button>
+                                            <button class="btn btn-sm btn-outline-secondary">پیش‌نمایش</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
