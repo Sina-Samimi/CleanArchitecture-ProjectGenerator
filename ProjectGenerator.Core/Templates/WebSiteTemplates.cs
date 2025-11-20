@@ -2443,46 +2443,89 @@ public class BlogController : Controller
     ViewData[""Title""] = ""داشبورد مدیریت"";
 }
 
-<div class=""row"">
-    <div class=""col-md-3"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">کاربران</h5>
-                <p class=""card-text"">مدیریت کاربران سیستم</p>
-                <a asp-controller=""Users"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+<div class=""section-title-bar"">
+    <div>
+        <h4 class=""mb-1"">گزارش سریع</h4>
+        <p class=""text-muted small mb-0"">چیدمان و کارت‌ها مشابه پنل ArsisTest</p>
+    </div>
+</div>
+
+<div class=""dashboard-grid"">
+    <div class=""summary-card primary"">
+        <div class=""icon-badge""><i class=""fas fa-users""></i></div>
+        <div class=""label"">کاربران</div>
+        <div class=""value"">+128</div>
+        <p class=""desc"">مدیریت کاربران و نقش‌ها</p>
+    </div>
+    <div class=""summary-card success"">
+        <div class=""icon-badge""><i class=""fas fa-box""></i></div>
+        <div class=""label"">محصولات</div>
+        <div class=""value"">342</div>
+        <p class=""desc"">کالاها و دسته‌بندی‌ها</p>
+    </div>
+    <div class=""summary-card warning"">
+        <div class=""icon-badge""><i class=""fas fa-receipt""></i></div>
+        <div class=""label"">سفارشات</div>
+        <div class=""value"">57</div>
+        <p class=""desc"">پردازش و صدور فاکتور</p>
+    </div>
+    <div class=""summary-card info"">
+        <div class=""icon-badge""><i class=""fas fa-blog""></i></div>
+        <div class=""label"">بلاگ</div>
+        <div class=""value"">18</div>
+        <p class=""desc"">محتوای منتشر شده</p>
+    </div>
+</div>
+
+<div class=""row g-3"">
+    <div class=""col-lg-7"">
+        <div class=""action-card"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">اقدامات سریع</h5>
+                <span class=""text-muted small"">ایجاد و مدیریت داده</span>
+            </div>
+            <div class=""list-group list-group-flush"">
+                <a class=""list-group-item"" asp-controller=""Users"" asp-action=""Create"">
+                    <span><i class=""fas fa-user-plus ms-2""></i>افزودن کاربر جدید</span>
+                    <span class=""badge bg-primary rounded-pill"">جدید</span>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Roles"" asp-action=""Index"">
+                    <span><i class=""fas fa-user-shield ms-2""></i>مدیریت نقش‌ها</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Products"" asp-action=""Create"">
+                    <span><i class=""fas fa-plus-circle ms-2""></i>افزودن محصول</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Orders"" asp-action=""Index"">
+                    <span><i class=""fas fa-clipboard-list ms-2""></i>مشاهده سفارشات</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Blogs"" asp-action=""Index"">
+                    <span><i class=""fas fa-pen ms-2""></i>مدیریت مقالات</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
             </div>
         </div>
     </div>
-    <div class=""col-md-3"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">محصولات</h5>
-                <p class=""card-text"">مدیریت محصولات</p>
-                <a asp-controller=""Products"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+    <div class=""col-lg-5"">
+        <div class=""action-card h-100"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">مرور سیستم</h5>
+                <span class=""text-muted small"">نمای کلی وضعیت</span>
             </div>
-        </div>
-    </div>
-    <div class=""col-md-3"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">سفارشات</h5>
-                <p class=""card-text"">مدیریت سفارشات</p>
-                <a asp-controller=""Orders"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
-            </div>
-        </div>
-    </div>
-    <div class=""col-md-3"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">بلاگ</h5>
-                <p class=""card-text"">مدیریت محتوا</p>
-                <a asp-controller=""Blogs"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
-            </div>
+            <ul class=""list-unstyled mb-0 small text-muted"">
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>هدر خوش‌آمدگویی و سایدبار ثابت</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه مطابق ArsisTest</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لینک‌های سریع برای مدیریت</li>
+                <li><i class=""fas fa-check-circle text-success ms-2""></i>حذف وابستگی به تست‌ها و سازمان‌ها</li>
+            </ul>
         </div>
     </div>
 </div>
 ";
     }
+
 
     public string GetSellerDashboardTemplate()
     {
@@ -2490,28 +2533,74 @@ public class BlogController : Controller
     ViewData[""Title""] = ""داشبورد فروشنده"";
 }
 
-<div class=""row"">
-    <div class=""col-md-6"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">محصولات من</h5>
-                <p class=""card-text"">مدیریت محصولات</p>
-                <a asp-controller=""Products"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+<div class=""section-title-bar"">
+    <div>
+        <h4 class=""mb-1"">مرور عملکرد</h4>
+        <p class=""text-muted small mb-0"">چیدمان و کارت‌ها هماهنگ با پنل ArsisTest</p>
+    </div>
+</div>
+
+<div class=""dashboard-grid"">
+    <div class=""summary-card success"">
+        <div class=""icon-badge""><i class=""fas fa-box-open""></i></div>
+        <div class=""label"">محصولات فعال</div>
+        <div class=""value"">86</div>
+        <p class=""desc"">مدیریت کالاهای فروشنده</p>
+    </div>
+    <div class=""summary-card primary"">
+        <div class=""icon-badge""><i class=""fas fa-truck""></i></div>
+        <div class=""label"">سفارشات جاری</div>
+        <div class=""value"">24</div>
+        <p class=""desc"">در انتظار ارسال</p>
+    </div>
+    <div class=""summary-card warning"">
+        <div class=""icon-badge""><i class=""fas fa-wallet""></i></div>
+        <div class=""label"">تسویه</div>
+        <div class=""value"">12</div>
+        <p class=""desc"">تسویه حساب‌های در صف</p>
+    </div>
+</div>
+
+<div class=""row g-3"">
+    <div class=""col-lg-7"">
+        <div class=""action-card"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">اقدامات سریع</h5>
+                <span class=""text-muted small"">مدیریت فروش</span>
+            </div>
+            <div class=""list-group list-group-flush"">
+                <a class=""list-group-item"" asp-controller=""Products"" asp-action=""Index"">
+                    <span><i class=""fas fa-box ms-2""></i>محصولات من</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Orders"" asp-action=""Index"">
+                    <span><i class=""fas fa-shopping-cart ms-2""></i>سفارشات مشتریان</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Orders"" asp-action=""Index"">
+                    <span><i class=""fas fa-truck-loading ms-2""></i>سفارشات در انتظار ارسال</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
             </div>
         </div>
     </div>
-    <div class=""col-md-6"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">سفارشات</h5>
-                <p class=""card-text"">مشاهده سفارشات</p>
-                <a asp-controller=""Orders"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+    <div class=""col-lg-5"">
+        <div class=""action-card h-100"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">نکات طراحی</h5>
+                <span class=""text-muted small"">الهام از ArsisTest</span>
             </div>
+            <ul class=""list-unstyled mb-0 small text-muted"">
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه شفاف</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لینک‌های سریع در سایدبار</li>
+                <li><i class=""fas fa-check-circle text-success ms-2""></i>بدون وابستگی به ماژول تست یا سازمان</li>
+            </ul>
         </div>
     </div>
 </div>
 ";
     }
+
 
     public string GetUserDashboardTemplate()
     {
@@ -2519,28 +2608,74 @@ public class BlogController : Controller
     ViewData[""Title""] = ""داشبورد کاربری"";
 }
 
-<div class=""row"">
-    <div class=""col-md-6"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">پروفایل من</h5>
-                <p class=""card-text"">مشاهده و ویرایش پروفایل</p>
-                <a asp-controller=""Profile"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+<div class=""section-title-bar"">
+    <div>
+        <h4 class=""mb-1"">خلاصه حساب</h4>
+        <p class=""text-muted small mb-0"">طراحی و کارت‌ها هماهنگ با نسخه ArsisTest</p>
+    </div>
+</div>
+
+<div class=""dashboard-grid"">
+    <div class=""summary-card primary"">
+        <div class=""icon-badge""><i class=""fas fa-user-circle""></i></div>
+        <div class=""label"">پروفایل</div>
+        <div class=""value"">کامل</div>
+        <p class=""desc"">اطلاعات به‌روز</p>
+    </div>
+    <div class=""summary-card success"">
+        <div class=""icon-badge""><i class=""fas fa-bag-shopping""></i></div>
+        <div class=""label"">سفارشات</div>
+        <div class=""value"">8 فعال</div>
+        <p class=""desc"">پیگیری وضعیت سفارش</p>
+    </div>
+    <div class=""summary-card info"">
+        <div class=""icon-badge""><i class=""fas fa-ticket-alt""></i></div>
+        <div class=""label"">پشتیبانی</div>
+        <div class=""value"">3 باز</div>
+        <p class=""desc"">گفتگوهای جاری</p>
+    </div>
+</div>
+
+<div class=""row g-3"">
+    <div class=""col-lg-7"">
+        <div class=""action-card"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">اقدامات سریع</h5>
+                <span class=""text-muted small"">مدیریت حساب</span>
+            </div>
+            <div class=""list-group list-group-flush"">
+                <a class=""list-group-item"" asp-controller=""Profile"" asp-action=""Edit"">
+                    <span><i class=""fas fa-user-edit ms-2""></i>ویرایش اطلاعات</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Orders"" asp-action=""Index"">
+                    <span><i class=""fas fa-box-open ms-2""></i>پیگیری سفارشات</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
+                <a class=""list-group-item"" asp-controller=""Cart"" asp-action=""Index"">
+                    <span><i class=""fas fa-shopping-cart ms-2""></i>مشاهده سبد خرید</span>
+                    <i class=""fas fa-angle-left text-muted""></i>
+                </a>
             </div>
         </div>
     </div>
-    <div class=""col-md-6"">
-        <div class=""card"">
-            <div class=""card-body"">
-                <h5 class=""card-title"">سفارشات من</h5>
-                <p class=""card-text"">مشاهده سفارشات</p>
-                <a asp-controller=""Orders"" asp-action=""Index"" class=""btn btn-primary"">مشاهده</a>
+    <div class=""col-lg-5"">
+        <div class=""action-card h-100"">
+            <div class=""section-title-bar"">
+                <h5 class=""mb-0"">یادآوری‌های طراحی</h5>
+                <span class=""text-muted small"">هماهنگ با ArsisTest</span>
             </div>
+            <ul class=""list-unstyled mb-0 small text-muted"">
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>هدر چسبان با آواتار</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه مشابه پنل اصلی</li>
+                <li><i class=""fas fa-check-circle text-success ms-2""></i>فاقد بخش تست و سازمان</li>
+            </ul>
         </div>
     </div>
 </div>
 ";
     }
+
 
     public string GetUserProfileIndexViewTemplate()
     {
@@ -2721,49 +2856,203 @@ public class BlogController : Controller
     ViewData[""Title""] = ""خانه"";
 }}
 
-<div class=""hero-section"" style=""background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 0; text-align: center;"">
+<section class=""landing-hero mb-5"">
     <div class=""container"">
-        <h1 class=""display-4"">به وب‌سایت ما خوش آمدید</h1>
-        <p class=""lead"">محصولات و خدمات با کیفیت برای شما</p>
-        <a href=""/Product"" class=""btn btn-light btn-lg mt-3"">مشاهده محصولات</a>
+        <div class=""row align-items-center g-4"">
+            <div class=""col-lg-7"">
+                <div class=""hero-content"">
+                    <div class=""d-inline-flex align-items-center gap-2 glass-card text-white mb-3"">
+                        <i class=""fas fa-bolt""></i>
+                        <span>تولید سریع پروژه‌های Clean Architecture</span>
+                    </div>
+                    <h1 class=""hero-title"">زیرساخت آماده برای فروشگاه، بلاگ و پنل‌های مدیریتی</h1>
+                    <p class=""hero-subtitle"">همان دیزاینی که در ArsisTest دیده‌اید؛ همراه با وب‌سایت اصلی، پنل مدیریت، فروشنده و کاربر در یک پکیج.</p>
+                    <div class=""hero-actions"">
+                        <a href=""/Product"" class=""btn btn-light btn-lg""><i class=""fas fa-shopping-bag ms-2""></i>مشاهده محصولات</a>
+                        <a href=""/Account/Register"" class=""btn btn-outline-light btn-lg""><i class=""fas fa-rocket ms-2""></i>شروع سریع</a>
+                    </div>
+                    <div class=""stats-badges"">
+                        <div class=""stats-badge"">
+                            <i class=""fas fa-layer-group""></i>
+                            <div>
+                                <div class=""value"">4 لایه آماده</div>
+                                <small>Domain, Application, Infrastructure, WebSite</small>
+                            </div>
+                        </div>
+                        <div class=""stats-badge"">
+                            <i class=""fas fa-users-cog""></i>
+                            <div>
+                                <div class=""value"">پنل‌های کامل</div>
+                                <small>مدیر، فروشنده و کاربر</small>
+                            </div>
+                        </div>
+                        <div class=""stats-badge"">
+                            <i class=""fas fa-shield-check""></i>
+                            <div>
+                                <div class=""value"">هویت و نقش‌ها</div>
+                                <small>ساخته‌شده با Identity</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class=""col-lg-5"">
+                <div class=""glass-card"">
+                    <h5 class=""mb-3"">پنل‌ها و صفحات آماده</h5>
+                    <div class=""d-grid gap-3"">
+                        <div class=""panel-card"">
+                            <div class=""d-flex justify-content-between align-items-start"">
+                                <div>
+                                    <h6 class=""mb-1"">پنل مدیریت</h6>
+                                    <p class=""panel-meta mb-2"">مدیریت کاربران، نقش‌ها، محصولات و سفارشات</p>
+                                    <a class=""panel-link"" asp-area=""Admin"" asp-controller=""Home"" asp-action=""Index""><i class=""fas fa-arrow-left""></i> ورود به داشبورد</a>
+                                </div>
+                                <span class=""badge bg-primary rounded-pill"">Admin</span>
+                            </div>
+                        </div>
+                        <div class=""panel-card"">
+                            <div class=""d-flex justify-content-between align-items-start"">
+                                <div>
+                                    <h6 class=""mb-1"">پنل فروشنده</h6>
+                                    <p class=""panel-meta mb-2"">مدیریت کالاها و سفارشات مخصوص فروشنده</p>
+                                    <a class=""panel-link"" asp-area=""Seller"" asp-controller=""Home"" asp-action=""Index""><i class=""fas fa-arrow-left""></i> مدیریت فروش</a>
+                                </div>
+                                <span class=""badge bg-success rounded-pill"">Seller</span>
+                            </div>
+                        </div>
+                        <div class=""panel-card mb-0"">
+                            <div class=""d-flex justify-content-between align-items-start"">
+                                <div>
+                                    <h6 class=""mb-1"">پنل کاربری</h6>
+                                    <p class=""panel-meta mb-2"">پروفایل، سفارشات و تیکت‌های کاربر</p>
+                                    <a class=""panel-link"" asp-area=""User"" asp-controller=""Home"" asp-action=""Index""><i class=""fas fa-arrow-left""></i> مشاهده پنل</a>
+                                </div>
+                                <span class=""badge bg-info rounded-pill"">User</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class=""container mb-5"">
+    <div class=""section-header"">
+        <div>
+            <h2 class=""section-title"">امکانات کلیدی</h2>
+            <p class=""section-subtitle"">همان تجربه ArsisTest با تمرکز بر فروشگاه و بلاگ</p>
+        </div>
+    </div>
+    <div class=""feature-grid"">
+        <div class=""feature-card"">
+            <div class=""feature-icon""><i class=""fas fa-store""></i></div>
+            <h5 class=""mb-2"">کاتالوگ محصولات</h5>
+            <p class=""text-muted mb-3"">صفحات لیست و جزئیات محصول با دکمه‌های افزودن به سبد.</p>
+            <a href=""/Product"" class=""btn btn-outline-primary btn-sm"">نمایش محصولات</a>
+        </div>
+        <div class=""feature-card"">
+            <div class=""feature-icon""><i class=""fas fa-blog""></i></div>
+            <h5 class=""mb-2"">بلاگ و محتوا</h5>
+            <p class=""text-muted mb-3"">لیست مقالات، جزئیات، برچسب‌ها و مدیریت انتشار.</p>
+            <a href=""/Blog"" class=""btn btn-outline-success btn-sm"">ورود به بلاگ</a>
+        </div>
+        <div class=""feature-card"">
+            <div class=""feature-icon""><i class=""fas fa-shopping-cart""></i></div>
+            <h5 class=""mb-2"">سبد خرید و تسویه</h5>
+            <p class=""text-muted mb-3"">فرآیند سبد خرید، پرداخت و پیگیری سفارش به‌صورت آماده.</p>
+            <a href=""/Cart"" class=""btn btn-outline-dark btn-sm"">بررسی سفارش</a>
+        </div>
+        <div class=""feature-card"">
+            <div class=""feature-icon""><i class=""fas fa-user-shield""></i></div>
+            <h5 class=""mb-2"">هویت و نقش‌ها</h5>
+            <p class=""text-muted mb-3"">ورود/ثبت‌نام، نقش‌ها و سیاست‌های دسترسی از پیش پیکربندی شده.</p>
+            <a href=""/Account/Login"" class=""btn btn-outline-secondary btn-sm"">تجربه ورود</a>
+        </div>
     </div>
 </div>
 
-<div class=""container mt-5"">
-    <div class=""row"">
-        <div class=""col-md-4 mb-4"">
-            <div class=""card h-100"">
-                <div class=""card-body text-center"">
-                    <i class=""fas fa-shopping-bag fa-3x text-primary mb-3""></i>
-                    <h5 class=""card-title"">محصولات</h5>
-                    <p class=""card-text"">مجموعه‌ای از بهترین محصولات</p>
-                    <a href=""/Product"" class=""btn btn-primary"">مشاهده</a>
+<div class=""container mb-5"">
+    <div class=""section-header"">
+        <div>
+            <h2 class=""section-title"">پنل‌های الهام‌گرفته از ArsisTest</h2>
+            <p class=""section-subtitle"">طراحی کارت‌ها، هدر چسبان و ناوبری درون‌پنل مطابق نمونه اصلی</p>
+        </div>
+    </div>
+    <div class=""row g-4"">
+        <div class=""col-lg-4"">
+            <div class=""panel-card h-100"">
+                <div class=""d-flex align-items-center gap-3 mb-3"">
+                    <span class=""feature-icon""><i class=""fas fa-gauge""></i></span>
+                    <div>
+                        <h5 class=""mb-1"">داشبورد مدیریتی</h5>
+                        <p class=""panel-meta mb-0"">نمایش گزارش‌های کلیدی و لینک‌های سریع</p>
+                    </div>
                 </div>
+                <ul class=""list-unstyled mb-3 small text-muted"">
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> کارت‌های خلاصه کاربران، محصولات و سفارش‌ها</li>
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> دکمه‌های اقدام سریع برای افزودن داده</li>
+                    <li><i class=""fas fa-check-circle text-success ms-2""></i> هدر خوش‌آمدگویی و هشدارها</li>
+                </ul>
+                <a asp-area=""Admin"" asp-controller=""Home"" asp-action=""Index"" class=""btn btn-primary w-100"">ورود به مدیریت</a>
             </div>
         </div>
-        <div class=""col-md-4 mb-4"">
-            <div class=""card h-100"">
-                <div class=""card-body text-center"">
-                    <i class=""fas fa-blog fa-3x text-success mb-3""></i>
-                    <h5 class=""card-title"">بلاگ</h5>
-                    <p class=""card-text"">مقالات و مطالب مفید</p>
-                    <a href=""/Blog"" class=""btn btn-success"">مطالعه</a>
+        <div class=""col-lg-4"">
+            <div class=""panel-card h-100"">
+                <div class=""d-flex align-items-center gap-3 mb-3"">
+                    <span class=""feature-icon""><i class=""fas fa-store""></i></span>
+                    <div>
+                        <h5 class=""mb-1"">پنل فروشنده</h5>
+                        <p class=""panel-meta mb-0"">مدیریت سفارشات و محصولات شخصی</p>
+                    </div>
                 </div>
+                <ul class=""list-unstyled mb-3 small text-muted"">
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> کارت‌های آماری سفارش و درآمد</li>
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> لینک‌های سریع به مدیریت محصولات</li>
+                    <li><i class=""fas fa-check-circle text-success ms-2""></i> ناوبری ثابت در سایدبار</li>
+                </ul>
+                <a asp-area=""Seller"" asp-controller=""Home"" asp-action=""Index"" class=""btn btn-success w-100"">ورود فروشنده</a>
             </div>
         </div>
-        <div class=""col-md-4 mb-4"">
-            <div class=""card h-100"">
-                <div class=""card-body text-center"">
-                    <i class=""fas fa-clipboard-check fa-3x text-info mb-3""></i>
-                    <h5 class=""card-title"">آزمون‌ها</h5>
-                    <p class=""card-text"">آزمون‌های ارزیابی و سنجش</p>
-                    <a href=""/Assessment"" class=""btn btn-info"">شرکت</a>
+        <div class=""col-lg-4"">
+            <div class=""panel-card h-100"">
+                <div class=""d-flex align-items-center gap-3 mb-3"">
+                    <span class=""feature-icon""><i class=""fas fa-user""></i></span>
+                    <div>
+                        <h5 class=""mb-1"">پنل کاربر</h5>
+                        <p class=""panel-meta mb-0"">پروفایل، سفارشات و بروزرسانی اطلاعات</p>
+                    </div>
                 </div>
+                <ul class=""list-unstyled mb-3 small text-muted"">
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> کارت خلاصه حساب و وضعیت سفارشات</li>
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i> فرم ویرایش اطلاعات مطابق سبک Arsis</li>
+                    <li><i class=""fas fa-check-circle text-success ms-2""></i> هدر چسبان با آواتار کاربر</li>
+                </ul>
+                <a asp-area=""User"" asp-controller=""Home"" asp-action=""Index"" class=""btn btn-info text-white w-100"">پروفایل کاربری</a>
             </div>
         </div>
     </div>
 </div>
-";
+
+<div class=""container mb-5"">
+    <div class=""cta-section"">
+        <div class=""row align-items-center g-3"">
+            <div class=""col-lg-8"">
+                <h3 class=""mb-2"">همه چیز آماده است؛ کافیست پروژه را تولید کنید.</h3>
+                <p class=""text-muted mb-3"">تنظیمات تم، مسیرها و فایل‌های سی‌اس‌اس/اسکریپت با الهام از ArsisTest در خروجی شما قرار می‌گیرند.</p>
+                <div class=""cta-badges"">
+                    <span class=""cta-badge""><i class=""fas fa-check text-success ms-2""></i>بدون تست و سازمان</span>
+                    <span class=""cta-badge""><i class=""fas fa-check text-success ms-2""></i>Bootstrap 5 + RTL</span>
+                    <span class=""cta-badge""><i class=""fas fa-check text-success ms-2""></i>هویت و نقش‌بندی کامل</span>
+                </div>
+            </div>
+            <div class=""col-lg-4 text-lg-end"">
+                <a href=""/Account/Register"" class=""btn btn-primary btn-lg""><i class=""fas fa-magic ms-2""></i>شروع تولید پروژه</a>
+            </div>
+        </div>
+    </div>
+</div>
+"; 
     }
 
     public string GetHomeAboutViewTemplate()
