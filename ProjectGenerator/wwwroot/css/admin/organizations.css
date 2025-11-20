@@ -1,0 +1,315 @@
+/* Organizations Admin Styles */
+.organizations-page {
+    padding: 2rem 0;
+}
+
+.organizations-page__hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+}
+
+.organizations-page__title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.organizations-page__subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+.organizations-page__actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.organizations-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.organizations-metric-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e9ecef;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.organizations-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.organizations-metric-card--primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.organizations-metric-card--success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.organizations-metric-card__body {
+    padding: 1.5rem;
+}
+
+.organizations-metric-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.organizations-metric-card__header > div {
+    flex: 1;
+}
+
+.organizations-metric-card__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+.organizations-metric-card__value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.organizations-metric-card__icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.organizations-metric-card__hint {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.organizations-metric-card__footer {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.organizations-metric-card__chip {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.organizations-metric-card__chip--success {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+.organizations-metric-card__chip--muted {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.organizations-metric-card__chip--primary {
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+}
+
+.organizations-metric-card__chip--secondary {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.organizations-table {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+}
+
+.organizations-table__header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.organizations-table__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: #495057;
+}
+
+.organizations-table__name {
+    line-height: 1.4;
+}
+
+.organizations-table__code {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.organizations-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e9ecef;
+}
+
+.organizations-empty__icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.organizations-empty__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.organizations-empty__description {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+.organizations-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.organizations-details {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Table hover effects */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Button improvements */
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: white;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+/* Modal improvements */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .organizations-page__hero {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .organizations-page__actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .organizations-page__actions .btn {
+        width: 100%;
+    }
+
+    .organizations-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .organizations-metric-card__header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .organizations-metric-card__footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Persian date display improvements */
+.persian-date {
+    font-family: 'Courier New', monospace;
+    direction: ltr;
+}
+
+/* Form improvements */
+.form-control:focus,
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 600;
+}
+
+/* Table responsive improvements */
+@media (max-width: 992px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .organizations-table__name small {
+        display: block;
+        margin-top: 0.25rem;
+    }
+}
