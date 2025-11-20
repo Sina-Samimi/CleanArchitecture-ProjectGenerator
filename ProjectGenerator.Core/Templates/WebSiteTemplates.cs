@@ -2441,12 +2441,25 @@ public class BlogController : Controller
     {
         return @"@{
     ViewData[""Title""] = ""داشبورد مدیریت"";
+    var displayName = User?.Identity?.Name ?? ""مدیر"";
 }
 
-<div class=""section-title-bar"">
+<div class=""dashboard-hero"">
     <div>
-        <h4 class=""mb-1"">گزارش سریع</h4>
-        <p class=""text-muted small mb-0"">چیدمان و کارت‌ها مشابه پنل ArsisTest</p>
+        <div class=""hero-label""><i class=""fas fa-shield-alt ms-1""></i>پنل مدیریت</div>
+        <h3>سلام، @displayName</h3>
+        <p>ظاهر و چیدمان دقیقاً مشابه نسخه ArsisTest با تمرکز بر کارت‌های خلاصه و دایره وضعیت.</p>
+        <div class=""hero-meta"">
+            <span class=""meta-chip""><i class=""fas fa-thumbtack""></i>بدون تست و سازمان</span>
+            <span class=""meta-chip""><i class=""fas fa-magic""></i>الهام از متریکون</span>
+        </div>
+    </div>
+    <div class=""stat-stack"">
+        <div class=""stat-circle"">0</div>
+        <div class=""stat-note"">
+            <span class=""fw-bold"">کاربران</span>
+            <small class=""text-muted"">همان دایره شمارنده بالای کارت‌ها</small>
+        </div>
     </div>
 </div>
 
@@ -2454,26 +2467,26 @@ public class BlogController : Controller
     <div class=""summary-card primary"">
         <div class=""icon-badge""><i class=""fas fa-users""></i></div>
         <div class=""label"">کاربران</div>
-        <div class=""value"">+128</div>
-        <p class=""desc"">مدیریت کاربران و نقش‌ها</p>
+        <div class=""value"">128</div>
+        <p class=""desc"">همان کارت گرد با آیکن آبی</p>
+    </div>
+    <div class=""summary-card info"">
+        <div class=""icon-badge""><i class=""fas fa-shield-alt""></i></div>
+        <div class=""label"">سطح دسترسی</div>
+        <div class=""value"">کامل</div>
+        <p class=""desc"">هم‌راستا با کارت سبز ArsisTest</p>
     </div>
     <div class=""summary-card success"">
         <div class=""icon-badge""><i class=""fas fa-box""></i></div>
         <div class=""label"">محصولات</div>
         <div class=""value"">342</div>
-        <p class=""desc"">کالاها و دسته‌بندی‌ها</p>
+        <p class=""desc"">مدیریت کالا و دسته‌ها</p>
     </div>
     <div class=""summary-card warning"">
         <div class=""icon-badge""><i class=""fas fa-receipt""></i></div>
         <div class=""label"">سفارشات</div>
         <div class=""value"">57</div>
         <p class=""desc"">پردازش و صدور فاکتور</p>
-    </div>
-    <div class=""summary-card info"">
-        <div class=""icon-badge""><i class=""fas fa-blog""></i></div>
-        <div class=""label"">بلاگ</div>
-        <div class=""value"">18</div>
-        <p class=""desc"">محتوای منتشر شده</p>
     </div>
 </div>
 
@@ -2482,7 +2495,7 @@ public class BlogController : Controller
         <div class=""action-card"">
             <div class=""section-title-bar"">
                 <h5 class=""mb-0"">اقدامات سریع</h5>
-                <span class=""text-muted small"">ایجاد و مدیریت داده</span>
+                <span class=""text-muted small"">چیدمان منویی شبیه لیست کنار کارت</span>
             </div>
             <div class=""list-group list-group-flush"">
                 <a class=""list-group-item"" asp-controller=""Users"" asp-action=""Create"">
@@ -2515,10 +2528,10 @@ public class BlogController : Controller
                 <span class=""text-muted small"">نمای کلی وضعیت</span>
             </div>
             <ul class=""list-unstyled mb-0 small text-muted"">
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>هدر خوش‌آمدگویی و سایدبار ثابت</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه مطابق ArsisTest</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لینک‌های سریع برای مدیریت</li>
-                <li><i class=""fas fa-check-circle text-success ms-2""></i>حذف وابستگی به تست‌ها و سازمان‌ها</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>دایره شمارنده و کارت‌ها در بالای صفحه</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های سفید با حاشیه روشن</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لیست اقدامات سریع درون کارت</li>
+                <li><i class=""fas fa-check-circle text-success ms-2""></i>بدون وابستگی به تست یا سازمان</li>
             </ul>
         </div>
     </div>
@@ -2531,12 +2544,25 @@ public class BlogController : Controller
     {
         return @"@{
     ViewData[""Title""] = ""داشبورد فروشنده"";
+    var displayName = User?.Identity?.Name ?? ""فروشنده"";
 }
 
-<div class=""section-title-bar"">
+<div class=""dashboard-hero"">
     <div>
-        <h4 class=""mb-1"">مرور عملکرد</h4>
-        <p class=""text-muted small mb-0"">چیدمان و کارت‌ها هماهنگ با پنل ArsisTest</p>
+        <div class=""hero-label""><i class=""fas fa-store ms-1""></i>پنل فروشنده</div>
+        <h3>سلام، @displayName</h3>
+        <p>سربرگ، کارت‌های گرد و لیست اقدامات مشابه نسخه مرجع ArsisTest.</p>
+        <div class=""hero-meta"">
+            <span class=""meta-chip""><i class=""fas fa-box""></i>محصولات فعال</span>
+            <span class=""meta-chip""><i class=""fas fa-truck""></i>ارسال سریع</span>
+        </div>
+    </div>
+    <div class=""stat-stack"">
+        <div class=""stat-circle"">0</div>
+        <div class=""stat-note"">
+            <span class=""fw-bold"">سفارشات</span>
+            <small class=""text-muted"">نمای دایره شمارنده</small>
+        </div>
     </div>
 </div>
 
@@ -2545,7 +2571,7 @@ public class BlogController : Controller
         <div class=""icon-badge""><i class=""fas fa-box-open""></i></div>
         <div class=""label"">محصولات فعال</div>
         <div class=""value"">86</div>
-        <p class=""desc"">مدیریت کالاهای فروشنده</p>
+        <p class=""desc"">نمای کارت سبز مانند نمونه</p>
     </div>
     <div class=""summary-card primary"">
         <div class=""icon-badge""><i class=""fas fa-truck""></i></div>
@@ -2591,9 +2617,9 @@ public class BlogController : Controller
                 <span class=""text-muted small"">الهام از ArsisTest</span>
             </div>
             <ul class=""list-unstyled mb-0 small text-muted"">
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه شفاف</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لینک‌های سریع در سایدبار</li>
-                <li><i class=""fas fa-check-circle text-success ms-2""></i>بدون وابستگی به ماژول تست یا سازمان</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>سربرگ با دایره شمارنده</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های سفید حاشیه‌دار</li>
+                <li><i class=""fas fa-check-circle text-success ms-2""></i>بدون ماژول تست یا سازمان</li>
             </ul>
         </div>
     </div>
@@ -2606,12 +2632,25 @@ public class BlogController : Controller
     {
         return @"@{
     ViewData[""Title""] = ""داشبورد کاربری"";
+    var displayName = User?.Identity?.Name ?? ""کاربر"";
 }
 
-<div class=""section-title-bar"">
+<div class=""dashboard-hero"">
     <div>
-        <h4 class=""mb-1"">خلاصه حساب</h4>
-        <p class=""text-muted small mb-0"">طراحی و کارت‌ها هماهنگ با نسخه ArsisTest</p>
+        <div class=""hero-label""><i class=""fas fa-user ms-1""></i>پنل کاربری</div>
+        <h3>سلام، @displayName</h3>
+        <p>سربرگ، کارت‌های سفید و دایره شمارنده همسان با رابط ArsisTest.</p>
+        <div class=""hero-meta"">
+            <span class=""meta-chip""><i class=""fas fa-phone""></i>پروفایل کامل</span>
+            <span class=""meta-chip""><i class=""fas fa-shopping-bag""></i>سفارشات فعال</span>
+        </div>
+    </div>
+    <div class=""stat-stack"">
+        <div class=""stat-circle"">0</div>
+        <div class=""stat-note"">
+            <span class=""fw-bold"">جمع سفارشات</span>
+            <small class=""text-muted"">دایره بزرگ بالای کارت‌ها</small>
+        </div>
     </div>
 </div>
 
@@ -2666,8 +2705,8 @@ public class BlogController : Controller
                 <span class=""text-muted small"">هماهنگ با ArsisTest</span>
             </div>
             <ul class=""list-unstyled mb-0 small text-muted"">
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>هدر چسبان با آواتار</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های خلاصه مشابه پنل اصلی</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>سربرگ و کارت‌های سفید</li>
+                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>دایره شمارنده بالای کارت‌ها</li>
                 <li><i class=""fas fa-check-circle text-success ms-2""></i>فاقد بخش تست و سازمان</li>
             </ul>
         </div>
@@ -2690,112 +2729,98 @@ public class BlogController : Controller
 }}
 
 <div class=""profile-page"">
-    <div class=""page-header mb-4"">
-        <h1 class=""page-title"">پروفایل کاربری</h1>
-        <p class=""page-subtitle text-muted"">نمای کلی از اطلاعات حساب</p>
-    </div>
-
-    <!-- Main User Info Card -->
-    <div class=""user-info-card"">
-        <div class=""card-label"">پنل کاربری</div>
-        <div class=""d-flex justify-content-between align-items-start"">
-            <div class=""user-info-content"">
-                <h2 class=""user-name"">@(user?.UserName ?? ""کاربر"")</h2>
-                <div class=""user-contact-details mt-3"">
-                    @if (!string.IsNullOrEmpty(user?.Email))
-                    {{
-                        <div class=""contact-detail-item"">
-                            <i class=""fas fa-envelope""></i>
-                            <span>@user.Email</span>
+    <div class=""profile-shell"">
+        <div>
+            <div class=""profile-hero"">
+                <div class=""hero-row"">
+                    <div>
+                        <div class=""hero-chip""><i class=""fas fa-id-card ms-1""></i>پروفایل کاربری</div>
+                        <h2>@(user?.UserName ?? ""کاربر"")</h2>
+                        <div class=""hero-meta"">
+                            @if (!string.IsNullOrEmpty(user?.PhoneNumber))
+                            {{
+                                <span class=""meta-chip""><i class=""fas fa-phone""></i>@user.PhoneNumber</span>
+                            }}
+                            @if (!string.IsNullOrEmpty(user?.Email))
+                            {{
+                                <span class=""meta-chip""><i class=""fas fa-envelope""></i>@user.Email</span>
+                            }}
                         </div>
-                    }}
-                    @if (!string.IsNullOrEmpty(user?.PhoneNumber))
-                    {{
-                        <div class=""contact-detail-item"">
-                            <i class=""fas fa-phone""></i>
-                            <span>@user.PhoneNumber</span>
-                        </div>
-                    }}
-                </div>
-                <div class=""user-meta-info mt-3"">
-                    <div class=""meta-item"">
-                        <span class=""meta-label"">عضویت از:</span>
-                        <span class=""meta-value"">@membershipDate.ToString(""yyyy/MM/dd"")</span>
                     </div>
-                    <div class=""meta-item"">
-                        <span class=""meta-label"">آخرین بروزرسانی:</span>
-                        <span class=""meta-value"">@lastUpdate.ToString(""yyyy/MM/dd HH:mm"")</span>
+                    <div class=""avatar-circle-large"">
+                        <span>@(user?.UserName?.Length > 0 ? user.UserName[0].ToString() : ""آ"")</span>
                     </div>
                 </div>
+                <div class=""profile-actions"">
+                    <a asp-action=""Edit"" class=""btn btn-edit-profile""><i class=""fas fa-edit ms-1""></i>ویرایش پروفایل</a>
+                    <a href=""#"" class=""btn btn-account-details""><i class=""fas fa-file-alt ms-1""></i>جزئیات حساب</a>
+                </div>
+                <div class=""info-pills"">
+                    <div class=""info-pill"">
+                        <div class=""label"">آخرین ورود</div>
+                        <div class=""value"">@DateTime.Now.ToString(""yyyy/MM/dd"")</div>
+                        <div class=""desc"">ورود با کد یک‌بار مصرف</div>
+                    </div>
+                    <div class=""info-pill"">
+                        <div class=""label"">روزهای همراهی</div>
+                        <div class=""value"">@daysSinceMembership</div>
+                        <div class=""desc"">از @membershipDate.ToString(""yyyy/MM/dd"")</div>
+                    </div>
+                    <div class=""info-pill"">
+                        <div class=""label"">درصد تکمیل</div>
+                        <div class=""value"">@completionPercentage%</div>
+                        <div class=""desc"">همان کارت پیشرفت ArsisTest</div>
+                    </div>
+                </div>
             </div>
-            <div class=""user-avatar-card"">
-                <div class=""avatar-circle-large"">
-                    <span>@(user?.UserName?.Length > 0 ? user.UserName[0].ToString() : ""آ"")</span>
+
+            <div class=""info-cards-row"">
+                <div class=""info-card"">
+                    <div class=""info-card-header"">
+                        <i class=""fas fa-sign-in-alt""></i>
+                        <h6>آخرین ورود</h6>
+                    </div>
+                    <div class=""info-card-body"">
+                        <div class=""info-value"">@DateTime.Now.ToString(""yyyy/MM/dd"")</div>
+                        <div class=""info-description"">ورود با کد یک بار مصرف</div>
+                    </div>
+                </div>
+
+                <div class=""info-card"">
+                    <div class=""info-card-header"">
+                        <i class=""fas fa-calendar-alt""></i>
+                        <h6>روزهای همراهی</h6>
+                    </div>
+                    <div class=""info-card-body"">
+                        <div class=""info-value"">@daysSinceMembership</div>
+                        <div class=""info-description"">از @membershipDate.ToString(""yyyy/MM/dd"")</div>
+                    </div>
+                </div>
+
+                <div class=""info-card"">
+                    <div class=""info-card-header"">
+                        <i class=""fas fa-percentage""></i>
+                        <h6>درصد تکمیل</h6>
+                    </div>
+                    <div class=""info-card-body"">
+                        <div class=""info-value"">@completionPercentage%</div>
+                        <div class=""info-description"">آماده دریافت گزارشها</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class=""action-buttons-row"">
-        <a asp-action=""Edit"" class=""btn btn-edit-profile"">
-            <i class=""fas fa-edit""></i>
-            ویرایش پروفایل
-        </a>
-        <a href=""#"" class=""btn btn-account-details"">
-            <i class=""fas fa-file-alt""></i>
-            جزئیات حساب
-        </a>
-    </div>
-
-    <!-- Info Cards Row -->
-    <div class=""info-cards-row"">
-        <div class=""info-card"">
-            <div class=""info-card-header"">
-                <i class=""fas fa-sign-in-alt""></i>
-                <h6>آخرین ورود</h6>
+        <div>
+            <div class=""action-card h-100"">
+                <div class=""section-title-bar"">
+                    <h5 class=""mb-0"">مرکز اطلاعات</h5>
+                    <span class=""text-muted small"">نمای کناری مشابه ArsisTest</span>
+                </div>
+                <ul class=""list-unstyled mb-0 small text-muted"">
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت پروفایل با پس‌زمینه آبی روشن</li>
+                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>دکمه‌های سبز و آبی مشابه تصویر</li>
+                    <li><i class=""fas fa-check-circle text-success ms-2""></i>همه جزئیات بدون ماژول تست/سازمان</li>
+                </ul>
             </div>
-            <div class=""info-card-body"">
-                <div class=""info-value"">@DateTime.Now.ToString(""yyyy/MM/dd"")</div>
-                <div class=""info-description"">ورود با کد یک بار مصرف</div>
-            </div>
-        </div>
-
-        <div class=""info-card"">
-            <div class=""info-card-header"">
-                <i class=""fas fa-calendar-alt""></i>
-                <h6>روزهای همراهی</h6>
-            </div>
-            <div class=""info-card-body"">
-                <div class=""info-value"">@daysSinceMembership</div>
-                <div class=""info-description"">از @membershipDate.ToString(""yyyy/MM/dd"")</div>
-            </div>
-        </div>
-
-        <div class=""info-card"">
-            <div class=""info-card-header"">
-                <i class=""fas fa-percentage""></i>
-                <h6>درصد تکمیل</h6>
-            </div>
-            <div class=""info-card-body"">
-                <div class=""info-value"">@completionPercentage%</div>
-                <div class=""info-description"">آماده دریافت گزارشها</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Sections -->
-    <div class=""bottom-sections-row"">
-        <div class=""update-info-section"">
-            <h5>به روز رسانی اطلاعات کاربری</h5>
-            <p class=""text-muted"">اطلاعات حساب خود را تازه نگه دارید تا گزارشهای استعداد دقیق تری دریافت کنید.</p>
-            <small class=""text-muted"">آخرین ویرایش @lastUpdate.ToString(""HH:mm yyyy/MM/dd"")</small>
-        </div>
-
-        <div class=""profile-progress-section"">
-            <h5>پیشرفت پروفایل</h5>
-            <p class=""text-muted"">با تکمیل اطلاعات دسترسی سریع تر به گزارشها خواهید داشت.</p>
-            <a href=""#"" class=""progress-link"">آماده دریافت گزارش ها</a>
         </div>
     </div>
 </div>
