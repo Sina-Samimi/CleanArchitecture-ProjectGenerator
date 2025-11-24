@@ -1,0 +1,216 @@
+@using EndPoint.WebSite.Areas.Admin.Models.Tests
+@using Arsis.Domain.Enums
+@using Arsis.SharedKernel.Extensions
+@model CreateTestViewModel
+
+@{
+    var availableFromDisplay = Model.AvailableFrom.ToPersianDateTimeString() ?? string.Empty;
+    var availableUntilDisplay = Model.AvailableUntil.ToPersianDateTimeString() ?? string.Empty;
+}
+
+@{
+    ViewData["Title"] = "ایجاد تست جدید";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">ایجاد تست جدید</h2>
+                    <p class="text-muted mb-0">افزودن تست جدید به سیستم</p>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-right me-2"></i>
+                    بازگشت به لیست
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" asp-action="Create" data-tests-form>
+                @Html.AntiForgeryToken()
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                }
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">عنوان تست *</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">توضیحات</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="Type" class="form-label">نوع تست *</label>
+                            <select asp-for="Type" class="form-select" asp-items="Model.TestTypes"></select>
+                            <span asp-validation-for="Type" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label">دسته‌بندی</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
+                                <option value="">-- بدون دسته‌بندی --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            <small class="form-text text-muted d-block mt-1">
+                                <i class="bi bi-info-circle"></i>
+                                تمام دسته‌بندی‌های سایت در لیست نمایش داده می‌شوند
+                                @if (Model.Categories != null)
+                                {
+                                    <span class="badge bg-info ms-2">(@Model.Categories.Count() دسته)</span>
+                                }
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Price" class="form-label">قیمت (تومان) *</label>
+                            <input asp-for="Price" asp-format="{0:0}" type="number" class="form-control" step="1000" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Currency" class="form-label">واحد پول</label>
+                            <select asp-for="Currency" class="form-select">
+                                <option value="IRT" selected>IRT (تومان)</option>
+                                <option value="IRR">IRR (ریال)</option>
+                                <option value="USD">USD (دلار)</option>
+                                <option value="EUR">EUR (یورو)</option>
+                            </select>
+                            <span asp-validation-for="Currency" class="text-danger"></span>
+                            <small class="form-text text-muted d-block mt-1">
+                                <i class="bi bi-info-circle"></i>
+                                واحد پول تست باید با واحد پول کیف پول کاربران سازگار باشد
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DurationMinutes" class="form-label">مدت زمان (دقیقه)</label>
+                            <input asp-for="DurationMinutes" type="number" class="form-control" />
+                            <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MaxAttempts" class="form-label">حداکثر دفعات شرکت</label>
+                            <input asp-for="MaxAttempts" type="number" class="form-control" />
+                            <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PassingScore" class="form-label">نمره قبولی</label>
+                            <input asp-for="PassingScore" asp-format="{0:0}" type="number" class="form-control" />
+                            <span asp-validation-for="PassingScore" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>تنظیمات نمایش</h5>
+                        <div class="form-check mb-2">
+                            <input asp-for="ShowResultsImmediately" class="form-check-input" type="checkbox" />
+                            <label asp-for="ShowResultsImmediately" class="form-check-label">
+                                نمایش نتایج بلافاصله
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input asp-for="ShowCorrectAnswers" class="form-check-input" type="checkbox" />
+                            <label asp-for="ShowCorrectAnswers" class="form-check-label">
+                                نمایش پاسخ‌های صحیح
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input asp-for="RandomizeQuestions" class="form-check-input" type="checkbox" />
+                            <label asp-for="RandomizeQuestions" class="form-check-label">
+                                نمایش تصادفی سوالات
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input asp-for="RandomizeOptions" class="form-check-input" type="checkbox" />
+                            <label asp-for="RandomizeOptions" class="form-check-label">
+                                نمایش تصادفی گزینه‌ها
+                            </label>
+                        </div>
+                    </div>
+
+                        <div class="col-md-6">
+                            <h5>دسترسی زمانی</h5>
+                            <div class="mb-3">
+                                <label asp-for="AvailableFrom" class="form-label">در دسترس از تاریخ</label>
+                                <div class="input-group">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="مثلاً ۱۰:۳۰ ۱۴۰۳/۰۱/۱۵"
+                                           dir="ltr"
+                                           autocomplete="off"
+                                           data-jdp
+                                           data-jalali-display="AvailableFrom"
+                                           value="@availableFromDisplay" />
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-open="AvailableFrom">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-clear="AvailableFrom">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <input asp-for="AvailableFrom" type="hidden" data-jalali-target="AvailableFrom" />
+                                <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="AvailableUntil" class="form-label">در دسترس تا تاریخ</label>
+                                <div class="input-group">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="مثلاً ۱۸:۰۰ ۱۴۰۳/۰۱/۲۰"
+                                           dir="ltr"
+                                           autocomplete="off"
+                                           data-jdp
+                                           data-jalali-display="AvailableUntil"
+                                           value="@availableUntilDisplay" />
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-open="AvailableUntil">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-clear="AvailableUntil">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <input asp-for="AvailableUntil" type="hidden" data-jalali-target="AvailableUntil" />
+                                <span asp-validation-for="AvailableUntil" class="text-danger"></span>
+                            </div>
+                        </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">ذخیره و ادامه</button>
+                    <a asp-action="Index" class="btn btn-secondary">انصراف</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <link href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" rel="stylesheet" />
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/tests-form.js"></script>
+}

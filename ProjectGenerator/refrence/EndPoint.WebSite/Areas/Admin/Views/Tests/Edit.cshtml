@@ -1,0 +1,512 @@
+@using EndPoint.WebSite.Areas.Admin.Models.Tests
+@using Arsis.Domain.Enums
+@using Arsis.SharedKernel.Extensions
+@using System.Globalization
+@using System.Text.Json
+@using System.Text.Encodings.Web
+@model EditTestViewModel
+
+@{
+    var availableFromDisplay = Model.AvailableFrom.ToPersianDateTimeString() ?? string.Empty;
+    var availableUntilDisplay = Model.AvailableUntil.ToPersianDateTimeString() ?? string.Empty;
+    var questionJsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+}
+
+@{
+    ViewData["Title"] = "ویرایش تست";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>ویرایش تست: @Model.Title</h2>
+                <div>
+                    @if (Model.Status == TestStatus.Draft)
+                    {
+                        <form method="post" asp-action="Publish" asp-route-id="@Model.Id" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success">انتشار تست</button>
+                        </form>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary">بازگشت</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>اطلاعات اصلی</h5>
+                </div>
+                    <div class="card-body">
+                        <form method="post" asp-action="Edit" data-tests-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">عنوان *</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">توضیحات</label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label">دسته‌بندی</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
+                                <option value="">-- بدون دسته‌بندی --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            <small class="form-text text-muted d-block mt-1">
+                                <i class="bi bi-info-circle"></i>
+                                تمام دسته‌بندی‌های سایت در لیست نمایش داده می‌شوند
+                                @if (Model.Categories != null)
+                                {
+                                    <span class="badge bg-info ms-2">(@Model.Categories.Count() دسته)</span>
+                                }
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Type" class="form-label">نوع تست</label>
+                                    <select asp-for="Type" class="form-select" asp-items="Model.TestTypes"></select>
+                                    <span asp-validation-for="Type" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Status" class="form-label">وضعیت</label>
+                                    <select asp-for="Status" class="form-select" asp-items="Model.TestStatuses"></select>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Price" class="form-label">قیمت (تومان) *</label>
+                                      <input asp-for="Price" asp-format="{0:0}" type="number" class="form-control" step="1000" />
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Currency" class="form-label">واحد پول</label>
+                                    <select asp-for="Currency" class="form-select">
+                                        <option value="IRT">IRT (تومان)</option>
+                                        <option value="IRR">IRR (ریال)</option>
+                                        <option value="USD">USD (دلار)</option>
+                                        <option value="EUR">EUR (یورو)</option>
+                                    </select>
+                                    <span asp-validation-for="Currency" class="text-danger"></span>
+                                    <small class="form-text text-muted d-block mt-1">
+                                        <i class="bi bi-info-circle"></i>
+                                        واحد پول تست باید با واحد پول کیف پول کاربران سازگار باشد
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DurationMinutes" class="form-label">مدت زمان (دقیقه)</label>
+                                    <input asp-for="DurationMinutes" type="number" class="form-control" />
+                                    <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="MaxAttempts" class="form-label">حداکثر دفعات شرکت</label>
+                                    <input asp-for="MaxAttempts" type="number" class="form-control" min="1" />
+                                    <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="PassingScore" class="form-label">نمره قبولی</label>
+                                      <input asp-for="PassingScore" asp-format="{0:0}" type="number" class="form-control" />
+                                    <span asp-validation-for="PassingScore" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NumberOfQuestionsToShow" class="form-label">تعداد سوالات نمایشی</label>
+                                    <input asp-for="NumberOfQuestionsToShow" type="number" class="form-control" min="1" />
+                                    <span asp-validation-for="NumberOfQuestionsToShow" class="text-danger"></span>
+                                    <small class="form-text text-muted">برای نمایش همه سوالات، خالی بگذارید</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <h5 class="mb-3">تنظیمات نمایش</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input asp-for="ShowResultsImmediately" class="form-check-input" type="checkbox" />
+                                    <label asp-for="ShowResultsImmediately" class="form-check-label">
+                                        نمایش نتایج بلافاصله
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input asp-for="ShowCorrectAnswers" class="form-check-input" type="checkbox" />
+                                    <label asp-for="ShowCorrectAnswers" class="form-check-label">
+                                        نمایش پاسخ‌های صحیح
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input asp-for="RandomizeQuestions" class="form-check-input" type="checkbox" />
+                                    <label asp-for="RandomizeQuestions" class="form-check-label">
+                                        نمایش تصادفی سوالات
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input asp-for="RandomizeOptions" class="form-check-input" type="checkbox" />
+                                    <label asp-for="RandomizeOptions" class="form-check-label">
+                                        نمایش تصادفی گزینه‌ها
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <h5 class="mb-3">دسترسی زمانی</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="AvailableFrom" class="form-label">در دسترس از تاریخ</label>
+                                    <div class="input-group">
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="مثلاً ۱۰:۳۰ ۱۴۰۳/۰۱/۱۵"
+                                               dir="ltr"
+                                               autocomplete="off"
+                                               data-jdp
+                                               data-jalali-display="AvailableFrom"
+                                               value="@availableFromDisplay" />
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-open="AvailableFrom">
+                                            <i class="bi bi-calendar-event"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-clear="AvailableFrom">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <input asp-for="AvailableFrom" type="hidden" data-jalali-target="AvailableFrom" />
+                                    <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="AvailableUntil" class="form-label">در دسترس تا تاریخ</label>
+                                    <div class="input-group">
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="مثلاً ۱۸:۰۰ ۱۴۰۳/۰۱/۲۰"
+                                               dir="ltr"
+                                               autocomplete="off"
+                                               data-jdp
+                                               data-jalali-display="AvailableUntil"
+                                               value="@availableUntilDisplay" />
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-open="AvailableUntil">
+                                            <i class="bi bi-calendar-event"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-clear="AvailableUntil">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <input asp-for="AvailableUntil" type="hidden" data-jalali-target="AvailableUntil" />
+                                    <span asp-validation-for="AvailableUntil" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>سوالات (@Model.Questions.Count)</h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                        <i class="bi bi-plus"></i> افزودن سوال
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (Model.Questions.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var question in Model.Questions)
+                            {
+                                var questionPayload = JsonSerializer.Serialize(new
+                                {
+                                    id = question.Id,
+                                    text = question.Text,
+                                    questionType = (int)question.QuestionType,
+                                    order = question.Order,
+                                    score = question.Score,
+                                    isRequired = question.IsRequired,
+                                    imageUrl = question.ImageUrl,
+                                    explanation = question.Explanation,
+                                    options = question.Options.OrderBy(o => o.Order).Select(o => new
+                                    {
+                                        id = o.Id,
+                                        text = o.Text,
+                                        isCorrect = o.IsCorrect,
+                                        score = o.Score,
+                                        imageUrl = o.ImageUrl,
+                                        explanation = o.Explanation
+                                    })
+                                }, questionJsonOptions);
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6>سوال @question.Order: @question.Text</h6>
+                                            <p class="mb-1 text-muted">
+                                                <span class="badge bg-secondary">@question.QuestionType.ToString()</span>
+                                                @if (question.Score.HasValue)
+                                                {
+                                                    <span class="badge bg-info">امتیاز: @question.Score</span>
+                                                }
+                                            </p>
+                                            @if (question.Options.Any())
+                                            {
+                                                <ul class="list-unstyled mb-0">
+                                                    @foreach (var option in question.Options.OrderBy(o => o.Order))
+                                                    {
+                                                        <li>
+                                                            @if (option.IsCorrect)
+                                                            {
+                                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="bi bi-circle"></i>
+                                                            }
+                                                            @option.Text
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </div>
+                                        <div class="ms-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-question="@questionPayload" onclick="AdminTestsQuestions.editQuestion(this)">
+                                                <i class="bi bi-pencil"></i> ویرایش
+                                            </button>
+                                            <form method="post" asp-action="DeleteQuestion" class="d-inline" onsubmit="return confirm('آیا از حذف این سوال اطمینان دارید؟');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="testId" value="@Model.Id" />
+                                                <input type="hidden" name="questionId" value="@question.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i> حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted">هنوز سوالی اضافه نشده است.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>اطلاعات</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">نوع:</dt>
+                        <dd class="col-sm-6">@Model.Type.ToString()</dd>
+
+                        <dt class="col-sm-6">وضعیت:</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge @(Model.Status == TestStatus.Published ? "bg-success" : "bg-warning")">
+                                @(Model.Status == TestStatus.Published ? "منتشر شده" : "پیش‌نویس")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-6">قیمت:</dt>
+                        <dd class="col-sm-6">@Model.Price.ToString("N0") تومان</dd>
+
+                        @if (Model.DurationMinutes.HasValue)
+                        {
+                            <dt class="col-sm-6">مدت زمان:</dt>
+                            <dd class="col-sm-6">@Model.DurationMinutes دقیقه</dd>
+                        }
+
+                        @if (Model.MaxAttempts.HasValue)
+                        {
+                            <dt class="col-sm-6">حداکثر دفعات:</dt>
+                            <dd class="col-sm-6">@Model.MaxAttempts</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-action="AddQuestion">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TestId" value="@Model.Id" />
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">افزودن سوال جدید</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">متن سوال *</label>
+                        <textarea name="Text" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">نوع سوال *</label>
+                                <select name="QuestionType" class="form-select" asp-items="Model.QuestionTypes" required>
+                                    <option value="">-- انتخاب کنید --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">ترتیب *</label>
+                                <input name="Order" type="number" class="form-control" value="@(Model.Questions.Count + 1)" required min="1" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">امتیاز</label>
+                                <input name="Score" type="number" class="form-control" min="0" value="1" />
+                            </div>
+                        </div>
+                    </div>
+
+                        <div id="optionsContainer" data-options-container>
+                            <h6>گزینه‌ها</h6>
+                        </div>
+                      <button type="button" class="btn btn-sm btn-secondary" onclick="AdminTestsQuestions.addOption()">افزودن گزینه</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">افزودن سوال</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Question Modal -->
+<div class="modal fade" id="editQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-action="UpdateQuestion" id="editQuestionForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TestId" value="@Model.Id" />
+                <input type="hidden" name="QuestionId" id="editQuestionId" />
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">ویرایش سوال</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">متن سوال *</label>
+                        <textarea name="Text" id="editQuestionText" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">نوع سوال *</label>
+                                <select name="QuestionType" id="editQuestionType" class="form-select" asp-items="Model.QuestionTypes" required>
+                                    <option value="">-- انتخاب کنید --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">ترتیب *</label>
+                                <input name="Order" id="editQuestionOrder" type="number" class="form-control" required min="1" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">امتیاز</label>
+                                <input name="Score" id="editQuestionScore" type="number" class="form-control" min="0" value="1" />
+                            </div>
+                        </div>
+                    </div>
+
+                      <div id="editOptionsContainer" data-edit-options>
+                        <h6>گزینه‌ها</h6>
+                    </div>
+                      <button type="button" class="btn btn-sm btn-secondary" onclick="AdminTestsQuestions.addEditOption()">افزودن گزینه</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <link href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" rel="stylesheet" />
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/tests-form.js" asp-append-version="true"></script>
+    <script src="~/js/admin/tests-questions.js" asp-append-version="true"></script>
+}

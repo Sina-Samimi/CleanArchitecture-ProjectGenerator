@@ -1,0 +1,162 @@
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Domain.Enums
+@model MyTestsViewModel
+
+@{
+    ViewData["Title"] = "Debug: تست‌های من";
+}
+
+<div class="container py-4">
+    <h1 class="mb-4">🔍 Debug: تست‌های من</h1>
+
+    <div class="alert alert-warning">
+        <strong>⚠️ این صفحه فقط برای debug است</strong>
+        <p class="mb-0">برای بررسی اینکه چرا همه فاکتورها نمایش داده نمی‌شوند.</p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">📊 خلاصه</h3>
+        </div>
+        <div class="card-body">
+            <ul class="list-unstyled mb-0">
+                <li><strong>تعداد تست‌های خریداری شده:</strong> @Model.PurchasedTests.Count</li>
+                <li><strong>تعداد attempt های کاربر:</strong> @Model.Attempts.Count</li>
+                <li><strong>تعداد کل:</strong> @(Model.PurchasedTests.Count + Model.Attempts.Count)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">✅ تست‌های خریداری شده (@Model.PurchasedTests.Count)</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.PurchasedTests.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>عنوان تست</th>
+                                <th>نوع</th>
+                                <th>شماره فاکتور</th>
+                                <th>InvoiceId</th>
+                                <th>TestId</th>
+                                <th>تاریخ خرید</th>
+                                <th>وضعیت Attempt</th>
+                                <th>AttemptId</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (test, index) in Model.PurchasedTests.Select((t, i) => (t, i + 1)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@test.TestTitle</td>
+                                    <td>@test.TestType</td>
+                                    <td>@test.InvoiceNumber</td>
+                                    <td><code>@test.InvoiceId.ToString().Substring(0, 8)...</code></td>
+                                    <td><code>@test.TestId.ToString().Substring(0, 8)...</code></td>
+                                    <td>@test.PurchaseDate.ToString("yyyy/MM/dd HH:mm")</td>
+                                    <td>
+                                        @if (test.Attempt != null)
+                                        {
+                                            <span class="badge bg-@(test.Attempt.Status == TestAttemptStatus.Completed ? "success" : test.Attempt.Status == TestAttemptStatus.InProgress ? "warning" : "secondary")">
+                                                @test.Attempt.Status
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark">بدون Attempt</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (test.Attempt != null)
+                                        {
+                                            <code>@test.Attempt.Id.ToString().Substring(0, 8)...</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">هیچ تست خریداری شده‌ای یافت نشد.</p>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0">📝 Attempt های بدون فاکتور (@Model.Attempts.Count)</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.Attempts.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>عنوان تست</th>
+                                <th>نوع</th>
+                                <th>AttemptId</th>
+                                <th>TestId</th>
+                                <th>InvoiceId</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ شروع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (attempt, index) in Model.Attempts.Select((a, i) => (a, i + 1)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@attempt.TestTitle</td>
+                                    <td>@attempt.TestType</td>
+                                    <td><code>@attempt.Id.ToString().Substring(0, 8)...</code></td>
+                                    <td><code>@attempt.TestId.ToString().Substring(0, 8)...</code></td>
+                                    <td>
+                                        @if (attempt.InvoiceId.HasValue)
+                                        {
+                                            <code>@attempt.InvoiceId.Value.ToString().Substring(0, 8)...</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">بدون فاکتور</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(attempt.Status == TestAttemptStatus.Completed ? "success" : attempt.Status == TestAttemptStatus.InProgress ? "warning" : "secondary")">
+                                            @attempt.Status
+                                        </span>
+                                    </td>
+                                    <td>@attempt.StartedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">هیچ attempt بدون فاکتوری یافت نشد.</p>
+            }
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-action="MyTests" class="btn btn-primary">
+            <i class="bi bi-arrow-right"></i> بازگشت به صفحه عادی
+        </a>
+    </div>
+</div>

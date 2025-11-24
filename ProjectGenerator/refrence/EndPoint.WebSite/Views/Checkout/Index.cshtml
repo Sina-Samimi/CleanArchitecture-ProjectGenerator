@@ -1,0 +1,134 @@
+@model EndPoint.WebSite.Models.Cart.CheckoutViewModel
+@{
+    ViewData["Title"] = "تسویه حساب";
+    ViewData["ContainerClass"] = "container checkout-container";
+    ViewData["MainClass"] = "site-main checkout-main";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/checkout-modern.css" asp-append-version="true" />
+}
+
+<section class="checkout" aria-labelledby="checkoutTitle">
+    <div class="checkout__header">
+        <h1 class="checkout__title" id="checkoutTitle">تسویه حساب</h1>
+        <p class="checkout__subtitle">انتخاب روش پرداخت و تکمیل خرید</p>
+    </div>
+
+    <div class="checkout-content">
+        <!-- Payment Method Selection -->
+        <section class="checkout-payment" aria-label="انتخاب روش پرداخت">
+            <div class="checkout-payment__card">
+                <h2 class="checkout-payment__title">روش پرداخت را انتخاب کنید</h2>
+                
+                <form asp-action="ProcessPayment" method="post" class="checkout-payment__form">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="payment-methods">
+                        <!-- Gateway Payment -->
+                        <label class="payment-method">
+                            <input type="radio" name="PaymentMethod" value="Gateway" checked class="payment-method__radio" />
+                            <div class="payment-method__card">
+                                <div class="payment-method__icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z"/>
+                                        <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/>
+                                    </svg>
+                                </div>
+                                <div class="payment-method__content">
+                                    <h3 class="payment-method__name">پرداخت اینترنتی</h3>
+                                    <p class="payment-method__description">پرداخت از طریق درگاه بانکی با کارت‌های عضو شتاب</p>
+                                    <div class="payment-method__features">
+                                        <span class="payment-method__feature">✓ ایمن و مطمئن</span>
+                                        <span class="payment-method__feature">✓ پرداخت آنی</span>
+                                    </div>
+                                </div>
+                                <div class="payment-method__check">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Wallet Payment -->
+                        <label class="payment-method">
+                            <input type="radio" name="PaymentMethod" value="Wallet" class="payment-method__radio" />
+                            <div class="payment-method__card">
+                                <div class="payment-method__icon payment-method__icon--wallet">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499L12.136.326zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484L5.562 3zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
+                                    </svg>
+                                </div>
+                                <div class="payment-method__content">
+                                    <h3 class="payment-method__name">کیف پول</h3>
+                                    <p class="payment-method__description">پرداخت از طریق موجودی کیف پول شما</p>
+                                    <div class="payment-method__features">
+                                        <span class="payment-method__feature">✓ پرداخت سریع</span>
+                                        <span class="payment-method__feature">✓ بدون کارمزد</span>
+                                    </div>
+                                    @* <p class="payment-method__balance">موجودی: <strong>۱۵۰,۰۰۰ تومان</strong></p> *@
+                                </div>
+                                <div class="payment-method__check">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="checkout-payment__actions">
+                        <button type="submit" class="checkout-payment__submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
+                            </svg>
+                            ادامه و پرداخت
+                        </button>
+                        <a asp-controller="Cart" asp-action="Index" class="checkout-payment__back">بازگشت به سبد خرید</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Order Summary -->
+        <aside class="checkout-summary" aria-label="خلاصه سفارش">
+            <div class="checkout-summary__card">
+                <h2 class="checkout-summary__title">خلاصه سفارش</h2>
+                
+                <div class="checkout-summary__items">
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <div class="checkout-summary__item">
+                            <img class="checkout-summary__item-image" src="@(!string.IsNullOrWhiteSpace(item.ThumbnailUrl) ? item.ThumbnailUrl : "https://placehold.co/80x80?text=Arsis")" alt="" loading="lazy" />
+                            <div class="checkout-summary__item-info">
+                                <h3 class="checkout-summary__item-name">@item.Name</h3>
+                                <span class="checkout-summary__item-quantity">تعداد: @item.Quantity</span>
+                            </div>
+                            <span class="checkout-summary__item-price">@item.LineTotal.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تومان</span>
+                        </div>
+                    }
+                </div>
+
+                <dl class="checkout-summary__details">
+                    <div class="checkout-summary__row">
+                        <dt>جمع جزء</dt>
+                        <dd>@Model.Cart.Subtotal.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تومان</dd>
+                    </div>
+                    <div class="checkout-summary__row">
+                        <dt>تخفیف</dt>
+                        <dd>@Model.Cart.DiscountTotal.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تومان</dd>
+                    </div>
+                    <div class="checkout-summary__divider" aria-hidden="true"></div>
+                    <div class="checkout-summary__row checkout-summary__row--total">
+                        <dt>مبلغ قابل پرداخت</dt>
+                        <dd>@Model.Cart.GrandTotal.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تومان</dd>
+                    </div>
+                </dl>
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

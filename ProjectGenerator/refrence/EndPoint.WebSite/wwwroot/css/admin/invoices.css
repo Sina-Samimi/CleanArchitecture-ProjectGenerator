@@ -1,0 +1,210 @@
+.invoice-page__header,
+.invoice-form__header,
+.invoice-details__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.invoice-page__actions,
+.invoice-form__actions,
+.invoice-details__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.invoice-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.invoice-filter-container {
+    margin-bottom: 1.5rem;
+}
+
+.invoice-filter-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background-color: var(--bs-light-bg-subtle);
+}
+
+.invoice-filter-summary__label {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--bs-secondary-color);
+}
+
+.invoice-filter-summary__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.invoice-filter-summary__reset {
+    margin-right: auto;
+}
+
+.invoice-metric-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background-color: var(--bs-body-bg);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+.invoice-metric-card__value {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.invoice-metric-card__label {
+    margin: 0.25rem 0 1rem;
+    color: var(--bs-secondary-color);
+}
+
+.invoice-metric-card__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.invoice-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 1rem;
+    background-color: var(--bs-light-bg-subtle);
+    margin-top: 2rem;
+}
+
+.invoice-empty__icon {
+    font-size: 3rem;
+    color: var(--bs-primary);
+    margin-bottom: 1rem;
+}
+
+.invoice-form form,
+.invoice-details {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    background-color: var(--bs-body-bg);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+.invoice-items__header,
+.invoice-attributes__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.invoice-item-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--bs-light-bg-subtle);
+}
+
+.invoice-item-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.invoice-attributes__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.invoice-form__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.invoice-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.invoice-summary__card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background-color: var(--bs-body-bg);
+}
+
+.invoice-summary__card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.invoice-summary__card dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1rem;
+}
+
+.invoice-summary__card dt {
+    color: var(--bs-secondary-color);
+}
+
+.invoice-summary__card dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.invoice-section {
+    margin-top: 2rem;
+}
+
+.invoice-section__title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.invoice-attribute-list {
+    margin: 0;
+    padding-right: 1rem;
+    list-style: disc;
+}
+
+.invoice-attribute-list li {
+    font-size: 0.875rem;
+}
+
+@media (max-width: 576px) {
+    .invoice-page__header,
+    .invoice-form__header,
+    .invoice-details__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .invoice-page__actions,
+    .invoice-form__actions,
+    .invoice-details__actions {
+        justify-content: flex-start;
+    }
+}

@@ -1,0 +1,202 @@
+@model PhoneLoginViewModel
+@{
+    ViewData["Title"] = "ورود / ثبت نام";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - آرسیس</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link href="~/css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/font/iransans/style.css" rel="stylesheet" />
+    <link href="/font/iransans/fontiran.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+</head>
+<body style="font-family: 'IRANSansX', 'IRANSans', sans-serif;">
+
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Illustration Side (Left) -->
+        <div class="auth-illustration">
+            <div class="auth-illustration__content">
+                <svg class="auth-illustration__svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Medical Brain Illustration -->
+                    <!-- Top Icon -->
+                    <g transform="translate(225, 40)">
+                        <rect x="0" y="0" width="50" height="50" rx="12" fill="#4A90E2"/>
+                        <path d="M 15 25 L 20 30 L 35 15" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Left Brain (Blue) -->
+                    <g transform="translate(100, 150)">
+                        <ellipse cx="60" cy="80" rx="55" ry="75" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <path d="M 30 50 Q 40 60, 30 70" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <path d="M 50 45 Q 60 55, 50 65" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <path d="M 70 50 Q 80 60, 70 70" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <circle cx="25" cy="30" r="8" fill="#A8C5DD"/>
+                        <circle cx="60" cy="25" r="8" fill="#A8C5DD"/>
+                        <circle cx="90" cy="35" r="8" fill="#A8C5DD"/>
+                    </g>
+                    
+                    <!-- Right Brain (Orange) -->
+                    <g transform="translate(240, 150)">
+                        <ellipse cx="60" cy="80" rx="55" ry="75" fill="#FF8E53" opacity="0.9"/>
+                        <path d="M 30 50 Q 40 60, 30 70" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                        <path d="M 50 45 Q 60 55, 50 65" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                        <path d="M 70 50 Q 80 60, 70 70" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                    </g>
+                    
+                    <!-- Plus Signs Decorations -->
+                    <g fill="#4A90E2" opacity="0.4">
+                        <text x="80" y="120" font-size="24" font-weight="bold">+</text>
+                        <text x="370" y="160" font-size="28" font-weight="bold">+</text>
+                        <text x="140" y="340" font-size="20" font-weight="bold">+</text>
+                        <text x="350" y="300" font-size="24" font-weight="bold">+</text>
+                    </g>
+                    
+                    <!-- Bottom Icon -->
+                    <g transform="translate(210, 380)">
+                        <ellipse cx="40" cy="45" rx="35" ry="40" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <circle cx="40" cy="35" r="20" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <circle cx="40" cy="25" r="8" fill="#FF8E53"/>
+                        <path d="M 40 45 L 40 85" stroke="#4A90E2" stroke-width="3"/>
+                    </g>
+                    
+                    <!-- Left Profile Silhouette -->
+                    <g transform="translate(40, 100)">
+                        <path d="M 20 50 Q 30 30, 45 40 Q 50 60, 45 80 Q 30 90, 20 70 Z" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                        <circle cx="32" cy="40" r="12" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                    </g>
+                    
+                    <!-- Right Profile Silhouette -->
+                    <g transform="translate(400, 100)">
+                        <path d="M 35 50 Q 25 30, 10 40 Q 5 60, 10 80 Q 25 90, 35 70 Z" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                        <circle cx="23" cy="40" r="12" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Form Side (Right) -->
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <span class="auth-logo-text">آ</span>
+                </div>
+                <h1 class="auth-title">ورود</h1>
+                <p class="auth-subtitle">لطفا شماره موبایل خود را وارد کنید.</p>
+            </div>
+
+            @if (ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="auth-card__validation">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+            {
+                <div class="auth-message auth-message--info">
+                    <i class="bi bi-info-circle ms-2"></i>
+                    @Model.InfoMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="auth-message auth-message--error">
+                    <i class="bi bi-exclamation-triangle ms-2"></i>
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <form asp-action="SendCode" method="post" class="auth-form" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="auth-field">
+                    <label asp-for="PhoneNumber" class="auth-field__label">شماره موبایل</label>
+                    <div class="auth-field__control">
+                        <i class="auth-field__icon bi bi-phone"></i>
+                        <input 
+                            asp-for="PhoneNumber" 
+                            class="auth-field__input" 
+                            placeholder="09123456789" 
+                            inputmode="tel" 
+                            maxlength="11"
+                            autocomplete="tel"
+                            autofocus />
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="auth-form__error"></span>
+                </div>
+
+                <div class="auth-consent">
+                    <label class="auth-consent__label">
+                        <input asp-for="AcceptTerms" class="auth-consent__checkbox" type="checkbox" />
+                        <span>
+                            با <a href="#" class="auth-link">قوانین و مقررات</a> آرسیس موافقم
+                        </span>
+                    </label>
+                    <span asp-validation-for="AcceptTerms" class="auth-form__error"></span>
+                </div>
+
+                <button type="submit" class="auth-button">
+                    ورود
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p class="auth-footer__text">
+                    با ورود و ثبت نام شرایط ما را قبول میکنید. اگر اکانت کاربری ندارید؟ پس 
+                    <a href="#" class="auth-link">ثبت نام</a>
+                    کنید
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    // Phone number formatting
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.querySelector('input[name="PhoneNumber"]');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                // Only allow digits
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Limit to 11 digits
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                
+                e.target.value = value;
+            });
+
+            // Focus on load if empty
+            if (!phoneInput.value) {
+                phoneInput.focus();
+            }
+        }
+
+        // Form submission loading state
+        const form = document.querySelector('.auth-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const button = form.querySelector('.auth-button');
+                if (button && form.checkValidity()) {
+                    button.classList.add('auth-button--loading');
+                    button.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

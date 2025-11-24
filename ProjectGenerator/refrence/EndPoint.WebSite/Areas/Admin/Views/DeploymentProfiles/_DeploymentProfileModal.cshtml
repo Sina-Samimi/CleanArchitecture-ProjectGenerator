@@ -1,0 +1,90 @@
+@model DeploymentProfileFormViewModel
+<form asp-area="Admin" asp-controller="DeploymentProfiles" asp-action="Save" method="post" id="deploymentProfileForm">
+    @Html.AntiForgeryToken()
+    <div class="modal-header">
+        <h5 class="modal-title">
+            @(Model.Id.HasValue ? "ویرایش پروفایل پابلیش" : "پروفایل پابلیش جدید")
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <input asp-for="Id" type="hidden" />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Branch" class="form-label"></label>
+                <input asp-for="Branch" class="form-control text-start" dir="ltr" />
+                <span asp-validation-for="Branch" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ServerHost" class="form-label"></label>
+                <input asp-for="ServerHost" class="form-control text-start" dir="ltr" />
+                <span asp-validation-for="ServerHost" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="ServerPort" class="form-label"></label>
+                <input asp-for="ServerPort" class="form-control text-start" type="number" min="1" max="65535" dir="ltr" />
+                <span asp-validation-for="ServerPort" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="ServerUser" class="form-label"></label>
+                <input asp-for="ServerUser" class="form-control text-start" dir="ltr" />
+                <span asp-validation-for="ServerUser" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DestinationPath" class="form-label"></label>
+                <input asp-for="DestinationPath" class="form-control text-start" dir="ltr" />
+                <span asp-validation-for="DestinationPath" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ArtifactName" class="form-label"></label>
+                <input asp-for="ArtifactName" class="form-control text-start" dir="ltr" />
+                <span asp-validation-for="ArtifactName" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-12">
+                <label asp-for="PreDeployCommand" class="form-label"></label>
+                <textarea asp-for="PreDeployCommand" class="form-control" rows="2"></textarea>
+                <div class="form-text">دستوراتی که قبل از انتقال فایل اجرا می‌شوند (اختیاری).</div>
+                <span asp-validation-for="PreDeployCommand" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="PostDeployCommand" class="form-label"></label>
+                <textarea asp-for="PostDeployCommand" class="form-control" rows="2"></textarea>
+                <div class="form-text">برای اکسترکت کردن فایل‌ها یا آماده‌سازی سرویس (اختیاری).</div>
+                <span asp-validation-for="PostDeployCommand" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="ServiceReloadCommand" class="form-label"></label>
+                <input asp-for="ServiceReloadCommand" class="form-control text-start" dir="ltr" />
+                <div class="form-text">مثلاً دستور ری‌استارت سرویس Kestrel یا Docker Compose.</div>
+                <span asp-validation-for="ServiceReloadCommand" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="SecretKeyName" class="form-label"></label>
+                <input asp-for="SecretKeyName" class="form-control text-start" dir="ltr" />
+                <div class="form-text">نام سکرت کلید خصوصی که در ریپازیتوری گیت‌هاب ثبت می‌کنید.</div>
+                <span asp-validation-for="SecretKeyName" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Notes" class="form-label"></label>
+                <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+        <button type="submit" class="btn btn-primary">ذخیره پروفایل</button>
+    </div>
+</form>

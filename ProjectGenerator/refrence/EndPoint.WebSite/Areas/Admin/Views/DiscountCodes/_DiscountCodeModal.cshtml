@@ -1,0 +1,320 @@
+@model DiscountCodeFormViewModel
+@{
+    Layout = null;
+    var isEdit = Model.Id.HasValue && Model.Id.Value != Guid.Empty;
+    var title = isEdit ? "ویرایش کد تخفیف" : "ایجاد کد تخفیف";
+    var subtitle = isEdit
+        ? "تنظیمات کد تخفیف را به‌روزرسانی کنید و محدودیت‌های جدیدی اعمال نمایید."
+        : "برای کاربران خود کد تخفیف جدید بسازید و شرایط مصرف را مشخص کنید.";
+    var groupRules = Model.GroupRules ?? new List<DiscountGroupRuleInputViewModel>();
+
+    string FormatScheduleDisplay(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        string ToPersianDigits(string input)
+        {
+            return input
+                .Replace('0', '۰')
+                .Replace('1', '۱')
+                .Replace('2', '۲')
+                .Replace('3', '۳')
+                .Replace('4', '۴')
+                .Replace('5', '۵')
+                .Replace('6', '۶')
+                .Replace('7', '۷')
+                .Replace('8', '۸')
+                .Replace('9', '۹');
+        }
+
+        var withSeparators = value.Replace('-', '/');
+        return ToPersianDigits(withSeparators);
+    }
+}
+
+<div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content discount-modal">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">@title</h5>
+                <p class="modal-subtitle">@subtitle</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <form asp-action="Save" method="post" class="discount-form" data-discount-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="discount-form__section">
+                    <h6 class="discount-form__title">اطلاعات پایه</h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Code" class="form-label"></label>
+                            <input asp-for="Code" class="form-control" placeholder="مثلاً ARSIS2024" autocomplete="off" />
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" placeholder="نام نمایشی برای پنل" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="DiscountType" class="form-label"></label>
+                            <select asp-for="DiscountType" class="form-select" data-discount-type-select>
+                                <option value="@((int)DiscountType.Percentage)">تخفیف درصدی</option>
+                                <option value="@((int)DiscountType.FixedAmount)">تخفیف مبلغی</option>
+                            </select>
+                            <span asp-validation-for="DiscountType" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="DiscountValue" class="form-label" data-discount-value-label>مقدار تخفیف</label>
+                            <div class="input-group">
+                                <input asp-for="DiscountValue" class="form-control" placeholder="مثلاً 20" data-discount-value />
+                                <span class="input-group-text" data-discount-value-unit>%</span>
+                            </div>
+                            <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="2" placeholder="توضیح کوتاه برای مدیران"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="discount-form__section">
+                    <h6 class="discount-form__title">زمان‌بندی و فعال‌سازی</h6>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="StartsAtPersian" class="form-label"></label>
+                            <div class="discount-schedule" data-discount-schedule="start">
+                                <div class="jalali-picker" data-jalali-picker>
+                                    <div class="jalali-picker__controls">
+                                        <button type="button" class="btn btn-light" data-jalali-open>
+                                            <i class="bi bi-calendar-event"></i>
+                                            <span class="visually-hidden">انتخاب تاریخ</span>
+                                        </button>
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="انتخاب تاریخ"
+                                               value="@FormatScheduleDisplay(Model.StartsAtPersian)"
+                                               data-jalali-input
+                                               data-jdp
+                                               data-jdp-only-date
+                                               data-jdp-init-date="@FormatScheduleDisplay(Model.StartsAtPersian)"
+                                               autocomplete="off"
+                                               dir="ltr" />
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-clear>حذف</button>
+                                    </div>
+                                    <input asp-for="StartsAtPersian" type="hidden" data-jalali-target />
+                                </div>
+                                <div class="discount-schedule__time">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="ساعت (مثلاً 08:30)"
+                                           value="@Model.StartsAtTime"
+                                           data-time-input
+                                           dir="ltr" />
+                                    <button type="button" class="btn btn-outline-secondary" data-time-clear>بازنشانی</button>
+                                    <input asp-for="StartsAtTime" type="hidden" data-time-target />
+                                </div>
+                            </div>
+                            <input asp-for="StartsAt" type="hidden" />
+                            <span asp-validation-for="StartsAtPersian" class="text-danger"></span>
+                            <span asp-validation-for="StartsAtTime" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="EndsAtPersian" class="form-label"></label>
+                            <div class="discount-schedule" data-discount-schedule="end">
+                                <div class="jalali-picker" data-jalali-picker>
+                                    <div class="jalali-picker__controls">
+                                        <button type="button" class="btn btn-light" data-jalali-open>
+                                            <i class="bi bi-calendar-event"></i>
+                                            <span class="visually-hidden">انتخاب تاریخ</span>
+                                        </button>
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="انتخاب تاریخ"
+                                               value="@FormatScheduleDisplay(Model.EndsAtPersian)"
+                                               data-jalali-input
+                                               data-jdp
+                                               data-jdp-only-date
+                                               data-jdp-init-date="@FormatScheduleDisplay(Model.EndsAtPersian)"
+                                               autocomplete="off"
+                                               dir="ltr" />
+                                        <button type="button" class="btn btn-outline-secondary" data-jalali-clear>حذف</button>
+                                    </div>
+                                    <input asp-for="EndsAtPersian" type="hidden" data-jalali-target />
+                                </div>
+                                <div class="discount-schedule__time">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="ساعت (مثلاً 18:00)"
+                                           value="@Model.EndsAtTime"
+                                           data-time-input
+                                           dir="ltr" />
+                                    <button type="button" class="btn btn-outline-secondary" data-time-clear>حذف</button>
+                                    <input asp-for="EndsAtTime" type="hidden" data-time-target />
+                                </div>
+                            </div>
+                            <input asp-for="EndsAt" type="hidden" />
+                            <span asp-validation-for="EndsAtPersian" class="text-danger"></span>
+                            <span asp-validation-for="EndsAtTime" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-check form-switch mt-3 mt-md-0">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="discount-form__section">
+                    <h6 class="discount-form__title">محدودیت‌ها و سقف مصرف</h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label asp-for="MinimumOrderAmount" class="form-label"></label>
+                            <input asp-for="MinimumOrderAmount" class="form-control" placeholder="مثلاً 200000" />
+                            <span class="form-text">برای سفارش‌های ارزان می‌توانید حداقل مبلغ تعیین کنید.</span>
+                            <span asp-validation-for="MinimumOrderAmount" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="MaxDiscountAmount" class="form-label"></label>
+                            <input asp-for="MaxDiscountAmount" class="form-control" placeholder="مثلاً 50000" />
+                            <span class="form-text">در صورت تخفیف درصدی می‌توانید سقف مبلغی تنظیم کنید.</span>
+                            <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label asp-for="GlobalUsageLimit" class="form-label"></label>
+                            <input asp-for="GlobalUsageLimit" class="form-control" placeholder="مثلاً 100" />
+                            <span class="form-text">اگر خالی بماند، کد برای همه کاربران نامحدود خواهد بود.</span>
+                            <span asp-validation-for="GlobalUsageLimit" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="discount-form__section discount-form__section--groups">
+                    <div class="discount-form__groups-header">
+                        <div>
+                            <h6 class="discount-form__title mb-1">گروه‌های مجاز</h6>
+                            <p class="discount-form__hint">می‌توانید کد را به گروه‌های خاص محدود کنید و برای هر گروه مقدار متفاوتی در نظر بگیرید.</p>
+                        </div>
+                        <button type="button" class="btn btn-light btn-sm" data-discount-group-add>
+                            <i class="bi bi-people"></i>
+                            افزودن گروه جدید
+                        </button>
+                    </div>
+                    <div class="discount-form__groups-body" data-discount-group-list>
+                        <div class="discount-form__groups-empty" data-discount-groups-empty @(groupRules.Count > 0 ? "hidden" : string.Empty)>
+                            هنوز گروهی اضافه نشده است. با کلیک روی «افزودن گروه جدید» می‌توانید گروه‌های هدف را مشخص کنید.
+                        </div>
+                        @for (var index = 0; index < groupRules.Count; index++)
+                        {
+                            <div class="discount-group-form" data-group-row>
+                                <div class="discount-group-form__header">
+                                    <span>گروه شماره @(index + 1)</span>
+                                    <button type="button" class="btn btn-icon btn-ghost" data-discount-group-remove aria-label="حذف گروه">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-3">
+                                        <label asp-for="GroupRules[index].Key" class="form-label"></label>
+                                        <input asp-for="GroupRules[index].Key" class="form-control" placeholder="مثلاً VIP" />
+                                        <span asp-validation-for="GroupRules[index].Key" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <label asp-for="GroupRules[index].UsageLimit" class="form-label"></label>
+                                        <input asp-for="GroupRules[index].UsageLimit" class="form-control" placeholder="مثلاً 50" />
+                                        <span asp-validation-for="GroupRules[index].UsageLimit" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <label asp-for="GroupRules[index].DiscountTypeOverride" class="form-label"></label>
+                                        <select asp-for="GroupRules[index].DiscountTypeOverride" class="form-select" data-group-type>
+                                            <option value="">مطابق تنظیم اصلی</option>
+                                            <option value="@((int)DiscountType.Percentage)">درصدی</option>
+                                            <option value="@((int)DiscountType.FixedAmount)">مبلغی</option>
+                                        </select>
+                                        <span asp-validation-for="GroupRules[index].DiscountTypeOverride" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-md-3" data-group-value-wrapper>
+                                        <label asp-for="GroupRules[index].DiscountValueOverride" class="form-label"></label>
+                                        <input asp-for="GroupRules[index].DiscountValueOverride" class="form-control" placeholder="مثلاً 15" data-group-value />
+                                        <span asp-validation-for="GroupRules[index].DiscountValueOverride" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <label asp-for="GroupRules[index].MaxDiscountAmountOverride" class="form-label"></label>
+                                        <input asp-for="GroupRules[index].MaxDiscountAmountOverride" class="form-control" placeholder="مثلاً 30000" />
+                                        <span asp-validation-for="GroupRules[index].MaxDiscountAmountOverride" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <label asp-for="GroupRules[index].MinimumOrderAmountOverride" class="form-label"></label>
+                                        <input asp-for="GroupRules[index].MinimumOrderAmountOverride" class="form-control" placeholder="مثلاً 100000" />
+                                        <span asp-validation-for="GroupRules[index].MinimumOrderAmountOverride" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">انصراف</button>
+                <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+            </div>
+
+            <template data-discount-group-template>
+                <div class="discount-group-form" data-group-row>
+                    <div class="discount-group-form__header">
+                        <span>گروه جدید</span>
+                        <button type="button" class="btn btn-icon btn-ghost" data-discount-group-remove aria-label="حذف گروه">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="GroupRules___index___Key">شناسه گروه</label>
+                            <input class="form-control" id="GroupRules___index___Key" name="GroupRules[__index__].Key" placeholder="مثلاً VIP" data-group-key />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].Key" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="GroupRules___index___UsageLimit">سقف مصرف</label>
+                            <input class="form-control" id="GroupRules___index___UsageLimit" name="GroupRules[__index__].UsageLimit" placeholder="مثلاً 50" />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].UsageLimit" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="GroupRules___index___DiscountTypeOverride">نوع تخفیف جایگزین</label>
+                            <select class="form-select" id="GroupRules___index___DiscountTypeOverride" name="GroupRules[__index__].DiscountTypeOverride" data-group-type>
+                                <option value="">مطابق تنظیم اصلی</option>
+                                <option value="@((int)DiscountType.Percentage)">درصدی</option>
+                                <option value="@((int)DiscountType.FixedAmount)">مبلغی</option>
+                            </select>
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].DiscountTypeOverride" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="col-12 col-md-3" data-group-value-wrapper>
+                            <label class="form-label" for="GroupRules___index___DiscountValueOverride">مقدار تخفیف جایگزین</label>
+                            <input class="form-control" id="GroupRules___index___DiscountValueOverride" name="GroupRules[__index__].DiscountValueOverride" placeholder="مثلاً 15" data-group-value />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].DiscountValueOverride" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="GroupRules___index___MaxDiscountAmountOverride">سقف تخفیف جایگزین</label>
+                            <input class="form-control" id="GroupRules___index___MaxDiscountAmountOverride" name="GroupRules[__index__].MaxDiscountAmountOverride" placeholder="مثلاً 30000" />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].MaxDiscountAmountOverride" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="GroupRules___index___MinimumOrderAmountOverride">حداقل مبلغ سفارش جایگزین</label>
+                            <input class="form-control" id="GroupRules___index___MinimumOrderAmountOverride" name="GroupRules[__index__].MinimumOrderAmountOverride" placeholder="مثلاً 100000" />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="GroupRules[__index__].MinimumOrderAmountOverride" data-valmsg-replace="true"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </form>
+    </div>
+</div>

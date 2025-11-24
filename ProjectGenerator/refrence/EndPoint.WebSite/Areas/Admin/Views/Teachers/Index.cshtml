@@ -1,0 +1,276 @@
+@using EndPoint.WebSite.Areas.Admin.Models
+@model TeacherProfilesIndexViewModel
+@{
+    var teachers = Model.Teachers?.ToList() ?? new List<TeacherProfileListItemViewModel>();
+    string FormatDate(DateTimeOffset value) => value.ToPersianDateTimeString();
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">مدیریت مدرسین</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">لیست مدرسین</h1>
+            <p class="text-muted mb-0">ثبت و مدیریت اطلاعات مدرسین برای نمایش در محصولات و اتصال به کاربران</p>
+        </div>
+        <a class="btn btn-primary" asp-area="Admin" asp-controller="Teachers" asp-action="Create">
+            <i class="bi bi-plus-lg me-1"></i>
+            مدرس جدید
+        </a>
+    </div>
+</div>
+
+<div class="modal fade" id="deactivateTeacherModal" tabindex="-1" aria-labelledby="deactivateTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deactivateTeacherModalLabel">غیرفعال‌سازی مدرس</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>با غیرفعال کردن <strong data-teacher-deactivate-name></strong> دسترسی او به پنل مدرس مسدود خواهد شد.</p>
+                <p class="text-muted small mb-0">در صورت نیاز می‌توانید هر زمان از همین بخش دوباره حساب او را فعال کنید.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form asp-area="Admin" asp-controller="Teachers" asp-action="Deactivate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" data-teacher-deactivate-id />
+                    <button type="submit" class="btn btn-warning">تایید غیرفعال‌سازی</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="activateTeacherModal" tabindex="-1" aria-labelledby="activateTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activateTeacherModalLabel">فعال‌سازی مدرس</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>با فعال‌سازی مجدد <strong data-teacher-activate-name></strong> امکان ورود و دسترسی به محصولات برای او باز می‌شود.</p>
+                <p class="text-muted small mb-0">پس از تایید، مدرس باید مجدداً وارد سیستم شود.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form asp-area="Admin" asp-controller="Teachers" asp-action="Activate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" data-teacher-activate-id />
+                    <button type="submit" class="btn btn-success">تایید فعال‌سازی</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeTeacherModal" tabindex="-1" aria-labelledby="removeTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeTeacherModalLabel">حذف مدرس</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>با حذف <strong data-teacher-remove-name></strong> دسترسی او به نقش مدرس و سوابق مرتبط پاک می‌شود.</p>
+                <p class="text-muted small mb-0">این عملیات قابل بازگشت نیست و مدرس از سیستم خارج خواهد شد.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form asp-area="Admin" asp-controller="Teachers" asp-action="Remove" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" data-teacher-remove-id />
+                    <button type="submit" class="btn btn-danger">تایید حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/teachers-index.js" asp-append-version="true"></script>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill me-2"><i class="bi bi-people"></i></span>
+                    <span class="fw-semibold">کل مدرسین</span>
+                </div>
+                <h2 class="h4 mb-1">@teachers.Count</h2>
+                <p class="text-muted small mb-0">تمام پروفایل‌های ثبت شده</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-success-subtle text-success rounded-pill me-2"><i class="bi bi-check-circle"></i></span>
+                    <span class="fw-semibold">فعال</span>
+                </div>
+                <h2 class="h4 mb-1">@Model.ActiveCount</h2>
+                <p class="text-muted small mb-0">قابل انتخاب در فرم‌های محصول</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill me-2"><i class="bi bi-pause-circle"></i></span>
+                    <span class="fw-semibold">غیرفعال</span>
+                </div>
+                <h2 class="h4 mb-1">@Model.InactiveCount</h2>
+                <p class="text-muted small mb-0">در دسترس برای انتساب نیستند</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 mb-1">مدرسین ثبت شده</h2>
+                <p class="text-muted small mb-0">@teachers.Count مدرس در سیستم وجود دارد.</p>
+            </div>
+        </div>
+
+        @if (teachers.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-person-video3 display-5 d-block mb-3"></i>
+                <h3 class="h5">هنوز مدرسی ثبت نشده است</h3>
+                <p class="mb-0">برای شروع روی دکمه «مدرس جدید» کلیک کنید و اطلاعات مدرس را تکمیل نمایید.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">مدرس</th>
+                            <th scope="col">تخصص</th>
+                            <th scope="col">اطلاعات تماس</th>
+                            <th scope="col">شناسه کاربری</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">آخرین بروزرسانی</th>
+                            <th scope="col" class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var teacher in teachers)
+                        {
+                            var statusBadge = teacher.IsActive ? "badge bg-success-subtle text-success" : "badge bg-secondary-subtle text-secondary";
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@teacher.DisplayName</div>
+                                    @if (!string.IsNullOrWhiteSpace(teacher.Degree))
+                                    {
+                                        <div class="text-muted small">@teacher.Degree</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(teacher.Bio))
+                                    {
+                                        <div class="text-muted small">@teacher.Bio</div>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(teacher.Specialty))
+                                    {
+                                        <span class="badge bg-info-subtle text-info">@teacher.Specialty</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1 small">
+                                        @if (!string.IsNullOrWhiteSpace(teacher.ContactEmail))
+                                        {
+                                            <span><i class="bi bi-envelope-open me-1"></i>@teacher.ContactEmail</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(teacher.ContactPhone))
+                                        {
+                                            <span><i class="bi bi-telephone me-1"></i>@teacher.ContactPhone</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(teacher.UserId))
+                                    {
+                                        <code class="small">@teacher.UserId</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">متصل نشده</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="@statusBadge">@(teacher.IsActive ? "فعال" : "غیرفعال")</span>
+                                </td>
+                                <td>
+                                    <div class="small text-muted">
+                                        <div>ویرایش: @FormatDate(teacher.UpdatedAt)</div>
+                                        <div>ایجاد: @FormatDate(teacher.CreatedAt)</div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-sliders"></i>
+                                            مدیریت
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Admin" asp-controller="Teachers" asp-action="Edit" asp-route-id="@teacher.Id">
+                                                    <i class="bi bi-pencil"></i>
+                                                    ویرایش پروفایل
+                                                </a>
+                                            </li>
+                                            @if (teacher.IsActive)
+                                            {
+                                                <li>
+                                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-warning" data-bs-toggle="modal" data-bs-target="#deactivateTeacherModal" data-teacher-id="@teacher.Id" data-teacher-name="@teacher.DisplayName">
+                                                        <i class="bi bi-pause-circle"></i>
+                                                        غیرفعال‌سازی مدرس
+                                                    </button>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-success" data-bs-toggle="modal" data-bs-target="#activateTeacherModal" data-teacher-id="@teacher.Id" data-teacher-name="@teacher.DisplayName">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        فعال‌سازی مدرس
+                                                    </button>
+                                                </li>
+                                            }
+                                            <li>
+                                                <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-danger" data-bs-toggle="modal" data-bs-target="#removeTeacherModal" data-teacher-id="@teacher.Id" data-teacher-name="@teacher.DisplayName">
+                                                    <i class="bi bi-trash"></i>
+                                                    حذف کامل مدرس
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

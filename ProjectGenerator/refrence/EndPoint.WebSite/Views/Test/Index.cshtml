@@ -1,0 +1,241 @@
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Domain.Enums
+@using System.Globalization
+@model TestListViewModel
+
+@{
+    ViewData["Title"] = "آزمون‌ها و تست‌های روانشناسی";
+    var persianCulture = new CultureInfo("fa-IR");
+    string FormatPrice(decimal value) => string.Format(persianCulture, "{0:N0}", value);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/tests-public.css" asp-append-version="true" />
+}
+
+<div class="tests-public-page">
+    <div class="tests-hero">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1 class="tests-hero__title">آزمون‌ها و تست‌های روانشناسی</h1>
+                    <p class="tests-hero__subtitle">با شرکت در تست‌های تخصصی، خود را بهتر بشناسید</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="row mb-4">
+                <div class="col-12">
+                    <a asp-action="MyTests" class="btn btn-outline-primary">
+                        <i class="bi bi-clipboard-check"></i> آزمون‌های من
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card tests-filter-card">
+                    <div class="card-body">
+                        <div class="tests-filter-header">
+                            <h5 class="tests-filter-title">
+                                <i class="bi bi-funnel"></i>
+                                فیلتر آزمون‌ها
+                            </h5>
+                            @if (Model.TotalCount > 0)
+                            {
+                                <span class="tests-filter-count">@Model.TotalCount آزمون یافت شد</span>
+                            }
+                        </div>
+                        <form method="get" asp-action="Index" class="tests-filter-form">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="search" class="form-label">جستجو</label>
+                                    <input type="text" id="search" name="search" value="@Model.Search" class="form-control" placeholder="عنوان آزمون..." />
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="type" class="form-label">نوع آزمون</label>
+                                    <select id="type" name="type" class="form-select" asp-items="Model.TestTypes">
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="categoryId" class="form-label">دسته‌بندی</label>
+                                    <select id="categoryId" name="categoryId" class="form-select" asp-items="Model.Categories">
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="isFree" class="form-label">وضعیت قیمت</label>
+                                    <select id="isFree" name="isFree" class="form-select">
+                                        <option value="">همه</option>
+                                        <option value="true" selected="@(Model.IsFree == true ? "selected" : null)">رایگان</option>
+                                        <option value="false" selected="@(Model.IsFree == false ? "selected" : null)">پولی</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tests-filter-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                    جستجو
+                                </button>
+                                <a asp-action="Index" class="btn btn-link text-decoration-none">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    بازنشانی فیلترها
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            @if (Model.Tests.Any())
+            {
+                @foreach (var test in Model.Tests)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="test-card">
+                            <div class="test-card__header">
+                                <span class="test-card__type test-card__type--@test.Type.ToString().ToLower()">
+                                    @GetTestTypeName(test.Type)
+                                </span>
+                                @if (test.Price == 0)
+                                {
+                                    <span class="test-card__badge test-card__badge--free">
+                                        <i class="bi bi-gift"></i>
+                                        رایگان
+                                    </span>
+                                }
+                            </div>
+                            <div class="test-card__body">
+                                <h5 class="test-card__title">@test.Title</h5>
+                                @if (!string.IsNullOrEmpty(test.CategoryName))
+                                {
+                                    <div class="test-card__category">
+                                        <i class="bi bi-tag"></i>
+                                        @test.CategoryName
+                                    </div>
+                                }
+                                <div class="test-card__meta">
+                                    <div class="test-card__meta-item">
+                                        <i class="bi bi-question-circle"></i>
+                                        <span>@test.QuestionsCount سوال</span>
+                                    </div>
+                                    <div class="test-card__meta-item">
+                                        <i class="bi bi-people"></i>
+                                        <span>@test.AttemptsCount شرکت‌کننده</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="test-card__footer">
+                                @if (test.Price > 0)
+                                {
+                                    <div class="test-card__price">
+                                        @FormatPrice(test.Price) تومان
+                                    </div>
+                                }
+                                <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-primary test-card__btn">
+                                    مشاهده جزئیات
+                                    <i class="bi bi-arrow-left"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="tests-empty-state">
+                        <div class="tests-empty-state__icon">
+                            <i class="bi bi-clipboard-x"></i>
+                        </div>
+                        <h3 class="tests-empty-state__title">آزمونی یافت نشد</h3>
+                        <p class="tests-empty-state__subtitle">
+                            @if (!string.IsNullOrEmpty(Model.Search) || Model.Type.HasValue || Model.CategoryId.HasValue || Model.IsFree.HasValue)
+                            {
+                                <span>با فیلترهای انتخابی شما آزمونی در دسترس نیست. لطفاً فیلترهای دیگری را امتحان کنید.</span>
+                            }
+                            else
+                            {
+                                <span>در حال حاضر آزمونی در دسترس نیست.</span>
+                            }
+                        </p>
+                        @if (!string.IsNullOrEmpty(Model.Search) || Model.Type.HasValue || Model.CategoryId.HasValue || Model.IsFree.HasValue)
+                        {
+                            <a asp-action="Index" class="btn btn-primary">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                نمایش همه آزمون‌ها
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="صفحه‌بندی آزمون‌ها">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.Page - 1)"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@Model.Type"
+                                   asp-route-categoryId="@Model.CategoryId"
+                                   asp-route-isFree="@Model.IsFree"
+                                   aria-label="قبلی">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.Page ? "active" : "")">
+                                    <a class="page-link" 
+                                       asp-action="Index" 
+                                       asp-route-page="@i"
+                                       asp-route-search="@Model.Search"
+                                       asp-route-type="@Model.Type"
+                                       asp-route-categoryId="@Model.CategoryId"
+                                       asp-route-isFree="@Model.IsFree">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.Page + 1)"
+                                   asp-route-search="@Model.Search"
+                                   asp-route-type="@Model.Type"
+                                   asp-route-categoryId="@Model.CategoryId"
+                                   asp-route-isFree="@Model.IsFree"
+                                   aria-label="بعدی">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetTestTypeName(TestType type) => type switch
+    {
+        TestType.General => "تست عمومی",
+        TestType.Disc => "تست DISC",
+        TestType.Clifton => "تست کلیفتون",
+        TestType.CliftonSchwartz => "تست کلیفتون + شوارتز",
+        TestType.Raven => "تست هوش ریون",
+        TestType.Personality => "تست شخصیت‌شناسی",
+        _ => type.ToString()
+    };
+}

@@ -276,10 +276,7 @@ public partial class MainForm : Form
 
     private void TxtProjectName_TextChanged(object? sender, EventArgs e)
     {
-        if (string.IsNullOrEmpty(txtNamespace.Text) || txtNamespace.Text == _config.ProjectName)
-        {
-            txtNamespace.Text = txtProjectName.Text;
-        }
+        txtNamespace.Text = txtProjectName.Text;
     }
 
     private void ChkGenerateSeedData_CheckedChanged(object? sender, EventArgs e)

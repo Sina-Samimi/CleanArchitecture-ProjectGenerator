@@ -1,0 +1,281 @@
+@model UserProductLibraryViewModel
+@{
+    ViewData["Title"] ??= "محصولات خریداری شده";
+    var filter = Model.Filter;
+    string FormatCurrency(decimal value) => value.ToString("N0");
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/user/product-library.css" asp-append-version="true" />
+}
+
+<div class="user-library" data-library>
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="library-metrics">
+                @foreach (var metric in Model.Metrics)
+                {
+                    <div class="library-metric library-metric--@metric.Tone">
+                        <div class="library-metric__icon" aria-hidden="true">
+                            <i class="bi @metric.Icon"></i>
+                        </div>
+                        <div class="library-metric__content">
+                            <span class="library-metric__label">@metric.Label</span>
+                            <strong class="library-metric__value">@metric.Value</strong>
+                            @if (!string.IsNullOrWhiteSpace(metric.Description))
+                            {
+                                <small class="library-metric__description">@metric.Description</small>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @await Html.PartialAsync("_StatusMessage")
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form class="row g-3 align-items-end" method="get" novalidate>
+                        <div class="col-12 col-lg-3">
+                            <label class="form-label" for="librarySearch">جستجوی محصول</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span> 
+                                <input type="search" id="librarySearch" name="Search" value="@filter.Search" class="form-control" placeholder="نام محصول، شماره فاکتور یا توضیحات" />
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <label class="form-label" for="libraryType">نوع محصول</label>
+                            <select id="libraryType" name="Type" class="form-select">
+                                <option value="">همه انواع</option>
+                                @if (filter.Type == UserProductTypeFilter.Digital)
+                                {
+                                    <option value="Digital" selected>محصولات دانلودی</option>
+                                }
+                                else
+                                {
+                                    <option value="Digital">محصولات دانلودی</option>
+                                }
+                                @if (filter.Type == UserProductTypeFilter.Physical)
+                                {
+                                    <option value="Physical" selected>محصولات حضوری / فیزیکی</option>
+                                }
+                                else
+                                {
+                                    <option value="Physical">محصولات حضوری / فیزیکی</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <label class="form-label" for="libraryStatus">وضعیت پرداخت</label>
+                            <select id="libraryStatus" name="Status" class="form-select">
+                                <option value="">همه وضعیت‌ها</option>
+                                @if (filter.Status == UserProductStatusFilter.Paid)
+                                {
+                                    <option value="Paid" selected>تسویه شده</option>
+                                }
+                                else
+                                {
+                                    <option value="Paid">تسویه شده</option>
+                                }
+                                @if (filter.Status == UserProductStatusFilter.PartiallyPaid)
+                                {
+                                    <option value="PartiallyPaid" selected>تسویه جزئی</option>
+                                }
+                                else
+                                {
+                                    <option value="PartiallyPaid">تسویه جزئی</option>
+                                }
+                                @if (filter.Status == UserProductStatusFilter.Pending)
+                                {
+                                    <option value="Pending" selected>در انتظار پرداخت</option>
+                                }
+                                else
+                                {
+                                    <option value="Pending">در انتظار پرداخت</option>
+                                }
+                                @if (filter.Status == UserProductStatusFilter.Overdue)
+                                {
+                                    <option value="Overdue" selected>سررسید گذشته</option>
+                                }
+                                else
+                                {
+                                    <option value="Overdue">سررسید گذشته</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-lg-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i>
+                                <span>اعمال فیلتر</span>
+                            </button>
+                            <a class="btn btn-ghost w-100" asp-area="User" asp-controller="Products" asp-action="Index">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                <span>بازنشانی</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="library-summary card border-0 shadow-sm">
+                <div class="card-body d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start align-items-md-center">
+                    <div>
+                        <h2 class="h5 mb-1">کتابخانه محصولات</h2>
+                        <p class="text-muted mb-0">@Model.FilteredPurchases.ToString("N0") محصول از @Model.TotalPurchases.ToString("N0") خرید ثبت‌شده نمایش داده می‌شود.</p>
+                    </div>
+                    <div class="library-summary__chips">
+                        @if (!string.IsNullOrWhiteSpace(filter.Search))
+                        {
+                            <span class="badge bg-primary-subtle text-primary-emphasis">
+                                <i class="bi bi-search ms-1"></i>
+                                جستجو: @filter.Search
+                            </span>
+                        }
+                        @if (filter.Type is not null)
+                        {
+                            var typeLabel = filter.Type == UserProductTypeFilter.Digital ? "دانلودی" : "حضوری / فیزیکی";
+                            <span class="badge bg-info-subtle text-info-emphasis">
+                                <i class="bi bi-collection-play ms-1"></i>
+                                نوع: @typeLabel
+                            </span>
+                        }
+                        @if (filter.Status is not null)
+                        {
+                            var statusLabel = filter.Status switch
+                            {
+                                UserProductStatusFilter.Paid => "تسویه شده",
+                                UserProductStatusFilter.PartiallyPaid => "تسویه جزئی",
+                                UserProductStatusFilter.Pending => "در انتظار پرداخت",
+                                UserProductStatusFilter.Overdue => "سررسید گذشته",
+                                _ => string.Empty
+                            };
+                            <span class="badge bg-warning-subtle text-warning-emphasis">
+                                <i class="bi bi-shield-check ms-1"></i>
+                                وضعیت: @statusLabel
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            @if (!Model.HasPurchases)
+            {
+                <div class="library-empty card border-0 shadow-sm text-center">
+                    <div class="card-body py-5">
+                        <div class="library-empty__icon" aria-hidden="true">
+                            <i class="bi bi-bag"></i>
+                        </div>
+                        <h3 class="h4 mb-2">هنوز محصولی خریداری نکرده‌اید</h3>
+                        <p class="text-muted mb-4">پس از خرید محصولات، دسترسی آن‌ها در اینجا نمایش داده می‌شود و می‌توانید فایل‌های دانلودی را دریافت کنید.</p>
+                        <a class="btn btn-primary px-4" asp-area="" asp-controller="Home" asp-action="Index" style="color:white;">
+                            <i class="bi bi-house-heart ms-1"></i>
+                            شروع خرید از وب‌سایت
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="library-grid">
+                    @foreach (var purchase in Model.Purchases)
+                    {
+                        var purchaseDate = purchase.PurchasedAt.ToPersianDateTimeString();
+                        var outstanding = Math.Abs(purchase.InvoiceOutstandingAmount) > 0.01m;
+                        <article class="library-card @(purchase.IsDigital ? "is-digital" : "is-physical")">
+                            <div class="library-card__media" aria-hidden="true">
+                                @if (!string.IsNullOrWhiteSpace(purchase.ThumbnailPath))
+                                {
+                                    <img src="@purchase.ThumbnailPath" alt="@purchase.Name" />
+                                }
+                                else
+                                {
+                                    <span class="library-card__placeholder">
+                                        <i class="bi @(purchase.IsDigital ? "bi-cloud-arrow-down" : "bi-bag-heart")"></i>
+                                    </span>
+                                }
+                                <span class="library-card__chip @(purchase.IsDigital ? "chip-digital" : "chip-physical")">
+                                    <i class="bi @(purchase.IsDigital ? "bi-cloud-download" : "bi-box-seam")"></i>
+                                    <span>@purchase.Type</span>
+                                </span>
+                            </div>
+                            <div class="library-card__body">
+                                <div class="library-card__header">
+                                    <div>
+                                        <h3 class="library-card__title">@purchase.Name</h3>
+                                        <div class="library-card__meta">
+                                            <span>
+                                                <i class="bi bi-hash ms-1"></i>
+                                                فاکتور: <strong>@purchase.InvoiceNumber</strong>
+                                            </span>
+                                            @if (!string.IsNullOrWhiteSpace(purchase.CategoryName))
+                                            {
+                                                <span>
+                                                    <i class="bi bi-collection"></i>
+                                                    دسته‌بندی: @purchase.CategoryName
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <span class="@purchase.StatusBadgeClass">@purchase.Status</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(purchase.Summary))
+                                {
+                                    <p class="library-card__summary">@purchase.Summary</p>
+                                }
+                                <div class="library-card__stats">
+                                    <div class="library-card__stat">
+                                        <span>تاریخ خرید</span>
+                                        <strong>@purchaseDate</strong>
+                                    </div>
+                                    <div class="library-card__stat">
+                                        <span>تعداد / قیمت واحد</span>
+                                        <strong>@purchase.Quantity.ToString("N0")</strong>
+                                        <small>@FormatCurrency(purchase.UnitPrice) ریال</small>
+                                    </div>
+                                    <div class="library-card__stat">
+                                        <span>مبلغ این آیتم</span>
+                                        <strong>@FormatCurrency(purchase.Total) ریال</strong>
+                                        <small>مبلغ فاکتور: @FormatCurrency(purchase.InvoiceGrandTotal) ریال</small>
+                                    </div>
+                                    <div class="library-card__stat">
+                                        <span>وضعیت پرداخت</span>
+                                        <strong>@FormatCurrency(purchase.InvoicePaidAmount) ریال</strong>
+                                        <small class="@(outstanding ? "text-danger" : "text-muted")">
+                                            @(outstanding ? $"{FormatCurrency(purchase.InvoiceOutstandingAmount)} ریال باقی‌مانده" : "تسویه کامل")
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="library-card__actions">
+                                    @if (purchase.CanDownload)
+                                    {
+                                        <a class="btn btn-primary" href="@purchase.DownloadUrl" target="_blank" rel="noopener">
+                                            <i class="bi bi-download"></i>
+                                            دانلود فایل
+                                        </a>
+                                    }
+                                    else if (purchase.IsDigital)
+                                    {
+                                        <span class="library-card__note">
+                                            <i class="bi bi-shield-lock"></i>
+                                            دسترسی دانلود پس از تکمیل پرداخت فعال می‌شود
+                                        </span>
+                                    }
+                                    <a class="btn btn-ghost" asp-area="User" asp-controller="Wallet" asp-action="Index">
+                                        <i class="bi bi-receipt"></i>
+                                        مشاهده فاکتورها
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

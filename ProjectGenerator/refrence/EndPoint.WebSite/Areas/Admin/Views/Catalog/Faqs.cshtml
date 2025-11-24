@@ -1,0 +1,152 @@
+@model ProductFaqsViewModel
+@{
+    var isEditing = Model.Form.Id.HasValue;
+    var pageTitle = isEditing ? "ویرایش سوال متداول" : "افزودن سوال متداول";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Catalog" asp-action="Index">مدیریت محصولات</a></li>
+    <li class="breadcrumb-item active" aria-current="page">سوالات متداول</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="product-faqs-page" data-product-faqs>
+    <div class="product-faqs-page__hero">
+        <div>
+            <h1 class="product-faqs-page__title">@ViewData["Title"]</h1>
+            <p class="product-faqs-page__subtitle">پرسش‌های پرتکرار مشتریان را برای محصول تنظیم و بروزرسانی کنید.</p>
+        </div>
+        <div class="product-faqs-page__actions">
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Catalog" asp-action="Index">
+                <i class="bi bi-arrow-right"></i>
+                بازگشت به محصولات
+            </a>
+        </div>
+    </div>
+
+    <section class="product-faqs-form card">
+        <div class="card-body">
+            <div class="product-faqs-form__header">
+                <div>
+                    <h2 class="product-faqs-form__title">@pageTitle</h2>
+                    <p class="product-faqs-form__subtitle">@("محصول: " + Model.ProductName)</p>
+                </div>
+                <span class="product-faqs-form__hint">سوال‌ها بر اساس مقدار «ترتیب» از کم به زیاد نمایش داده می‌شوند.</span>
+            </div>
+            <form class="product-faqs-form__form"
+                  asp-area="Admin"
+                  asp-controller="Catalog"
+                  asp-action="@(isEditing ? "UpdateFaq" : "CreateFaq")"
+                  asp-route-id="@Model.ProductId"
+                  method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Form.Id" />
+                <div class="row g-3">
+                    <div class="col-12 col-md-7">
+                        <label class="form-label" asp-for="Form.Question"></label>
+                        <input class="form-control" asp-for="Form.Question" />
+                        <span class="text-danger" asp-validation-for="Form.Question"></span>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" asp-for="Form.Order"></label>
+                        <input class="form-control" asp-for="Form.Order" type="number" min="0" />
+                        <span class="text-danger" asp-validation-for="Form.Order"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Form.Answer"></label>
+                        <textarea class="form-control" asp-for="Form.Answer" rows="4"></textarea>
+                        <span class="text-danger" asp-validation-for="Form.Answer"></span>
+                    </div>
+                </div>
+                <div class="product-faqs-form__actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi @(isEditing ? "bi-arrow-repeat" : "bi-plus-lg")"></i>
+                        @(isEditing ? "ذخیره تغییرات" : "افزودن سوال")
+                    </button>
+                    @if (isEditing)
+                    {
+                        <a class="btn btn-link" asp-area="Admin" asp-controller="Catalog" asp-action="Faqs" asp-route-id="@Model.ProductId">
+                            انصراف از ویرایش
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="product-faqs-list card">
+        <div class="card-body">
+            <div class="product-faqs-list__header">
+                <div>
+                    <h2 class="product-faqs-list__title">سوالات متداول</h2>
+                    <p class="product-faqs-list__subtitle">سوال‌های پرتکرار را برای راهنمایی بهتر مخاطبان مدیریت کنید.</p>
+                </div>
+                <span class="product-faqs-list__count">@Model.Faqs.Count سوال ثبت شده</span>
+            </div>
+
+            @if (!Model.Faqs.Any())
+            {
+                <div class="product-faqs-empty">
+                    <div class="product-faqs-empty__icon" aria-hidden="true">
+                        <i class="bi bi-chat-left-text"></i>
+                    </div>
+                    <h3 class="product-faqs-empty__title">سوالی برای این محصول ثبت نشده است</h3>
+                    <p class="product-faqs-empty__subtitle">اولین سوال را اضافه کنید تا کاربران سریع‌تر به پاسخ برسند.</p>
+                </div>
+            }
+            else
+            {
+                <div class="product-faqs-accordion" role="list">
+                    @foreach (var faq in Model.Faqs)
+                    {
+                        var isHighlighted = Model.HighlightedFaqId.HasValue && Model.HighlightedFaqId.Value == faq.Id;
+                        <article class="product-faq-card @(isHighlighted ? "product-faq-card--highlight" : null)" role="listitem">
+                            <header class="product-faq-card__header">
+                                <span class="product-faq-card__order">@($"سوال {faq.Order + 1}")</span>
+                                <h3 class="product-faq-card__question">@faq.Question</h3>
+                            </header>
+                            <div class="product-faq-card__answer" dir="auto">
+                                @faq.Answer
+                            </div>
+                            <footer class="product-faq-card__actions">
+                                <a class="btn btn-outline-primary btn-sm"
+                                   asp-area="Admin"
+                                   asp-controller="Catalog"
+                                   asp-action="Faqs"
+                                   asp-route-id="@Model.ProductId"
+                                   asp-route-faqId="@faq.Id">
+                                    <i class="bi bi-pencil"></i>
+                                    ویرایش
+                                </a>
+                                <form method="post"
+                                      asp-area="Admin"
+                                      asp-controller="Catalog"
+                                      asp-action="DeleteFaq"
+                                      asp-route-id="@Model.ProductId"
+                                      asp-route-faqId="@faq.Id"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('آیا از حذف این سوال مطمئن هستید؟');">
+                                        <i class="bi bi-trash"></i>
+                                        حذف
+                                    </button>
+                                </form>
+                            </footer>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

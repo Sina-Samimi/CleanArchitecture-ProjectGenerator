@@ -1,0 +1,255 @@
+@using System
+@using System.Text.Json
+@using Microsoft.AspNetCore.Http
+@{
+    var title = ViewData["Title"] as string ?? "پنل سازمانی";
+    var subtitle = ViewData["Subtitle"] as string;
+    var alertMessage = TempData["Alert.Message"] as string;
+    var alertTitle = TempData["Alert.Title"] as string;
+    var alertType = TempData["Alert.Type"] as string;
+    var alertConfirmText = TempData["Alert.ConfirmText"] as string;
+    var hasAlert = !string.IsNullOrWhiteSpace(alertMessage);
+    string alertJson = string.Empty;
+
+    if (hasAlert)
+    {
+        var payload = new
+        {
+            title = string.IsNullOrWhiteSpace(alertTitle) ? "اعلان سیستم" : alertTitle,
+            message = alertMessage,
+            type = string.IsNullOrWhiteSpace(alertType) ? "info" : alertType,
+            confirmText = string.IsNullOrWhiteSpace(alertConfirmText) ? "باشه" : alertConfirmText
+        };
+
+        alertJson = JsonSerializer.Serialize(payload);
+    }
+
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    var greetingInitial = (ViewData["GreetingInitial"] as string)?.Trim();
+    var greetingAvatarUrl = ViewData["GreetingAvatarUrl"] as string;
+    var greetingTitle = ViewData["GreetingTitle"] as string ?? "سلام 👋";
+    var greetingSubtitle = ViewData["GreetingSubtitle"] as string ?? "به پنل سازمانی خوش آمدید";
+    var searchPlaceholder = ViewData["SearchPlaceholder"] as string ?? "جستجو در پنل سازمانی";
+    var showSearch = ViewData["ShowSearch"] is bool showSearchValue ? showSearchValue : true;
+    var accountName = ViewData["AccountName"] as string ?? "کاربر";
+    var accountInitial = (ViewData["AccountInitial"] as string)?.Trim();
+    var accountAvatarUrl = ViewData["AccountAvatarUrl"] as string ?? greetingAvatarUrl;
+    var titleSuffix = ViewData["TitleSuffix"] as string ?? "پنل سازمانی";
+    var persianYear = DateTime.Now.ToPersianDateString().Split('/')[0];
+
+    var request = ViewContext?.HttpContext?.Request;
+    string? logoutReturnUrl = null;
+
+    if (request is not null && HttpMethods.IsGet(request.Method))
+    {
+        var candidate = request.Path.Value ?? string.Empty;
+
+        if (request.QueryString.HasValue)
+        {
+            candidate += request.QueryString.Value;
+        }
+
+        logoutReturnUrl = Uri.EscapeDataString(candidate);
+    }
+}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - @titleSuffix</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/adminlte/adminlte.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/adminlte/adminlte-rtl.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/adminlte/adminlte-extra.css" asp-append-version="true" />
+
+    <!-- Custom styles for organization panel -->
+    <style>
+        .organization-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .nav-sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .organization-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .organization-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light organization-header">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="~/organization/dashboard" class="nav-link">
+                        <i class="fas fa-home"></i> داشبورد سازمانی
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-toggle="dropdown" href="#">
+                        <i class="far fa-user"></i>
+                        <span>@accountName</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <div class="dropdown-divider"></div>
+                        <a href="~/account/logout?returnUrl=@logoutReturnUrl" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt mr-2"></i> خروج
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4 organization-header">
+            <!-- Brand Logo -->
+            <a href="~/organization/dashboard" class="brand-link">
+                <span class="brand-text font-weight-light">پنل سازمانی</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <div class="image">
+                        @if (!string.IsNullOrWhiteSpace(accountAvatarUrl))
+                        {
+                            <img src="@accountAvatarUrl" class="img-circle elevation-2" alt="User Image">
+                        }
+                        else if (!string.IsNullOrWhiteSpace(accountInitial))
+                        {
+                            <div class="avatar-initial">@accountInitial</div>
+                        }
+                        else
+                        {
+                            <div class="avatar-initial">@greetingInitial</div>
+                        }
+                    </div>
+                    <div class="info">
+                        <a href="#" class="d-block">@accountName</a>
+                    </div>
+                </div>
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <a href="~/organization/dashboard" class="nav-link @(currentController == "Dashboard" ? "active" : "")">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>داشبورد</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="~/organization/analysis" class="nav-link @(currentController == "Analysis" ? "active" : "")">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>تحلیل سازمانی</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="~/organization/users" class="nav-link @(currentController == "Users" ? "active" : "")">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>کاربران سازمان</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="~/organization/tests" class="nav-link @(currentController == "Tests" ? "active" : "")">
+                                <i class="nav-icon fas fa-clipboard-check"></i>
+                                <p>نتایج تست‌ها</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="~/organization/settings" class="nav-link @(currentController == "Settings" ? "active" : "")">
+                                <i class="nav-icon fas fa-cog"></i>
+                                <p>تنظیمات</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Content Header -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0">@title</h1>
+                            @if (!string.IsNullOrWhiteSpace(subtitle))
+                            {
+                                <p class="text-muted">@subtitle</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </section>
+        </div>
+
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <strong>&copy; @persianYear <a href="~/">ARSIS</a>.</strong>
+            تمامی حقوق محفوظ است.
+            <div class="float-left">
+                <b>Version</b> 1.0.0
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/js/adminlte/adminlte.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @if (hasAlert)
+    {
+        <script>
+            $(document).ready(function() {
+                const alertData = @Html.Raw(alertJson);
+                showAlert(alertData);
+            });
+        </script>
+    }
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

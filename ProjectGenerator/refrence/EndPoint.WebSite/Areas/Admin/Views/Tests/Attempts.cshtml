@@ -1,0 +1,538 @@
+@using System
+@using System.Linq
+@using Arsis.Domain.Enums
+@using Arsis.SharedKernel.Extensions
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model EndPoint.WebSite.Areas.Admin.Models.Tests.TestAttemptsViewModel
+
+@{
+    ViewData["Title"] ??= "سوابق آزمون‌ها";
+    ViewData["Subtitle"] ??= "لیست تلاش‌های کاربران در تمام آزمون‌ها";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    string FormatDate(DateTimeOffset? value) => value?.ToPersianDateTimeString() ?? "-";
+
+    string FormatMinutes(int minutes)
+    {
+        if (minutes <= 0)
+        {
+            return "-";
+        }
+
+        var span = TimeSpan.FromMinutes(minutes);
+        if (span.TotalHours >= 1)
+        {
+            return $"{(int)span.TotalHours}ساعت و {span.Minutes}دقیقه";
+        }
+
+        return $"{span.Minutes} دقیقه";
+    }
+
+    string FormatAverageMinutes(double? minutes)
+    {
+        if (!minutes.HasValue)
+        {
+            return "-";
+        }
+
+        var span = TimeSpan.FromMinutes(minutes.Value);
+        if (span.TotalHours >= 1)
+        {
+            return $"{Math.Round(span.TotalHours, 1)} ساعت";
+        }
+
+        return $"{Math.Round(span.TotalMinutes)} دقیقه";
+    }
+
+    string FormatPercent(decimal? value) => value.HasValue ? value.Value.ToString("0.#") + "%" : "-";
+
+    string GetStatusBadgeClass(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.Completed => "bg-success-subtle text-success",
+        TestAttemptStatus.InProgress => "bg-info-subtle text-info",
+        TestAttemptStatus.Cancelled => "bg-warning-subtle text-warning",
+        TestAttemptStatus.Expired => "bg-danger-subtle text-danger",
+        _ => "bg-secondary-subtle text-secondary"
+    };
+
+    string GetAttemptStatusText(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.InProgress => "در حال انجام",
+        TestAttemptStatus.Completed => "تکمیل شده",
+        TestAttemptStatus.Cancelled => "لغو شده",
+        TestAttemptStatus.Expired => "منقضی شده",
+        _ => status.ToString()
+    };
+
+    var testIdParam = Model.TestId?.ToString();
+    var userIdParam = Model.UserId;
+    var statusParam = Model.Status?.ToString();
+    var startedFromParam = Model.StartedFrom?.ToString("yyyy-MM-dd");
+    var startedToParam = Model.StartedTo?.ToString("yyyy-MM-dd");
+    var searchParam = Model.Search;
+    var pageSizeParam = Model.PageSize.ToString();
+
+    int startPage = Math.Max(1, Model.Page - 2);
+    int endPage = Math.Min(Model.TotalPages, startPage + 4);
+
+    var startedFromDisplay = Model.StartedFrom?.ToPersianDateString();
+    var startedToDisplay = Model.StartedTo?.ToPersianDateString();
+    var hasActiveFilters = Model.TestId.HasValue
+        || !string.IsNullOrWhiteSpace(Model.UserId)
+        || Model.Status.HasValue
+        || !string.IsNullOrWhiteSpace(Model.Search)
+        || Model.StartedFrom.HasValue
+        || Model.StartedTo.HasValue;
+
+    var firstItemIndex = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    var lastItemIndex = Model.TotalCount == 0
+        ? 0
+        : Math.Min(Model.TotalCount, Model.Page * Model.PageSize);
+}
+
+@section Head
+{
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/test-attempts.css" asp-append-version="true" />
+}
+
+@section Breadcrumb
+{
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">مدیریت</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Tests" asp-action="Index">مدیریت آزمون‌ها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">سوابق آزمون‌ها</li>
+}
+
+<div class="tests-attempts">
+    @await Html.PartialAsync("_StatusMessage")
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="small text-muted mb-1">کل تلاش‌ها</div>
+                    <div class="display-6 fw-semibold">@Model.Statistics.TotalAttempts.ToString("N0")</div>
+                    <div class="text-success small">@Model.Statistics.CompletionRate.ToString("0.#")% نرخ تکمیل</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="small text-muted mb-1">کاربران یکتا</div>
+                    <div class="display-6 fw-semibold">@Model.Statistics.UniqueParticipants.ToString("N0")</div>
+                    <div class="text-muted small">@Model.Statistics.CompletedAttempts.ToString("N0") تلاش موفق</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="small text-muted mb-1">میانگین نمره</div>
+                    <div class="display-6 fw-semibold">@FormatPercent(Model.Statistics.AverageScore)</div>
+                    <div class="text-muted small">@Model.Statistics.AbandonRate.ToString("0.#")% نرخ رها شده</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="small text-muted mb-1">میانگین زمان تکمیل</div>
+                    <div class="display-6 fw-semibold">@FormatAverageMinutes(Model.Statistics.AverageCompletionMinutes)</div>
+                    <div class="text-muted small">آخرین تلاش: @FormatDate(Model.Statistics.LastAttemptAt)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div class="d-flex flex-wrap gap-2" data-attempt-actions>
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#attempts-filter-modal">
+                    <i class="bi bi-funnel"></i>
+                    فیلترها
+                </button>
+                <a class="btn btn-outline-secondary"
+                   asp-area="Admin"
+                   asp-controller="Tests"
+                   asp-action="Attempts">
+                    <i class="bi bi-x-circle"></i>
+                    حذف فیلترها
+                </a>
+            </div>
+            <div class="attempts-summary text-muted small">
+                @if (Model.TotalCount > 0)
+                {
+                    <span>نمایش @firstItemIndex تا @lastItemIndex از @Model.TotalCount تلاش</span>
+                }
+                else
+                {
+                    <span>هیچ تلاشی برای نمایش وجود ندارد</span>
+                }
+            </div>
+            <form method="get" class="attempts-page-size d-flex align-items-center gap-2" data-attempt-page-size-form>
+                <input type="hidden" name="Page" value="1" />
+                <input type="hidden" name="TestId" value="@testIdParam" />
+                <input type="hidden" name="UserId" value="@userIdParam" />
+                <input type="hidden" name="Status" value="@statusParam" />
+                <input type="hidden" name="Search" value="@searchParam" />
+                <input type="hidden" name="StartedFrom" value="@startedFromParam" />
+                <input type="hidden" name="StartedTo" value="@startedToParam" />
+                <label class="form-label mb-0" for="pageSizeSelect">تعداد در صفحه</label>
+                <select id="pageSizeSelect" name="PageSize" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach (var option in Model.PageSizeOptions)
+                    {
+                        <option value="@option" selected="@(option == Model.PageSize ? "selected" : null)">@option</option>
+                    }
+                </select>
+            </form>
+        </div>
+
+        @if (hasActiveFilters)
+        {
+            <div class="card-footer bg-body attempts-filter-summary">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted small"><i class="bi bi-funnel"></i> فیلترهای فعال:</span>
+                    <div class="d-flex flex-wrap gap-2" data-attempt-filter-chips>
+                        @if (!string.IsNullOrWhiteSpace(Model.Search))
+                        {
+                            <span class="badge rounded-pill text-bg-light">جستجو: @Model.Search</span>
+                        }
+                        @if (Model.TestId.HasValue && Model.Tests is not null)
+                        {
+                            var selected = Model.Tests.FirstOrDefault(t => string.Equals(t.Value, testIdParam, StringComparison.OrdinalIgnoreCase));
+                            var label = selected?.Text ?? "آزمون انتخاب شده";
+                            <span class="badge rounded-pill text-bg-light">آزمون: @label</span>
+                        }
+                        @if (Model.Status.HasValue)
+                        {
+                            var statusItem = Model.Statuses.Cast<SelectListItem?>().FirstOrDefault(s => s?.Value == ((int)Model.Status.Value).ToString());
+                            var statusLabel = statusItem?.Text ?? GetAttemptStatusText(Model.Status.Value);
+                            <span class="badge rounded-pill text-bg-light">وضعیت: @statusLabel</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.UserId))
+                        {
+                            <span class="badge rounded-pill text-bg-light">شناسه کاربر: @Model.UserId</span>
+                        }
+                        @if (Model.StartedFrom.HasValue)
+                        {
+                            <span class="badge rounded-pill text-bg-light">از تاریخ: @startedFromDisplay</span>
+                        }
+                        @if (Model.StartedTo.HasValue)
+                        {
+                            <span class="badge rounded-pill text-bg-light">تا تاریخ: @startedToDisplay</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            @if (Model.Attempts.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">آزمون</th>
+                                <th scope="col">کاربر</th>
+                                <th scope="col">نمره</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">تاریخ شروع</th>
+                                <th scope="col">تاریخ اتمام</th>
+                                <th scope="col">مدت زمان</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var attempt in Model.Attempts)
+                            {
+                                var badgeClass = GetStatusBadgeClass(attempt.Status);
+                                var statusText = GetAttemptStatusText(attempt.Status);
+                                var percent = attempt.ScorePercentage.HasValue ? $"{attempt.ScorePercentage:0.#}%" : "-";
+                                var scoreDisplay = attempt.TotalScore.HasValue && attempt.MaxScore.HasValue
+                                    ? $"{attempt.TotalScore:0.##} از {attempt.MaxScore:0.##}"
+                                    : "-";
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@attempt.TestTitle</div>
+                                        <div class="text-muted small">@attempt.TestType.ToString()</div>
+                                        <div class="text-muted small">دفعه: @attempt.AttemptNumber</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace(attempt.UserFullName) ? "-" : attempt.UserFullName)</div>
+                                        <div class="text-muted small">@attempt.UserEmail</div>
+                                        <div class="text-muted small">@attempt.UserPhoneNumber</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@percent</div>
+                                        <div class="text-muted small">@scoreDisplay</div>
+                                        @if (attempt.IsPassed.HasValue)
+                                        {
+                                            <span class="badge @(attempt.IsPassed.Value ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">@(attempt.IsPassed.Value ? "قبول" : "رد")</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @badgeClass">@statusText</span>
+                                        @if (attempt.Status == TestAttemptStatus.InProgress && attempt.TimeRemainingMinutes.HasValue)
+                                        {
+                                            <div class="text-muted small">زمان باقیمانده: @FormatMinutes(attempt.TimeRemainingMinutes.Value)</div>
+                                        }
+                                    </td>
+                                    <td>@FormatDate(attempt.StartedAt)</td>
+                                    <td>@FormatDate(attempt.CompletedAt)</td>
+                                    <td>@FormatMinutes(attempt.TimeElapsedMinutes)</td>
+                                    <td class="text-end text-nowrap">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-area="Admin"
+                                           asp-controller="Tests"
+                                           asp-action="AttemptDetails"
+                                           asp-route-id="@attempt.Id">
+                                            <i class="bi bi-eye"></i>
+                                            مشاهده
+                                        </a>
+                                        <form method="post"
+                                              asp-area="Admin"
+                                              asp-controller="Tests"
+                                              asp-action="DeleteAttempt"
+                                              asp-route-id="@attempt.Id"
+                                              class="d-inline-flex"
+                                              data-attempt-delete-form>
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Page" value="@Model.Page" />
+                                            <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                                            <input type="hidden" name="TestId" value="@testIdParam" />
+                                            <input type="hidden" name="UserId" value="@userIdParam" />
+                                            <input type="hidden" name="Status" value="@statusParam" />
+                                            <input type="hidden" name="Search" value="@searchParam" />
+                                            <input type="hidden" name="StartedFrom" value="@startedFromParam" />
+                                            <input type="hidden" name="StartedTo" value="@startedToParam" />
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-attempt-delete>
+                                                <i class="bi bi-trash"></i>
+                                                حذف
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-clipboard2-check display-4 d-block mb-3"></i>
+                    <h5 class="fw-semibold">هیچ تلاشی یافت نشد</h5>
+                    <p class="mb-0">با تغییر فیلترها یا بازه تاریخی می‌توانید نتایج بیشتری مشاهده کنید.</p>
+                </div>
+            }
+        </div>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-footer bg-body">
+                <nav aria-label="صفحه‌بندی سوابق آزمون">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(Model.Page == 1 ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Tests"
+                               asp-action="Attempts"
+                               asp-route-Page="@(Math.Max(1, Model.Page - 1))"
+                               asp-route-TestId="@testIdParam"
+                               asp-route-UserId="@userIdParam"
+                               asp-route-Status="@statusParam"
+                               asp-route-Search="@searchParam"
+                               asp-route-StartedFrom="@startedFromParam"
+                               asp-route-StartedTo="@startedToParam"
+                               asp-route-PageSize="@pageSizeParam"
+                               aria-label="صفحه قبل">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        @for (var pageNumber = startPage; pageNumber <= endPage; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == Model.Page ? "active" : string.Empty)">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="Tests"
+                                   asp-action="Attempts"
+                                   asp-route-Page="@pageNumber"
+                                   asp-route-TestId="@testIdParam"
+                                   asp-route-UserId="@userIdParam"
+                                   asp-route-Status="@statusParam"
+                                   asp-route-Search="@searchParam"
+                                   asp-route-StartedFrom="@startedFromParam"
+                                   asp-route-StartedTo="@startedToParam"
+                                   asp-route-PageSize="@pageSizeParam">@pageNumber</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Tests"
+                               asp-action="Attempts"
+                               asp-route-Page="@(Math.Min(Model.TotalPages, Model.Page + 1))"
+                               asp-route-TestId="@testIdParam"
+                               asp-route-UserId="@userIdParam"
+                               asp-route-Status="@statusParam"
+                               asp-route-Search="@searchParam"
+                               asp-route-StartedFrom="@startedFromParam"
+                               asp-route-StartedTo="@startedToParam"
+                               asp-route-PageSize="@pageSizeParam"
+                               aria-label="صفحه بعد">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="attempts-filter-modal" tabindex="-1" aria-labelledby="attempts-filter-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="attempts-filter-label">فیلتر سوابق آزمون</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-area="Admin" asp-controller="Tests" asp-action="Attempts" data-attempt-filter-form>
+                <div class="modal-body">
+                    <input type="hidden" name="Page" value="1" />
+                    <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterSearch">جستجو</label>
+                            <input id="attemptFilterSearch"
+                                   name="Search"
+                                   value="@Model.Search"
+                                   type="search"
+                                   class="form-control"
+                                   placeholder="نام کاربر، ایمیل یا عنوان آزمون" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterTest">آزمون</label>
+                            <select id="attemptFilterTest" name="TestId" class="form-select">
+                                <option value="">همه آزمون‌ها</option>
+                                @if (Model.Tests is not null)
+                                {
+                                    foreach (var item in Model.Tests)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterStatus">وضعیت</label>
+                            <select id="attemptFilterStatus" name="Status" class="form-select">
+                                <option value="">همه وضعیت‌ها</option>
+                                @foreach (var item in Model.Statuses)
+                                {
+                                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterUser">شناسه کاربر</label>
+                            <input id="attemptFilterUser"
+                                   name="UserId"
+                                   value="@Model.UserId"
+                                   type="text"
+                                   class="form-control"
+                                   placeholder="شناسه کاربری یا ایمیل" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterFromDisplay">تاریخ شروع از</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <button type="button" class="btn btn-light" data-jalali-open>
+                                        <i class="bi bi-calendar-event"></i>
+                                        <span class="visually-hidden">انتخاب تاریخ</span>
+                                    </button>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="attemptFilterFromDisplay"
+                                           value="@(startedFromDisplay ?? startedFromParam?.Replace("-", "/"))"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(startedFromDisplay ?? startedFromParam?.Replace("-", "/"))"
+                                           placeholder="انتخاب تاریخ"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-clear>حذف</button>
+                                </div>
+                                <input type="hidden" id="attemptFilterFrom" name="StartedFrom" value="@startedFromParam" data-jalali-target />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="attemptFilterToDisplay">تاریخ شروع تا</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <button type="button" class="btn btn-light" data-jalali-open>
+                                        <i class="bi bi-calendar-event"></i>
+                                        <span class="visually-hidden">انتخاب تاریخ</span>
+                                    </button>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="attemptFilterToDisplay"
+                                           value="@(startedToDisplay ?? startedToParam?.Replace("-", "/"))"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(startedToDisplay ?? startedToParam?.Replace("-", "/"))"
+                                           placeholder="انتخاب تاریخ"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                    <button type="button" class="btn btn-outline-secondary" data-jalali-clear>حذف</button>
+                                </div>
+                                <input type="hidden" id="attemptFilterTo" name="StartedTo" value="@startedToParam" data-jalali-target />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2"></i>
+                        اعمال فیلتر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="attemptDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تایید حذف تلاش</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">آیا از حذف این تلاش کاربر اطمینان دارید؟ این عملیات قابل بازگشت نیست.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger" data-attempt-delete-confirm>حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/test-attempts.js" asp-append-version="true"></script>
+}
+

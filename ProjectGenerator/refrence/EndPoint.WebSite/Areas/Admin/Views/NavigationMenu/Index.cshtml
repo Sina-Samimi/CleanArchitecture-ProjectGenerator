@@ -1,0 +1,206 @@
+@model NavigationMenuPageViewModel
+@using System.Linq
+@using System.Threading.Tasks
+@{
+    ViewData["Title"] ??= "مدیریت منوهای سایت";
+    ViewData["Subtitle"] ??= "تعریف ساختار منوی اصلی و زیرمنوها";
+
+    async Task RenderMenuItems(IEnumerable<NavigationMenuItemViewModel> items)
+    {
+        foreach (var item in items.OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+        {
+            <text>
+                <li class="list-group-item border-0 ps-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="text-muted small" style="min-width: 2rem;">
+                                @item.DisplayOrder
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold">@item.Title</span>
+                                    @if (!string.IsNullOrWhiteSpace(item.Icon))
+                                    {
+                                        <span class="badge bg-light text-secondary">@item.Icon</span>
+                                    }
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    @if (!string.IsNullOrWhiteSpace(item.Url))
+                                    {
+                                        <span class="d-inline-flex align-items-center gap-1" dir="ltr">
+                                            <i class="bi bi-link-45deg"></i>
+                                            <span>@item.Url</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="d-inline-flex align-items-center gap-1 text-muted">
+                                            <i class="bi bi-link-45deg"></i>
+                                            <span>بدون لینک</span>
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge @(item.IsVisible ? "bg-success" : "bg-secondary")">
+                                @(item.IsVisible ? "فعال" : "غیرفعال")
+                            </span>
+                            @if (item.OpenInNewTab)
+                            {
+                                <span class="badge bg-info text-dark">تب جدید</span>
+                            }
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a asp-area="Admin" asp-controller="NavigationMenu" asp-action="Index" asp-route-id="@item.Id" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-area="Admin" asp-controller="NavigationMenu" asp-action="Delete" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('آیا از حذف این آیتم مطمئن هستید؟');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (item.Children.Any())
+                    {
+                        <ul class="list-group list-group-flush ms-4 mt-3">
+                            @{ await RenderMenuItems(item.Children); }
+                        </ul>
+                    }
+                </li>
+            </text>
+        }
+
+        await Task.CompletedTask;
+    }
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4 align-items-start">
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="card-title h4 mb-1">ساختار منو</h2>
+                    <p class="card-subtitle text-muted mb-0">لیست کامل آیتم‌ها و زیرمنوها را مشاهده کنید و برای ویرایش یا حذف اقدام کنید.</p>
+                </div>
+                <span class="badge bg-light text-primary">@Model.Items.Count آیتم ریشه</span>
+            </div>
+            <div class="card-body">
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-diagram-3 display-5 d-block mb-3"></i>
+                        <p class="mb-0">هنوز هیچ آیتمی برای منو ثبت نشده است. از فرم سمت راست برای ایجاد اولین آیتم استفاده کنید.</p>
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @{ await RenderMenuItems(Model.Items); }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <form asp-area="Admin"
+              asp-controller="NavigationMenu"
+              asp-action="@(Model.IsEditMode ? "Edit" : "Create")"
+              method="post"
+              class="card h-100"
+              novalidate>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="card-title h4 mb-1">@(Model.IsEditMode ? "ویرایش آیتم" : "افزودن آیتم جدید")</h2>
+                    <p class="card-subtitle text-muted mb-0">عنوان، لینک، ترتیب نمایش و وضعیت نمایش آیتم را مدیریت کنید.</p>
+                </div>
+                @if (Model.IsEditMode)
+                {
+                    <span class="badge bg-warning text-dark">حالت ویرایش</span>
+                }
+            </div>
+            <div class="card-body">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                @if (Model.IsEditMode)
+                {
+                    <input asp-for="Form.Id" type="hidden" />
+                }
+
+                <div class="mb-3">
+                    <label asp-for="Form.Title" class="form-label"></label>
+                    <input asp-for="Form.Title" class="form-control" />
+                    <span asp-validation-for="Form.Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Form.Url" class="form-label"></label>
+                    <input asp-for="Form.Url" class="form-control text-start" dir="ltr" />
+                    <span class="form-text text-muted">می‌توانید از آدرس داخلی (مانند /courses) یا لینک خارجی استفاده کنید.</span>
+                    <span asp-validation-for="Form.Url" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Form.Icon" class="form-label"></label>
+                    <input asp-for="Form.Icon" class="form-control text-start" dir="ltr" />
+                    <span class="form-text text-muted">نام کلاس آیکون (Bootstrap Icons، FontAwesome و ...) را وارد کنید.</span>
+                    <span asp-validation-for="Form.Icon" class="text-danger"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Form.DisplayOrder" class="form-label"></label>
+                        <input asp-for="Form.DisplayOrder" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="Form.DisplayOrder" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Form.ParentId" class="form-label"></label>
+                        <select asp-for="Form.ParentId" asp-items="Model.ParentOptions" class="form-select"></select>
+                        <span asp-validation-for="Form.ParentId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-check mt-4">
+                    <input asp-for="Form.IsVisible" class="form-check-input" type="checkbox" />
+                    <label asp-for="Form.IsVisible" class="form-check-label"></label>
+                </div>
+                <div class="form-check mt-2">
+                    <input asp-for="Form.OpenInNewTab" class="form-check-input" type="checkbox" />
+                    <label asp-for="Form.OpenInNewTab" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                @if (Model.IsEditMode)
+                {
+                    <a asp-area="Admin" asp-controller="NavigationMenu" asp-action="Index" class="btn btn-outline-secondary">
+                        انصراف از ویرایش
+                    </a>
+                }
+                else
+                {
+                    <span></span>
+                }
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-save me-1"></i>
+                    @(Model.IsEditMode ? "ذخیره تغییرات" : "ایجاد آیتم")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

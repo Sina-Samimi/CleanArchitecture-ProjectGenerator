@@ -1,0 +1,262 @@
+@model TeacherProductFormViewModel
+@{
+    ViewData["Sidebar:ActiveTab"] = "create";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/teacher/product-form.css" asp-append-version="true" />
+}
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-2">درخواست افزودن محصول جدید</h1>
+                <p class="text-muted mb-4">اطلاعات محصول را تکمیل کنید تا پس از بررسی ادمین در فروشگاه منتشر شود.</p>
+
+                <form asp-area="Teacher"
+                      asp-controller="Products"
+                      asp-action="Create"
+                      method="post"
+                      enctype="multipart/form-data"
+                      data-teacher-product-form>
+                    @Html.AntiForgeryToken()
+                    <input asp-for="WasPreviouslyPublished" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="FeaturedImagePath" class="form-label"></label>
+                        <div class="featured-image-picker" data-featured-picker>
+                            <div class="featured-image-picker__preview" data-featured-preview>
+                                <img src="@Model.FeaturedImagePath"
+                                     alt="تصویر شاخص"
+                                     class="featured-image-picker__image @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? "d-none" : string.Empty)"
+                                     data-featured-image />
+                                <div class="featured-image-picker__placeholder @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? string.Empty : "d-none")"
+                                     data-featured-placeholder>
+                                    <i class="bi bi-image"></i>
+                                    <span>هنوز تصویری انتخاب نشده است</span>
+                                </div>
+                            </div>
+                            <div class="featured-image-picker__controls">
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                    <input asp-for="FeaturedImagePath"
+                                           class="form-control"
+                                           data-featured-path
+                                           placeholder="آدرس تصویر شاخص یا لینک فایل آپلود شده" />
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <input asp-for="FeaturedImageUpload"
+                                           type="file"
+                                           class="d-none"
+                                           accept="image/*"
+                                           capture="environment"
+                                           data-featured-file />
+                                    <label class="btn btn-outline-primary" for="FeaturedImageUpload">
+                                        <i class="bi bi-camera"></i>
+                                        گرفتن عکس یا انتخاب تصویر
+                                    </label>
+                                    <button type="button" class="btn btn-outline-secondary" data-featured-clear>
+                                        <i class="bi bi-x-circle"></i>
+                                        حذف تصویر
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="form-text d-block mt-2">برای نمایش بهتر در سایت از تصویری با نسبت ۴:۳ و حجم کمتر از ۵ مگابایت استفاده کنید.</span>
+                        <span asp-validation-for="FeaturedImagePath" class="text-danger"></span>
+                        <span asp-validation-for="FeaturedImageUpload" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" placeholder="مانند: دوره جامع تحلیل استعداد" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Summary" class="form-label"></label>
+                            <textarea asp-for="Summary" class="form-control" rows="2" placeholder="چند جمله کوتاه درباره محصول"></textarea>
+                            <span asp-validation-for="Summary" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <div class="teacher-editor" data-editor-field>
+                                <div id="teacherProductDescriptionEditor"
+                                     class="teacher-editor__surface d-none"
+                                     data-editor-wrapper
+                                     data-upload-url="">
+                                </div>
+                                <textarea asp-for="Description"
+                                          class="form-control d-none"
+                                          rows="6"
+                                          placeholder="جزئیات کامل محصول، سرفصل‌ها و دستاوردها"
+                                          data-content-input
+                                          data-editor-textarea></textarea>
+                                <div class="form-text d-none text-warning" data-editor-fallback>
+                                    در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                                </div>
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Type" class="form-label"></label>
+                            <select asp-for="Type"
+                                    asp-items="Model.TypeOptions"
+                                    class="form-select"
+                                    id="Type"
+                                    data-teacher-product-type>
+                                <option value="">نوع محصول را انتخاب کنید</option>
+                            </select>
+                            <span asp-validation-for="Type" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Price" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Price" class="form-control" type="number" min="0" step="1000" placeholder="قیمت به تومان" />
+                                <span class="input-group-text">تومان</span>
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" asp-items="Model.CategoryOptions" class="form-select">
+                                <option value="">یک دسته‌بندی انتخاب کنید</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12" data-digital-section>
+                            <label asp-for="DigitalDownloadPath" class="form-label"></label>
+                            <input asp-for="DigitalDownloadPath"
+                                   class="form-control"
+                                   placeholder="لینک مستقیم فایل یا صفحه دانلود"
+                                   data-digital-input />
+                            <span class="text-muted small d-block mt-1">در محصولات دانلودی وارد کردن لینک فایل الزامی است.</span>
+                            <span asp-validation-for="DigitalDownloadPath" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12" data-inventory-section>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="TrackInventory"
+                                               class="form-check-input"
+                                               type="checkbox"
+                                               id="TrackInventory"
+                                               data-inventory-toggle />
+                                        <label class="form-check-label" asp-for="TrackInventory"></label>
+                                    </div>
+                                    <span asp-validation-for="TrackInventory" class="text-danger"></span>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label asp-for="StockQuantity" class="form-label"></label>
+                                    <input asp-for="StockQuantity"
+                                           class="form-control"
+                                           type="number"
+                                           min="0"
+                                           id="StockQuantity"
+                                           data-inventory-quantity />
+                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Tags" class="form-label"></label>
+                            <div class="tag-input" data-tag-input>
+                                <div class="tag-input__chips" data-tag-chips>
+                                    @foreach (var tag in Model.TagItems)
+                                    {
+                                        <span class="tag-chip" data-tag-chip>
+                                            <span class="tag-chip__text">@tag</span>
+                                            <button type="button" class="tag-chip__remove" data-tag-remove aria-label="حذف @tag">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </span>
+                                    }
+                                </div>
+                                <div class="tag-input__control">
+                                    <input type="text"
+                                           class="form-control tag-input__entry"
+                                           placeholder="هر برچسب را تایپ و با اینتر یا دکمه + اضافه کنید"
+                                           data-tag-entry />
+                                    <button type="button" class="btn btn-outline-primary tag-input__add" data-tag-add>
+                                        <i class="bi bi-plus-lg"></i>
+                                        <span class="visually-hidden">افزودن برچسب</span>
+                                    </button>
+                                </div>
+                                <input type="hidden" asp-for="Tags" data-tag-storage />
+                            </div>
+                            <span class="text-muted small d-block mt-1">مثال: استعداد، توسعه فردی، آزمون</span>
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i>
+                            ثبت درخواست برای تایید
+                        </button>
+                        <a class="btn btn-outline-secondary" asp-area="Teacher" asp-controller="Products" asp-action="Index">بازگشت</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">راهنمای تایید محصول</h2>
+                <ul class="list-unstyled text-muted small mb-4">
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        اطلاعات محصول باید کامل و دقیق باشد تا سریع‌تر تایید شود.
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        قیمت‌گذاری شفاف و متناسب با محتوای آموزشی انجام دهید.
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        پس از تایید ادمین، وضعیت محصول به صورت خودکار به «منتشر شده» تغییر می‌کند.
+                    </li>
+                </ul>
+
+                @if (Model.TagSuggestions.Count > 0)
+                {
+                    <h3 class="h6">برچسب‌های پیشنهادی</h3>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        @foreach (var tag in Model.TagSuggestions.Take(12))
+                        {
+                            <span class="badge bg-light text-dark border">@tag</span>
+                        }
+                    </div>
+                }
+
+                <div class="alert alert-info border-0" role="alert">
+                    <h3 class="h6 mb-2">مدارک تکمیلی</h3>
+                    <p class="mb-2">در صورت نیاز می‌توانید فایل‌های جانبی یا نمونه محتوای آموزشی را از طریق پشتیبانی ارسال کنید.</p>
+                    <a class="btn btn-sm btn-outline-primary" href="mailto:support@arsis.app">
+                        <i class="bi bi-envelope"></i>
+                        ارتباط با پشتیبانی
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/admin/rich-editor.js" asp-append-version="true"></script>
+    <script src="~/js/teacher/product-form.js" asp-append-version="true"></script>
+}

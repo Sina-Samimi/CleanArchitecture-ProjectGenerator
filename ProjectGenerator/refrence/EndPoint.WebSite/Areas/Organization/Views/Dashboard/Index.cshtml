@@ -1,0 +1,186 @@
+@model EndPoint.WebSite.Areas.Organization.Models.OrganizationDashboardViewModel
+
+@{
+    ViewData["Title"] = "داشبورد سازمانی";
+    ViewData["GreetingTitle"] = "داشبورد سازمانی";
+    ViewData["GreetingSubtitle"] = "نمای کلی از عملکرد سازمان شما";
+}
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info organization-card">
+            <div class="inner">
+                <h3>@Model.TotalUsers.ToString("N0")</h3>
+                <p>کاربر سازمان</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <a href="~/organization/users" class="small-box-footer">
+                مشاهده جزئیات <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success organization-card">
+            <div class="inner">
+                <h3>@Model.CompletedTests.ToString("N0")</h3>
+                <p>تست تکمیل شده</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <a href="~/organization/tests" class="small-box-footer">
+                مشاهده نتایج <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning organization-card">
+            <div class="inner">
+                <h3>@Model.ActiveTests.ToString("N0")</h3>
+                <p>تست فعال</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <a href="~/organization/tests" class="small-box-footer">
+                مشاهده وضعیت <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger organization-card">
+            <div class="inner">
+                <h3>@Model.TopWeaknesses.Count()</h3>
+                <p>ضعف‌های برتر</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <a href="~/organization/analysis" class="small-box-footer">
+                مشاهده تحلیل <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Top Weaknesses Chart -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    ضعف‌های برتر سازمان
+                </h3>
+            </div>
+            <div class="card-body">
+                <canvas id="weaknessesChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-2"></i>
+                    جزئیات ضعف‌ها
+                </h3>
+            </div>
+            <div class="card-body">
+                @foreach (var weakness in Model.TopWeaknesses)
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>@weakness.Description</span>
+                        <span class="badge badge-danger">@weakness.Count</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt mr-2"></i>
+                    اقدامات سریع
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="~/organization/analysis" class="btn btn-primary btn-block">
+                            <i class="fas fa-chart-line"></i>
+                            تحلیل سازمانی
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="~/organization/users" class="btn btn-info btn-block">
+                            <i class="fas fa-users"></i>
+                            مدیریت کاربران
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="~/organization/tests" class="btn btn-success btn-block">
+                            <i class="fas fa-clipboard-check"></i>
+                            نتایج تست‌ها
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="~/organization/settings" class="btn btn-warning btn-block">
+                            <i class="fas fa-cog"></i>
+                            تنظیمات سازمان
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Weaknesses Chart
+            const weaknessesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopWeaknesses.Select(w => new { label = w.Description, value = w.Count })));
+            const ctx = document.getElementById('weaknessesChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: weaknessesData.map(d => d.label),
+                    datasets: [{
+                        data: weaknessesData.map(d => d.value),
+                        backgroundColor: [
+                            '#ff6384',
+                            '#36a2eb',
+                            '#cc65fe',
+                            '#ffce56',
+                            '#ff9f40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

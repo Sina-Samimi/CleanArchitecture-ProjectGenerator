@@ -479,6 +479,119 @@ body.app-body a:focus {
     font-size: 0.8rem;
 }
 
+/* Admin dashboard */
+.admin-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-hero__stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-hero__circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 10px solid rgba(16, 185, 129, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--app-success);
+    background: rgba(16, 185, 129, 0.08);
+    box-shadow: inset 0 0 0 6px rgba(16, 185, 129, 0.05);
+}
+
+.admin-metric {
+    border-radius: var(--app-radius-sm);
+    background: #fff;
+    padding: 1.25rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.admin-metric__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    color: #fff;
+}
+
+.admin-metric--primary .admin-metric__icon {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.admin-metric--success .admin-metric__icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.admin-metric--warning .admin-metric__icon {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.admin-metric--info .admin-metric__icon {
+    background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+}
+
+.admin-metric__label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.admin-metric__value {
+    font-size: 1.65rem;
+    display: block;
+}
+
+.chart-placeholder {
+    border-radius: var(--app-radius-sm);
+    border: 2px dashed rgba(99, 102, 241, 0.35);
+    padding: 2.5rem;
+    text-align: center;
+    color: var(--app-muted);
+    transition: var(--app-transition);
+    font-weight: 600;
+}
+
+.chart-placeholder.is-active {
+    border-color: rgba(16, 185, 129, 0.6);
+    color: var(--app-success);
+}
+
+.admin-task {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.admin-task:last-child {
+    border-bottom: none;
+}
+
+.admin-task__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 1rem;
+    background: rgba(99, 102, 241, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
 .app-aside__footer {
     padding: 1.75rem;
     border-top: 1px solid var(--app-sidebar-border);

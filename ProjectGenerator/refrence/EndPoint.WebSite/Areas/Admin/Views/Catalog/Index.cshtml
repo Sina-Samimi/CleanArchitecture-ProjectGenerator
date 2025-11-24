@@ -1,0 +1,431 @@
+@using System
+@using System.Collections.Generic
+@using System.Globalization
+@using System.Linq
+@using Arsis.Domain.Enums
+@using Arsis.SharedKernel.Extensions
+@using EndPoint.WebSite.Areas.Admin.Models
+@model ProductIndexViewModel
+@{
+    var filters = Model.Filters ?? new ProductIndexFilterViewModel();
+    var products = Model.Products?.ToList() ?? new List<ProductListItemViewModel>();
+    var persianCulture = new CultureInfo("fa-IR");
+
+    string FormatPrice(decimal value) => string.Format(persianCulture, "{0:N0}", value);
+    string FormatPriceWithCurrency(decimal value) => $"{FormatPrice(value)} تومان";
+    string FormatDate(DateTimeOffset? value) => value is null ? "-" : value.Value.ToPersianDateTimeString();
+    string FormatDateShort(DateTimeOffset? value) => value is null ? "-" : value.Value.ToPersianDateString();
+
+    string StatusBadgeClass(bool isPublished) => isPublished
+        ? "badge bg-success-subtle text-success-emphasis"
+        : "badge bg-warning-subtle text-warning-emphasis";
+
+    string StatusLabel(bool isPublished) => isPublished ? "منتشر شده" : "پیش‌نویس";
+
+    string TypeBadgeClass(ProductType type) => type switch
+    {
+        ProductType.Physical => "badge bg-primary-subtle text-primary-emphasis",
+        ProductType.Digital => "badge bg-info-subtle text-info-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+
+    string TypeLabel(ProductType type) => type switch
+    {
+        ProductType.Physical => "محصول فیزیکی",
+        ProductType.Digital => "محصول دانلودی",
+        _ => "نامشخص"
+    };
+
+    string ThumbnailInitial(string name) => string.IsNullOrWhiteSpace(name) ? "?" : name.Trim()[0].ToString();
+
+    string? BuildPriceCompare(decimal? comparePrice)
+        => comparePrice is null || comparePrice <= 0 ? null : FormatPriceWithCurrency(comparePrice.Value);
+
+    string BuildCardAriaLabel(ProductListItemViewModel item)
+    {
+        var status = StatusLabel(item.IsPublished);
+        return $"{item.Name}، {TypeLabel(item.Type)}، وضعیت {status}";
+    }
+
+    string? MinPriceValue(ProductIndexFilterViewModel model) => model.MinPrice?.ToString(CultureInfo.InvariantCulture);
+    string? MaxPriceValue(ProductIndexFilterViewModel model) => model.MaxPrice?.ToString(CultureInfo.InvariantCulture);
+
+    var hasProducts = products.Count > 0;
+    var minPriceRoute = MinPriceValue(filters);
+    var maxPriceRoute = MaxPriceValue(filters);
+    var isPublishedRoute = filters.IsPublished?.ToString();
+    var typeRoute = filters.Type?.ToString();
+    var categoryRoute = filters.CategoryId?.ToString();
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="catalog-page" data-catalog-index>
+    <div class="catalog-page__hero">
+        <div>
+            <h1 class="catalog-page__title">مدیریت محصولات</h1>
+            <p class="catalog-page__subtitle">کنترل موجودی، قیمت‌گذاری و وضعیت انتشار محصولات فروشگاه</p>
+        </div>
+        <div class="catalog-page__actions">
+            <a class="btn btn-primary" asp-area="Admin" asp-controller="Catalog" asp-action="Create" style="color:white">
+                <i class="bi bi-plus-lg"></i>
+                محصول جدید
+            </a>
+            <a class="btn btn-outline-primary" asp-area="Admin" asp-controller="Catalog" asp-action="Categories">
+                <i class="bi bi-diagram-3"></i>
+                مدیریت دسته‌بندی‌ها
+            </a>
+        </div>
+    </div>
+
+    <div class="catalog-metrics">
+        <article class="catalog-metric-card catalog-metric-card--primary">
+            <div class="catalog-metric-card__body">
+                <div class="catalog-metric-card__header">
+                    <div>
+                        <span class="catalog-metric-card__label">کل محصولات</span>
+                        <h2 class="catalog-metric-card__value">@Model.Statistics.TotalProducts</h2>
+                    </div>
+                    <span class="catalog-metric-card__icon">
+                        <i class="bi bi-bag"></i>
+                    </span>
+                </div>
+                <p class="catalog-metric-card__hint">@Model.Statistics.FilteredProducts نتیجه مطابق فیلتر فعلی</p>
+                <div class="catalog-metric-card__footer">
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--success">
+                        <i class="bi bi-check-circle"></i>
+                        @Model.Statistics.PublishedProducts منتشر شده
+                    </span>
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--muted">
+                        <i class="bi bi-clock"></i>
+                        @Model.Statistics.DraftProducts پیش‌نویس
+                    </span>
+                </div>
+            </div>
+        </article>
+        <article class="catalog-metric-card catalog-metric-card--success">
+            <div class="catalog-metric-card__body">
+                <div class="catalog-metric-card__header">
+                    <div>
+                        <span class="catalog-metric-card__label">میانگین قیمت</span>
+                        <h2 class="catalog-metric-card__value">@FormatPrice(Model.Statistics.AveragePrice)</h2>
+                    </div>
+                    <span class="catalog-metric-card__icon">
+                        <i class="bi bi-cash-coin"></i>
+                    </span>
+                </div>
+                <p class="catalog-metric-card__hint">بازه قیمت فعلی محصولات فعال</p>
+                <div class="catalog-metric-card__footer">
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--primary">
+                        <i class="bi bi-arrow-up"></i>
+                        بیشترین: @FormatPrice(Model.Statistics.HighestPrice)
+                    </span>
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--secondary">
+                        <i class="bi bi-arrow-down"></i>
+                        کمترین: @FormatPrice(Model.Statistics.LowestPrice)
+                    </span>
+                </div>
+            </div>
+        </article>
+        <article class="catalog-metric-card catalog-metric-card--info">
+            <div class="catalog-metric-card__body">
+                <div class="catalog-metric-card__header">
+                    <div>
+                        <span class="catalog-metric-card__label">ترکیب نوع محصول</span>
+                        <h2 class="catalog-metric-card__value">@Model.Statistics.PhysicalProducts فیزیکی</h2>
+                    </div>
+                    <span class="catalog-metric-card__icon">
+                        <i class="bi bi-bar-chart"></i>
+                    </span>
+                </div>
+                <p class="catalog-metric-card__hint">@Model.Statistics.DigitalProducts محصول دانلودی ثبت شده</p>
+                <div class="catalog-metric-card__footer">
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--info">
+                        <i class="bi bi-box"></i>
+                        فیزیکی: @Model.Statistics.PhysicalProducts
+                    </span>
+                    <span class="catalog-metric-card__chip catalog-metric-card__chip--accent">
+                        <i class="bi bi-cloud-arrow-down"></i>
+                        دانلودی: @Model.Statistics.DigitalProducts
+                    </span>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <section class="catalog-filters card">
+        <div class="card-body">
+            <div class="catalog-filters__header">
+                <div>
+                    <h2 class="catalog-filters__title">فیلتر پیشرفته</h2>
+                    <p class="catalog-filters__subtitle">ترکیب دسته‌بندی، نوع و محدوده قیمت برای رسیدن به محصول موردنظر</p>
+                </div>
+                <div class="catalog-filters__count" aria-live="polite">
+                    @if (Model.FilteredCount == 0)
+                    {
+                        <span>نتیجه‌ای یافت نشد</span>
+                    }
+                    else
+                    {
+                        <span>نمایش @Model.FirstItemIndex تا @Model.LastItemIndex از @Model.FilteredCount مورد</span>
+                    }
+                </div>
+            </div>
+            <form method="get" asp-area="Admin" asp-controller="Catalog" asp-action="Index" class="catalog-filters__form" novalidate>
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="productFilterSearch">جستجو</label>
+                        <input id="productFilterSearch" name="Search" class="form-control" value="@filters.Search" placeholder="نام محصول، تگ یا دسته" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="productFilterCategory">دسته‌بندی</label>
+                        <select id="productFilterCategory" name="CategoryId" class="form-select" asp-items="Model.CategoryOptions"></select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="productFilterType">نوع محصول</label>
+                        <select id="productFilterType" name="Type" class="form-select" asp-items="Model.TypeOptions"></select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" for="productFilterStatus">وضعیت انتشار</label>
+                        <select id="productFilterStatus" name="IsPublished" class="form-select" asp-items="Model.StatusOptions"></select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" asp-for="Filters.MinPrice">حداقل قیمت</label>
+                        <input type="number" step="1000" class="form-control" name="MinPrice" value="@minPriceRoute" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" asp-for="Filters.MaxPrice">حداکثر قیمت</label>
+                        <input type="number" step="1000" class="form-control" name="MaxPrice" value="@maxPriceRoute" />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" for="productFilterPageSize">تعداد در صفحه</label>
+                        <select id="productFilterPageSize" name="PageSize" class="form-select">
+                            @foreach (var size in Model.PageSizeOptions ?? Array.Empty<int>())
+                            {
+                                <option value="@size" selected="@(size == filters.PageSize ? "selected" : null)">@size</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="catalog-filters__actions">
+                    <input type="hidden" name="page" value="1" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i>
+                        اعمال فیلتر
+                    </button>
+                    <a class="btn btn-link" asp-area="Admin" asp-controller="Catalog" asp-action="Index">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        بازنشانی
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="catalog-results">
+        @if (!hasProducts)
+        {
+            <div class="catalog-empty-state">
+                <div class="catalog-empty-state__icon" aria-hidden="true">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h2 class="catalog-empty-state__title">هنوز محصولی در این بخش ثبت نشده است</h2>
+                <p class="catalog-empty-state__subtitle">اولین محصول خود را اضافه کنید تا در فروشگاه نمایش داده شود.</p>
+                <a class="btn btn-primary" asp-area="Admin" asp-controller="Catalog" asp-action="Create" style="color:white">
+                    <i class="bi bi-plus-lg"></i>
+                    افزودن محصول جدید
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="catalog-grid" role="list">
+                @foreach (var product in products)
+                {
+                    var tags = product.TagList?
+                        .Split(new[] { ",", "،", ";", "|", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(tag => tag.Trim())
+                        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                        .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                        .Take(6)
+                        .ToList() ?? new List<string>();
+
+                    <article class="catalog-card" role="listitem" aria-label="@BuildCardAriaLabel(product)">
+                        <div class="catalog-card__media">
+                            @if (!string.IsNullOrWhiteSpace(product.FeaturedImagePath))
+                            {
+                                <img class="catalog-card__thumbnail" src="@product.FeaturedImagePath" alt="@product.Name" />
+                            }
+                            else
+                            {
+                                <span class="catalog-card__placeholder catalog-card__thumbnail">@ThumbnailInitial(product.Name)</span>
+                            }
+                            <span class="catalog-card__status @StatusBadgeClass(product.IsPublished)">@StatusLabel(product.IsPublished)</span>
+                        </div>
+                        <div class="catalog-card__body">
+                            <div class="catalog-card__header">
+                                <h3 class="catalog-card__title">@product.Name</h3>
+                                <span class="catalog-card__type @TypeBadgeClass(product.Type)">@TypeLabel(product.Type)</span>
+                            </div>
+                            <div class="catalog-card__meta">
+                                <div class="catalog-card__meta-item">
+                                    <i class="bi bi-diagram-3"></i>
+                                    <span>@product.Category</span>
+                                </div>
+                                <div class="catalog-card__meta-item">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span>آخرین بروزرسانی: @FormatDateShort(product.UpdatedAt)</span>
+                                </div>
+                            </div>
+                            <div class="catalog-card__pricing">
+                                <span class="catalog-card__price">@FormatPriceWithCurrency(product.Price)</span>
+                                @{
+                                    var compare = BuildPriceCompare(product.CompareAtPrice);
+                                    if (!string.IsNullOrWhiteSpace(compare))
+                                    {
+                                        <span class="catalog-card__compare">@compare</span>
+                                    }
+                                }
+                            </div>
+                            @if (tags.Count > 0)
+                            {
+                                <div class="catalog-card__tags" aria-label="برچسب‌های محصول">
+                                    @foreach (var tag in tags)
+                                    {
+                                        <span class="catalog-card__tag">@tag</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="catalog-card__footer">
+                            <div class="catalog-card__footer-meta">
+                                <span>
+                                    <i class="bi bi-clock-history"></i>
+                                    بروزرسانی: @FormatDate(product.UpdatedAt)
+                                </span>
+                                <span>
+                                    <i class="bi bi-upload"></i>
+                                    انتشار: @FormatDate(product.PublishedAt)
+                                </span>
+                            </div>
+                            <div class="catalog-card__actions dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="productActionsDropdown-@product.Id" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots"></i>
+                                    مدیریت
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productActionsDropdown-@product.Id">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@product.Id">
+                                            <i class="bi bi-eye"></i>
+                                            مشاهده جزئیات
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="Categories" asp-route-highlightId="@product.CategoryId">
+                                            <i class="bi bi-diagram-3"></i>
+                                            مشاهده دسته
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="ExecutionSteps" asp-route-id="@product.Id">
+                                            <i class="bi bi-kanban"></i>
+                                            گام‌های اجرایی
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="Faqs" asp-route-id="@product.Id">
+                                            <i class="bi bi-question-circle"></i>
+                                            سوالات متداول
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="Comments" asp-route-id="@product.Id">
+                                            <i class="bi bi-chat-dots"></i>
+                                            مدیریت نظرات
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="Admin" asp-controller="Catalog" asp-action="Edit" asp-route-id="@product.Id">
+                                            <i class="bi bi-pencil"></i>
+                                            ویرایش محصول
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                var prevPage = Math.Max(1, Model.PageNumber - 1);
+                var nextPage = Math.Min(Model.TotalPages, Model.PageNumber + 1);
+                <nav class="catalog-pagination" aria-label="صفحه‌بندی محصولات">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(Model.PageNumber == 1 ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Catalog"
+                               asp-action="Index"
+                               asp-route-search="@filters.Search"
+                               asp-route-categoryId="@categoryRoute"
+                               asp-route-type="@typeRoute"
+                               asp-route-isPublished="@isPublishedRoute"
+                               asp-route-minPrice="@minPriceRoute"
+                               asp-route-maxPrice="@maxPriceRoute"
+                               asp-route-page="@prevPage"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="قبلی">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == Model.PageNumber ? "active" : string.Empty)">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="Catalog"
+                                   asp-action="Index"
+                                   asp-route-search="@filters.Search"
+                                   asp-route-categoryId="@categoryRoute"
+                                   asp-route-type="@typeRoute"
+                                   asp-route-isPublished="@isPublishedRoute"
+                                   asp-route-minPrice="@minPriceRoute"
+                                   asp-route-maxPrice="@maxPriceRoute"
+                                   asp-route-page="@pageNumber"
+                                   asp-route-pageSize="@Model.PageSize">@pageNumber</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Catalog"
+                               asp-action="Index"
+                               asp-route-search="@filters.Search"
+                               asp-route-categoryId="@categoryRoute"
+                               asp-route-type="@typeRoute"
+                               asp-route-isPublished="@isPublishedRoute"
+                               asp-route-minPrice="@minPriceRoute"
+                               asp-route-maxPrice="@maxPriceRoute"
+                               asp-route-page="@nextPage"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="بعدی">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </section>
+</div>

@@ -1,0 +1,542 @@
+@using System.Globalization
+@using System.Linq
+@using System.Text.Json
+@model EndPoint.WebSite.Models.Result.ResultViewModel
+@{
+    ViewData["Title"] = "نتایج آزمون Clifton + PVQ";
+    Layout = "_ResultsLayout";
+    var culture = new CultureInfo("fa-IR");
+}
+
+<!-- Hero Section با انیمیشن -->
+<div class="hero-section">
+    <div class="success-banner">
+        <div class="success-icon">
+            <svg viewBox="0 0 52 52" class="checkmark">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        <h1 class="success-title">آزمون با موفقیت تکمیل شد</h1>
+        <p class="success-subtitle">تحلیل ترکیبی Clifton + Schwartz</p>
+    </div>
+    
+    <div class="action-bar">
+        <a class="btn-download" href="@Url.Action("Pdf", "Result", new { runId = Model.RunId })" target="_blank">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            دانلود نتیجه تست
+        </a>
+    </div>
+</div>
+
+<!-- Results Grid -->
+<div class="results-container">
+    <!-- PVQ & Clifton Charts -->
+    <div class="chart-grid">
+        @if (Model.PvqScores.Any())
+        {
+            <div class="panel animate-fade-in" style="animation-delay: 0.1s">
+                <div class="panel-header-modern pvq-gradient">
+                    <div class="header-content">
+                        <h3>ارزش‌های شوارتز</h3>
+                        <span class="header-badge">PVQ</span>
+                    </div>
+                </div>
+                <div class="panel-body-modern">
+                    <p class="panel-description">
+                        نمرات از ۰ تا ۱ نرمال‌سازی شده و بیانگر میزان اهمیت هر ارزش برای شماست
+                    </p>
+                    
+                    <div class="chart-container">
+                        <canvas id="pvqPie"></canvas>
+                    </div>
+                    
+                    <div class="scores-list">
+                        <div class="scores-header">
+                            <span>ارزش</span>
+                            <span>امتیاز</span>
+                        </div>
+                        @{
+                            var pvqRanked = Model.PvqScores.OrderByDescending(x => x.Score).ToList();
+                            for (int i = 0; i < pvqRanked.Count; i++)
+                            {
+                                var item = pvqRanked[i];
+                                var colorClass = i < 3 ? "score-top" : (i < pvqRanked.Count - 3 ? "score-mid" : "score-low");
+                                <div class="score-item @colorClass">
+                                    <div class="score-label">
+                                        <span class="rank-badge">@(i + 1)</span>
+                                        <span>@item.Label</span>
+                                    </div>
+                                    <span class="score-value">@item.Score.ToString("0.000", culture)</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.CliftonScores.Any())
+        {
+            <div class="panel animate-fade-in" style="animation-delay: 0.2s">
+                <div class="panel-header-modern clifton-gradient">
+                    <div class="header-content">
+                        <h3>استعدادهای کلیفتون</h3>
+                        <span class="header-badge">Clifton</span>
+                    </div>
+                </div>
+                <div class="panel-body-modern">
+                    <p class="panel-description">
+                        نمایش استعدادهای برتر شما بر اساس تحلیل کلیفتون استرنگز
+                    </p>
+                    
+                    <div class="chart-container">
+                        <canvas id="cliftonBar"></canvas>
+                    </div>
+                    
+                    <div class="scores-list">
+                        <div class="scores-header">
+                            <span>استعداد</span>
+                            <span>امتیاز</span>
+                        </div>
+                        @{
+                            var cliftonRanked = Model.CliftonScores.OrderByDescending(x => x.Score).ToList();
+                            for (int i = 0; i < cliftonRanked.Count; i++)
+                            {
+                                var item = cliftonRanked[i];
+                                var colorClass = i < 3 ? "score-top" : (i < cliftonRanked.Count - 3 ? "score-mid" : "score-low");
+                                <div class="score-item @colorClass">
+                                    <div class="score-label">
+                                        <span class="rank-badge">@(i + 1)</span>
+                                        <span>@item.Label</span>
+                                    </div>
+                                    <span class="score-value">@item.Score.ToString("0.000", culture)</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Job Groups Section -->
+    @if (Model.JobGroups.Any())
+    {
+        <div class="panel panel-full animate-fade-in" style="animation-delay: 0.3s">
+            <div class="panel-header-modern job-gradient">
+                <div class="header-content">
+                    <h3>گروه‌های شغلی پیشنهادی</h3>
+                    <span class="header-badge">توصیه شغلی</span>
+                </div>
+            </div>
+            <div class="panel-body-modern">
+                <p class="panel-description">
+                    بهترین مسیرهای شغلی بر اساس ترکیب استعدادها و ارزش‌های شما
+                </p>
+                
+                <div class="chart-container-large">
+                    <canvas id="jobsBar"></canvas>
+                </div>
+                
+                <div class="job-groups-grid">
+                    @{
+                        var topJobs = Model.JobGroups.OrderByDescending(x => x.Score).Take(3).ToList();
+                        for (int i = 0; i < topJobs.Count; i++)
+                        {
+                            var job = topJobs[i];
+                            var medalIcons = new[] { "🥇", "🥈", "🥉" };
+                            <div class="job-card">
+                                <div class="job-rank">@medalIcons[i]</div>
+                                <h4 class="job-title">@job.Label</h4>
+                                <p class="job-code">@job.Code</p>
+                                <div class="job-score-display">
+                                    <span class="job-score-label">امتیاز تطابق</span>
+                                    <span class="job-score-value">@job.Score.ToString("0.000", culture)</span>
+                                </div>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar-fill" style="width: @(job.Score * 100)%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <details class="all-jobs-details">
+                    <summary>مشاهده تمام گروه‌های شغلی</summary>
+                    <div class="all-jobs-table">
+                        @foreach (var g in Model.JobGroups.OrderByDescending(x => x.Score))
+                        {
+                            <div class="job-row">
+                                <span class="job-row-label">
+                                    <span class="job-dot"></span>
+                                    @g.Label
+                                    <span class="job-row-code">(@g.Code)</span>
+                                </span>
+                                <span class="job-row-score">@g.Score.ToString("0.000", culture)</span>
+                            </div>
+                        }
+                    </div>
+                </details>
+            </div>
+        </div>
+    }
+
+    <!-- Skill Development Plans -->
+    @if (Model.TopPlans.Any())
+    {
+        <div class="section-header animate-fade-in" style="animation-delay: 0.4s">
+            <h2>برنامه توسعه مهارت‌های چهارگانه</h2>
+            <p>مسیر پیشنهادی برای رشد در شغل‌های منتخب</p>
+        </div>
+
+        <div class="skill-plans-grid">
+            @{
+                var planIndex = 0;
+                foreach (var plan in Model.TopPlans)
+                {
+                    planIndex++;
+                    <div class="skill-plan-card animate-fade-in" style="animation-delay: @(0.5 + planIndex * 0.1)s">
+                        <div class="skill-plan-header">
+                            <h3>@plan.JobGroup</h3>
+                        </div>
+                        
+                        <div class="skill-sections">
+                            <div class="skill-section">
+                                <div class="skill-section-icon awareness">🎯</div>
+                                <div class="skill-section-content">
+                                    <h4>خودآگاهی</h4>
+                                    <p class="skill-section-subtitle">Self Awareness</p>
+                                    <ul class="skill-list">
+                                        @foreach (var skill in plan.SG1)
+                                        {
+                                            <li>@skill</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="skill-section">
+                                <div class="skill-section-icon building">🔨</div>
+                                <div class="skill-section-content">
+                                    <h4>خودسازی</h4>
+                                    <p class="skill-section-subtitle">Self Building</p>
+                                    <ul class="skill-list">
+                                        @foreach (var skill in plan.SG2)
+                                        {
+                                            <li>@skill</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="skill-section">
+                                <div class="skill-section-icon development">📈</div>
+                                <div class="skill-section-content">
+                                    <h4>خودتوسعه‌ای</h4>
+                                    <p class="skill-section-subtitle">Self Development</p>
+                                    <ul class="skill-list">
+                                        @foreach (var skill in plan.SG3)
+                                        {
+                                            <li>@skill</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="skill-section">
+                                <div class="skill-section-icon actualization">⭐</div>
+                                <div class="skill-section-content">
+                                    <h4>خودشکوفایی</h4>
+                                    <p class="skill-section-subtitle">Self Actualization</p>
+                                    <ul class="skill-list">
+                                        @foreach (var skill in plan.SG4)
+                                        {
+                                            <li>@skill</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+
+    <!-- Info Note -->
+    <div class="info-note animate-fade-in" style="animation-delay: 0.7s">
+        <div class="info-icon">ℹ️</div>
+        <div class="info-content">
+            <h4>درباره نتایج</h4>
+            <p>تمام امتیازهای نمایش داده شده بر اساس نرمال‌سازی محاسبه شده‌اند و برای مقایسه نسبی بین شاخص‌ها استفاده می‌شوند. این تحلیل بر اساس پاسخ‌های شما به سوالات تست و الگوریتم‌های علمی Clifton و Schwartz تهیه شده است.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.PvqScores.Any() || Model.CliftonScores.Any() || Model.JobGroups.Any())
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const pvqData = @Html.Raw(JsonSerializer.Serialize(
+                Model.PvqScores
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => new { label = x.Label, code = x.Code, score = Math.Round(x.Score, 3) })
+            ));
+
+            const cliftonData = @Html.Raw(JsonSerializer.Serialize(
+                Model.CliftonScores
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => new { label = x.Label, code = x.Code, score = Math.Round(x.Score, 3) })
+            ));
+
+            const jobsData = @Html.Raw(JsonSerializer.Serialize(
+                Model.JobGroups
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => new { label = x.Label, code = x.Code, score = x.Score })
+            ));
+
+            // Modern color palette
+            function genGradientColors(n) {
+                const colors = [
+                    ['#667eea', '#764ba2'], // Purple gradient
+                    ['#f093fb', '#f5576c'], // Pink gradient
+                    ['#4facfe', '#00f2fe'], // Blue gradient
+                    ['#43e97b', '#38f9d7'], // Green gradient
+                    ['#fa709a', '#fee140'], // Orange gradient
+                    ['#30cfd0', '#330867'], // Teal gradient
+                    ['#a8edea', '#fed6e3'], // Pastel gradient
+                    ['#ff9a56', '#ff6a88'], // Coral gradient
+                    ['#ffecd2', '#fcb69f'], // Peach gradient
+                    ['#ff6e7f', '#bfe9ff'], // Rose gradient
+                ];
+                
+                const arr = [];
+                for (let i = 0; i < n; i++) {
+                    const colorPair = colors[i % colors.length];
+                    arr.push(`linear-gradient(135deg, ${colorPair[0]}, ${colorPair[1]})`);
+                }
+                return arr;
+            }
+
+            function genSolidColors(n) {
+                const colors = [
+                    '#667eea', '#f5576c', '#4facfe', '#43e97b', '#fa709a',
+                    '#30cfd0', '#a8edea', '#ff9a56', '#ffecd2', '#ff6e7f'
+                ];
+                
+                const arr = [];
+                for (let i = 0; i < n; i++) {
+                    arr.push(colors[i % colors.length]);
+                }
+                return arr;
+            }
+
+            // Chart.js default options
+            Chart.defaults.font.family = 'IRANSans, system-ui, sans-serif';
+            Chart.defaults.font.size = 13;
+
+            if (pvqData.length) {
+                const ctx = document.getElementById('pvqPie');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: pvqData.map(x => x.label),
+                        datasets: [{
+                            data: pvqData.map(x => x.score),
+                            backgroundColor: genSolidColors(pvqData.length),
+                            borderWidth: 3,
+                            borderColor: '#fff',
+                            hoverBorderWidth: 4,
+                            hoverBorderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                rtl: true,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const percentage = ((value / pvqData.reduce((a, b) => a + b.score, 0)) * 100).toFixed(1);
+                                        return `${label}: ${value.toFixed(3)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (cliftonData.length) {
+                const ctx = document.getElementById('cliftonBar');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: cliftonData.map(x => x.label),
+                        datasets: [{
+                            label: 'امتیاز',
+                            data: cliftonData.map(x => x.score),
+                            backgroundColor: genSolidColors(cliftonData.length),
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: 1,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                rtl: true,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (jobsData.length) {
+                const ctx = document.getElementById('jobsBar');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: jobsData.map(x => x.label),
+                        datasets: [{
+                            label: 'امتیاز تطابق',
+                            data: jobsData.map(x => Math.round((x.score + Number.EPSILON) * 1000) / 1000),
+                            backgroundColor: genSolidColors(jobsData.length),
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    },
+                                    autoSkip: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                rtl: true,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Animate on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        </script>
+    }
+}

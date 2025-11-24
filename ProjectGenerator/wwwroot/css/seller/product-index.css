@@ -1,0 +1,216 @@
+.teacher-product-stats .teacher-stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 1rem;
+}
+
+.teacher-product-stats .teacher-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1.25rem 1.5rem -1rem rgba(15, 23, 42, 0.25);
+}
+
+.teacher-stat-card__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.teacher-stat-card__label {
+    margin-bottom: 0.25rem;
+    color: var(--bs-secondary-color, #6c757d);
+    font-weight: 500;
+}
+
+.teacher-stat-card__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--bs-body-color, #212529);
+}
+
+.teacher-stat-card__value--sm {
+    font-size: 1.5rem;
+}
+
+.teacher-stat-card__hint {
+    margin-bottom: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.85rem;
+}
+
+.teacher-product-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.teacher-product-card {
+    overflow: hidden;
+    border-radius: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.teacher-product-card__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(13, 110, 253, 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.teacher-product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.teacher-product-card__placeholder {
+    text-align: center;
+    color: var(--bs-secondary-color, #6c757d);
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+}
+
+.teacher-product-card__placeholder i {
+    font-size: 2rem;
+}
+
+.teacher-product-card__status {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.teacher-product-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.teacher-product-card__title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.teacher-product-card__title h2 {
+    flex: 1 1 auto;
+    font-size: 1.1rem;
+    color: var(--bs-body-color, #212529);
+}
+
+.teacher-product-card__type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.teacher-product-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.9rem;
+}
+
+.teacher-product-card__meta i {
+    margin-left: 0.35rem;
+    font-size: 1.05rem;
+}
+
+.teacher-product-card__price {
+    font-weight: 600;
+    color: var(--bs-success, #198754);
+}
+
+.teacher-product-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 1.5rem;
+}
+
+.teacher-product-card__tag {
+    padding: 0.3rem 0.75rem;
+    background: rgba(13, 110, 253, 0.12);
+    color: var(--bs-primary, #0d6efd);
+    border-radius: 999px;
+    font-size: 0.8rem;
+}
+
+.teacher-product-card__tag--empty {
+    background: rgba(108, 117, 125, 0.12);
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.teacher-product-card__footer {
+    margin-top: auto;
+    padding: 1rem 1.25rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.teacher-product-card__dates {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.teacher-product-card__date {
+    font-weight: 500;
+    color: var(--bs-body-color, #212529);
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+}
+
+.btn-icon i {
+    font-size: 1.1rem;
+}
+
+@media (min-width: 768px) {
+    .teacher-product-card__dates {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .teacher-product-stats .teacher-stat-card__value {
+        font-size: 1.5rem;
+    }
+
+    .teacher-product-card__footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .teacher-product-card__dates {
+        grid-template-columns: 1fr;
+    }
+}

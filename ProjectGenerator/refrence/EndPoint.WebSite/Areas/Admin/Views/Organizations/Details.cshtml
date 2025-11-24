@@ -1,0 +1,252 @@
+@using Arsis.Domain.Entities
+@using EndPoint.WebSite.Areas.Admin.Models.Organizations
+@using System.Globalization
+@model OrganizationDetailsViewModel
+
+@{
+    ViewData["Title"] = "جزئیات سازمان";
+    var persianCulture = new CultureInfo("fa-IR");
+    string FormatNumber(int value) => string.Format(persianCulture, "{0:N0}", value);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/organizations.css" asp-append-version="true" />
+}
+
+<div class="organizations-page">
+    <div class="organizations-page__hero">
+        <div>
+            <h1 class="organizations-page__title">جزئیات سازمان</h1>
+            <p class="organizations-page__subtitle">@Model.Organization.Name</p>
+        </div>
+        <div class="organizations-page__actions">
+            <a asp-action="Edit" asp-route-id="@Model.Organization.Id" class="btn btn-primary">
+                <i class="bi bi-pencil me-2"></i>
+                ویرایش سازمان
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>
+                بازگشت به لیست
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="organizations-details">
+        <!-- Organization Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    اطلاعات سازمان
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">نام سازمان</label>
+                            <p class="form-control-plaintext">@Model.Organization.Name</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">کد سازمان</label>
+                            <p class="form-control-plaintext">
+                                <code>@Model.Organization.Code</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Organization.Description))
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">توضیحات</label>
+                        <p class="form-control-plaintext">@Model.Organization.Description</p>
+                    </div>
+                }
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">نام مدیر</label>
+                            <p class="form-control-plaintext">@Model.Organization.AdminName</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">ایمیل مدیر</label>
+                            <p class="form-control-plaintext">@Model.Organization.AdminEmail</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">شماره تلفن</label>
+                            <p class="form-control-plaintext">@(string.IsNullOrWhiteSpace(Model.Organization.PhoneNumber) ? "-" : Model.Organization.PhoneNumber)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">آدرس</label>
+                            <p class="form-control-plaintext">@(string.IsNullOrWhiteSpace(Model.Organization.Address) ? "-" : Model.Organization.Address)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">وضعیت</label>
+                            <p class="form-control-plaintext">
+                                @switch (Model.Organization.Status)
+                                {
+                                    case OrganizationStatus.Active:
+                                        <span class="badge bg-success text-white">فعال</span>
+                                        break;
+                                    case OrganizationStatus.Inactive:
+                                        <span class="badge bg-secondary text-white">غیرفعال</span>
+                                        break;
+                                    case OrganizationStatus.Suspended:
+                                        <span class="badge bg-danger text-white">معلق</span>
+                                        break;
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">حداکثر کاربران</label>
+                            <p class="form-control-plaintext">@FormatNumber(Model.Organization.MaxUsers)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">کاربران فعلی</label>
+                            <p class="form-control-plaintext">@FormatNumber(Model.Organization.UserCount)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">تست‌های فعال</label>
+                            <p class="form-control-plaintext">@FormatNumber(Model.Organization.ActiveTests)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">تاریخ ایجاد</label>
+                            <p class="form-control-plaintext">@Model.Organization.CreatedAt.ToPersianDateString()</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.Organization.SubscriptionExpiry.HasValue)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">انقضای اشتراک</label>
+                        <p class="form-control-plaintext">@Model.Organization.SubscriptionExpiry.Value.ToPersianDateString()</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                        <h4 class="card-title mt-2">@FormatNumber(Model.Organization.UserCount)</h4>
+                        <p class="card-text text-muted">کاربر فعال</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-clipboard-check text-success" style="font-size: 2rem;"></i>
+                        <h4 class="card-title mt-2">@FormatNumber(Model.Organization.ActiveTests)</h4>
+                        <p class="card-text text-muted">تست فعال</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-check-circle text-info" style="font-size: 2rem;"></i>
+                        <h4 class="card-title mt-2">@FormatNumber(Model.Organization.CompletedTests)</h4>
+                        <p class="card-text text-muted">تست تکمیل شده</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tests -->
+        @if (Model.RecentTests.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        آخرین تست‌های انجام شده
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>کاربر</th>
+                                    <th>نوع تست</th>
+                                    <th>تاریخ انجام</th>
+                                    <th>نمره</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var test in Model.RecentTests)
+                                {
+                                    <tr>
+                                        <td>@test.UserName</td>
+                                        <td>@test.TestType</td>
+                                        <td>@test.CompletedAt.ToPersianDateString()</td>
+                                        <td>
+                                            <span class="badge bg-primary">@test.Score.ToString("F1")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-clock-history text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mt-3">هیچ تستی انجام نشده</h5>
+                    <p class="text-muted">تاکنون هیچ تستی توسط کاربران این سازمان انجام نشده است.</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>

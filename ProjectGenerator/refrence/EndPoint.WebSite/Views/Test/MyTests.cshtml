@@ -1,0 +1,130 @@
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Domain.Enums
+@model MyTestsViewModel
+
+@{
+    ViewData["Title"] = "آزمون‌های من";
+}
+
+<div class="container py-5">
+    <h1 class="mb-4">آزمون‌های من</h1>
+
+    @if (Model.Attempts.Any())
+    {
+        <div class="row">
+            @foreach (var attempt in Model.Attempts)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@attempt.TestTitle</h5>
+                            <div class="mb-3">
+                                <span class="badge @GetStatusBadgeClass(attempt.Status)">
+                                    @GetStatusName(attempt.Status)
+                                </span>
+                                <span class="badge bg-secondary">دفعه @attempt.AttemptNumber</span>
+                            </div>
+
+                            @if (attempt.Status == TestAttemptStatus.Completed)
+                            {
+                                @if (attempt.TotalScore.HasValue && attempt.MaxScore.HasValue)
+                                {
+                                    <div class="mb-3">
+                                        <div class="h5 mb-1">
+                                            @attempt.TotalScore.Value.ToString("F1") / @attempt.MaxScore.Value.ToString("F1")
+                                        </div>
+                                        @if (attempt.ScorePercentage.HasValue)
+                                        {
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar @(attempt.IsPassed == true ? "bg-success" : "bg-primary")" 
+                                                     style="width: @(attempt.ScorePercentage.Value)%">
+                                                    @attempt.ScorePercentage.Value.ToString("F1")%
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (attempt.IsPassed.HasValue)
+                                        {
+                                            <div class="mt-2">
+                                                @if (attempt.IsPassed.Value)
+                                                {
+                                                    <span class="badge bg-success">قبول</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">عدم قبولی</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else if (attempt.Status == TestAttemptStatus.InProgress)
+                            {
+                                @if (attempt.TimeRemainingMinutes.HasValue)
+                                {
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="bi bi-clock"></i>
+                                        زمان باقیمانده: @attempt.TimeRemainingMinutes دقیقه
+                                    </div>
+                                }
+                            }
+
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i>
+                                    @attempt.StartedAt.ToString("yyyy/MM/dd HH:mm")
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            @if (attempt.Status == TestAttemptStatus.InProgress)
+                            {
+                                <a asp-action="Take" asp-route-attemptId="@attempt.Id" class="btn btn-primary w-100">
+                                    ادامه آزمون
+                                </a>
+                            }
+                            else if (attempt.Status == TestAttemptStatus.Completed)
+                            {
+                                <a asp-action="Result" asp-route-attemptId="@attempt.Id" class="btn btn-outline-primary w-100">
+                                    مشاهده نتیجه
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i>
+            شما هنوز در هیچ آزمونی شرکت نکرده‌اید.
+            <div class="mt-3">
+                <a asp-action="Index" class="btn btn-primary">
+                    مشاهده آزمون‌های موجود
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    string GetStatusName(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.InProgress => "در حال انجام",
+        TestAttemptStatus.Completed => "تکمیل شده",
+        TestAttemptStatus.Expired => "منقضی شده",
+        TestAttemptStatus.Cancelled => "لغو شده",
+        _ => status.ToString()
+    };
+
+    string GetStatusBadgeClass(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.InProgress => "bg-primary",
+        TestAttemptStatus.Completed => "bg-success",
+        TestAttemptStatus.Expired => "bg-warning",
+        TestAttemptStatus.Cancelled => "bg-secondary",
+        _ => "bg-info"
+    };
+}

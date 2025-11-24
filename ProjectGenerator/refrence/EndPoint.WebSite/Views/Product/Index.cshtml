@@ -1,0 +1,177 @@
+@model ProductListViewModel
+@{
+    ViewData["Title"] ??= "محصولات تخصصی آرسیس";
+    ViewData["ContainerClass"] = "container products-container";
+    ViewData["MainClass"] = "site-main products-main";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/products-responsive.css" asp-append-version="true" />
+}
+
+<form class="products-page" id="productFilterForm" method="get">
+    <aside class="products-page__filters" aria-label="فیلتر محصولات">
+        <div class="products-filters__header">
+            <h1 class="products-filters__title">فیلترها</h1>
+            @if (Model.HasActiveFilters)
+            {
+                <a class="products-filters__reset" asp-controller="Product" asp-action="Index">پاکسازی فیلترها</a>
+            }
+        </div>
+        <div class="products-filter-group">
+            <label class="products-filter__label" for="productSearch">جستجوی محصول</label>
+            <div class="products-filter__search">
+                <input id="productSearch" name="search" value="@Model.Filters.SearchTerm" type="search" placeholder="نام محصول یا کلیدواژه" />
+                <button type="submit" class="products-filter__search-btn">جستجو</button>
+            </div>
+        </div>
+        <div class="products-filter-group" role="group" aria-labelledby="categoryFilterLabel">
+            <div class="products-filter__label" id="categoryFilterLabel">دسته‌بندی</div>
+            <label class="products-filter__option">
+                <input type="radio" name="category" value="" @(string.IsNullOrWhiteSpace(Model.Filters.SelectedCategory) ? "checked" : null) />
+                <span>همه دسته‌ها</span>
+            </label>
+            @foreach (var category in Model.Filters.Categories)
+            {
+                <label class="products-filter__option">
+                    <input type="radio" name="category" value="@category.Value" @(category.IsSelected ? "checked" : null) />
+                    <span>@category.Label (@category.Count)</span>
+                </label>
+            }
+        </div>
+        <div class="products-filter-group" role="group" aria-labelledby="formatFilterLabel">
+            <div class="products-filter__label" id="formatFilterLabel">شیوه برگزاری</div>
+            <label class="products-filter__option">
+                <input type="radio" name="format" value="" @(string.IsNullOrWhiteSpace(Model.Filters.SelectedDeliveryFormat) ? "checked" : null) />
+                <span>همه قالب‌ها</span>
+            </label>
+            @foreach (var format in Model.Filters.DeliveryFormats)
+            {
+                <label class="products-filter__option">
+                    <input type="radio" name="format" value="@format.Value" @(format.IsSelected ? "checked" : null) />
+                    <span>@format.Label (@format.Count)</span>
+                </label>
+            }
+        </div>
+        <div class="products-filter-group products-filter-group--inline" aria-labelledby="priceFilterLabel">
+            <div class="products-filter__label" id="priceFilterLabel">بازه قیمت (تومان)</div>
+            <div class="products-filter__range">
+                <input type="number" inputmode="numeric" name="minPrice" value="@(Model.Filters.MinPrice?.ToString("0"))" placeholder="از" min="0" step="10000" />
+                <span class="products-filter__range-separator">تا</span>
+                <input type="number" inputmode="numeric" name="maxPrice" value="@(Model.Filters.MaxPrice?.ToString("0"))" placeholder="تا" min="0" step="10000" />
+            </div>
+            <p class="products-filter__hint">محدوده قیمت موجود: @Model.Filters.PriceRangeMin.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تا @Model.Filters.PriceRangeMax.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) تومان</p>
+        </div>
+        <div class="products-filter-group" role="group" aria-labelledby="ratingFilterLabel">
+            <div class="products-filter__label" id="ratingFilterLabel">حداقل امتیاز</div>
+            @{ var noRatingChecked = !Model.Filters.MinRating.HasValue ? " checked" : string.Empty; }
+            <label class="products-filter__option">
+                <input type="radio" name="rating" value=""@noRatingChecked />
+                <span>بدون محدودیت</span>
+            </label>
+            @foreach (var ratingOption in Model.Filters.RatingOptions)
+            {
+                var checkedAttribute = ratingOption.IsSelected ? " checked" : string.Empty;
+                <label class="products-filter__option">
+                    <input type="radio" name="rating" value="@ratingOption.Value"@checkedAttribute />
+                    <span>@ratingOption.Label (@ratingOption.Count)</span>
+                </label>
+            }
+        </div>
+        <div class="products-filter__actions">
+            <button type="submit" class="products-filter__apply">اعمال فیلتر</button>
+        </div>
+    </aside>
+    <div class="products-page__content">
+        <header class="products-header">
+            <div class="products-header__info">
+                <span class="products-header__count">@Model.TotalCount.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) محصول</span>
+                @if (Model.HasActiveFilters)
+                {
+                    <span class="products-header__active">فیلترها فعال هستند</span>
+                }
+            </div>
+            <div class="products-header__sort">
+                <label class="products-header__sort-label" for="productSort">مرتب‌سازی</label>
+                <select id="productSort" name="sort" class="products-header__sort-select" form="productFilterForm" onchange="this.form.submit()">
+                    @foreach (var option in Model.Filters.SortOptions)
+                    {
+                        if (option.IsSelected)
+                        {
+                            <option value="@option.Value" selected="selected">@option.Label</option>
+                        }
+                        else
+                        {
+                            <option value="@option.Value">@option.Label</option>
+                        }
+                    }
+                </select>
+            </div>
+        </header>
+        @if (!Model.Products.Any())
+        {
+            <div class="products-empty" role="status">
+                <h2 class="products-empty__title">محصولی یافت نشد</h2>
+                <p class="products-empty__text">لطفاً فیلترها را تغییر دهید یا از جستجوی دیگری استفاده کنید.</p>
+                <a class="products-empty__reset" asp-controller="Product" asp-action="Index">بازگشت به همه محصولات</a>
+            </div>
+        }
+        else
+        {
+            <div class="products-grid">
+                @foreach (var product in Model.Products)
+                {
+                    <article class="products-grid__item">
+                        <a class="products-grid__card" asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
+                            <div class="products-grid__media" aria-hidden="true">
+                                <img src="@product.ThumbnailUrl" alt="" loading="lazy" />
+                                @if (!string.IsNullOrWhiteSpace(product.Badge))
+                                {
+                                    <span class="products-grid__badge">@product.Badge</span>
+                                }
+                            </div>
+                            <div class="products-grid__body">
+                                <div class="products-grid__meta">
+                                    @if (!string.IsNullOrWhiteSpace(product.Category))
+                                    {
+                                        <span class="products-grid__category">@product.Category</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(product.DeliveryFormat))
+                                    {
+                                        <span class="products-grid__dot" aria-hidden="true">•</span>
+                                        <span>@product.DeliveryFormat</span>
+                                    }
+                                </div>
+                                <h2 class="products-grid__title">@product.Name</h2>
+                                <p class="products-grid__excerpt">@product.ShortDescription</p>
+                                <div class="products-grid__footer">
+                                    <div class="products-grid__price">
+                                        <span class="products-grid__price-current">@product.GetFormattedPrice() تومان</span>
+                                        @if (product.OriginalPrice.HasValue)
+                                        {
+                                            <span class="products-grid__price-original">@product.GetFormattedOriginalPrice() تومان</span>
+                                        }
+                                    </div>
+                                    <div class="products-grid__rating" aria-label="@product.GetReviewCountLabel()">
+                                        <span class="products-grid__rating-icon" aria-hidden="true">★</span>
+                                        <span>@product.GetRatingLabel()</span>
+                                        <span class="products-grid__dot" aria-hidden="true">•</span>
+                                        <span>@product.GetReviewCountLabel()</span>
+                                    </div>
+                                </div>
+                                @if (product.Tags.Any())
+                                {
+                                    <div class="products-grid__tags" aria-label="برچسب‌های محصول">
+                                        @foreach (var tag in product.Tags.Take(3))
+                                        {
+                                            <span class="products-grid__tag">@tag</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </a>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</form>

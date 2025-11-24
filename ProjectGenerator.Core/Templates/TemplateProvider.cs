@@ -339,6 +339,8 @@ app.Run();
     public string GetEnhancedProgramTemplate()
     {
         return $@"using {_namespace}.Domain.Entities;
+using {_namespace}.Application;
+using {_namespace}.Infrastructure;
 using {_namespace}.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -372,12 +374,11 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 }});
 
-// Register Infrastructure Services
-builder.Services.AddScoped<{_namespace}.Application.Services.IFileService, {_namespace}.Infrastructure.Services.FileService>();
-builder.Services.AddScoped<{_namespace}.Application.Services.ISmsService, {_namespace}.Infrastructure.Services.SmsService>();
-builder.Services.AddScoped<{_namespace}.Application.Services.IOtpService, {_namespace}.Infrastructure.Services.OtpService>();
+// Application & Infrastructure services (including IProductService, etc.)
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Add services to the container
+// Add MVC/Razor & common services
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMemoryCache();

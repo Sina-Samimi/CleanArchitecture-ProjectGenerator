@@ -1,0 +1,201 @@
+@model SellerSidebarViewModel
+@{
+    var displayName = Model.AccountName;
+    var email = Model.AccountEmail ?? "ایمیل ثبت نشده";
+    var phone = Model.AccountPhone ?? "شماره ثبت نشده";
+    var profilePercent = Model.ProfileCompletionPercent ?? 0;
+    var avatarUrl = Model.AccountAvatarUrl;
+    var initial = Model.AccountInitial;
+
+    bool IsActive(string area, string controller, string? action = null)
+    {
+        var areaMatch = string.Equals(Model.CurrentArea, area, StringComparison.OrdinalIgnoreCase);
+        var controllerMatch = string.Equals(Model.CurrentController, controller, StringComparison.OrdinalIgnoreCase);
+        var actionMatch = action == null || string.Equals(Model.CurrentAction, action, StringComparison.OrdinalIgnoreCase);
+        return areaMatch && controllerMatch && actionMatch;
+    }
+}
+
+<aside class="app-aside" id="appAside" aria-label="منوی اصلی">
+    <div class="app-aside__inner">
+        <div class="app-aside__brand">
+            <a class="app-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="بازگشت به خانه">
+                <span class="app-brand__logo">آ</span>
+                <span class="app-brand__text">
+                    <span class="app-brand__name">آرسیس</span>
+                    <span class="app-brand__subtitle">پنل فروشندهی</span>
+                </span>
+            </a>
+            <button class="btn btn-icon btn-ghost d-lg-none" data-app-aside-close type="button" aria-label="بستن منو">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="app-aside__body">
+            <div class="app-user app-user--profile">
+                <div class="app-user__avatar">
+                    @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                    {
+                        <span class="avatar">
+                            <img src="@avatarUrl" alt="@displayName" />
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="avatar text-bg-primary">@initial</span>
+                    }
+                </div>
+                <div class="app-user__details">
+                    <div class="app-user__name">@displayName</div>
+                    <div class="app-user__subtitle">@Model.GreetingSubtitle</div>
+                    <div class="app-user__status">
+                        <span class="status-dot status-dot--success"></span>
+                        <span>آنلاین</span>
+                    </div>
+                </div>
+                <ul class="app-user__meta">
+                    <li>
+                        <i class="bi bi-envelope"></i>
+                        <span>@email</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-phone"></i>
+                        <span>@phone</span>
+                    </li>
+                </ul>
+            </div>
+
+            @if (profilePercent < 100)
+            {
+                <div class="app-progress">
+                    <div class="app-progress__label">
+                        <span>تکمیل پروفایل</span>
+                        <span>@profilePercent%</span>
+                    </div>
+                    <div class="app-progress__bar">
+                        <div class="app-progress__value" style="--progress-value: @profilePercent%"></div>
+                    </div>
+                </div>
+            }
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">مدیریت محصولات</div>
+                <nav class="app-menu" aria-label="مدیریت محصولات">
+                    <a class="app-menu__link @(IsActive("Seller", "Products", "Index") ? "is-active" : "")"
+                       asp-area="Seller"
+                       asp-controller="Products"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-grid"></i>
+                        </span>
+                        <span class="app-menu__title">محصولات من</span>
+                    </a>
+
+                    <a class="app-menu__link @(IsActive("Seller", "Products", "Create") ? "is-active" : "")"
+                       asp-area="Seller"
+                       asp-controller="Products"
+                       asp-action="Create">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-plus-circle"></i>
+                        </span>
+                        <span class="app-menu__title">افزودن محصول جدید</span>
+                    </a>
+
+                    <a class="app-menu__link"
+                       href="#">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-chart-bar"></i>
+                        </span>
+                        <span class="app-menu__title">آمار و گزارشات</span>
+                    </a>
+
+                    <a class="app-menu__link"
+                       href="#">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </span>
+                        <span class="app-menu__title">درآمد و پرداخت‌ها</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">حساب کاربری</div>
+                <nav class="app-menu" aria-label="حساب کاربری">
+                    <a class="app-menu__link @(IsActive("User", "Profile") ? "is-active" : "")"
+                       asp-area="User"
+                       asp-controller="Profile"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-person-circle"></i>
+                        </span>
+                        <span class="app-menu__title">پروفایل من</span>
+                    </a>
+
+                    <a class="app-menu__link @(IsActive("User", "Wallet") ? "is-active" : "")"
+                       asp-area="User"
+                       asp-controller="Wallet"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-wallet2"></i>
+                        </span>
+                        <span class="app-menu__title">کیف پول</span>
+                    </a>
+
+                    <a class="app-menu__link"
+                       href="#">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-bell"></i>
+                        </span>
+                        <span class="app-menu__title">اعلان‌ها</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">سایر بخش‌ها</div>
+                <nav class="app-menu" aria-label="سایر بخش‌ها">
+                    <a class="app-menu__link"
+                       asp-area=""
+                       asp-controller="Product"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-shop"></i>
+                        </span>
+                        <span class="app-menu__title">فروشگاه</span>
+                    </a>
+
+                    <a class="app-menu__link"
+                       asp-area=""
+                       asp-controller="Blog"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-journal-text"></i>
+                        </span>
+                        <span class="app-menu__title">بلاگ</span>
+                    </a>
+
+                    <a class="app-menu__link"
+                       href="#">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-question-circle"></i>
+                        </span>
+                        <span class="app-menu__title">راهنما</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <div class="app-aside__footer">
+            <div class="app-aside__cta">
+                <div class="app-aside__cta-title">پشتیبانی فروشندهین</div>
+                <p class="app-aside__cta-text">تیم ما آماده پاسخگویی به سوالات شماست</p>
+                <a class="btn btn-primary btn-sm w-100" href="#">
+                    <i class="bi bi-headset"></i>
+                    ارتباط با پشتیبانی
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
+

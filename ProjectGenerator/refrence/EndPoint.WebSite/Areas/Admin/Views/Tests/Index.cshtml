@@ -1,0 +1,314 @@
+@using EndPoint.WebSite.Areas.Admin.Models.Tests
+@using Arsis.Domain.Enums
+@using System.Globalization
+@model TestIndexViewModel
+
+@{
+    ViewData["Title"] = "مدیریت تست‌ها";
+    var persianCulture = new CultureInfo("fa-IR");
+    string FormatPrice(decimal value) => string.Format(persianCulture, "{0:N0}", value);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/tests.css" asp-append-version="true" />
+}
+
+<div class="tests-page">
+    <div class="tests-page__hero">
+        <div>
+            <h1 class="tests-page__title">مدیریت تست‌ها</h1>
+            <p class="tests-page__subtitle">مدیریت، ایجاد و ویرایش آزمون‌های مختلف سیستم</p>
+        </div>
+        <div class="tests-page__actions">
+            <a asp-action="Create" class="btn btn-primary" style="color:white">
+                <i class="bi bi-plus-lg"></i>
+                ایجاد تست جدید
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-funnel"></i>
+                فیلتر پیشرفته
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="tests-metrics">
+        <article class="tests-metric-card tests-metric-card--primary">
+            <div class="tests-metric-card__body">
+                <div class="tests-metric-card__header">
+                    <div>
+                        <span class="tests-metric-card__label">کل آزمون‌ها</span>
+                        <h2 class="tests-metric-card__value">@Model.Statistics.TotalTests</h2>
+                    </div>
+                    <span class="tests-metric-card__icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </span>
+                </div>
+                <p class="tests-metric-card__hint">@Model.TotalCount نتیجه مطابق فیلتر فعلی</p>
+                <div class="tests-metric-card__footer">
+                    <span class="tests-metric-card__chip tests-metric-card__chip--success">
+                        <i class="bi bi-check-circle"></i>
+                        @Model.Statistics.PublishedTests منتشر شده
+                    </span>
+                    <span class="tests-metric-card__chip tests-metric-card__chip--muted">
+                        <i class="bi bi-clock"></i>
+                        @Model.Statistics.DraftTests پیش‌نویس
+                    </span>
+                </div>
+            </div>
+        </article>
+
+        <article class="tests-metric-card tests-metric-card--success">
+            <div class="tests-metric-card__body">
+                <div class="tests-metric-card__header">
+                    <div>
+                        <span class="tests-metric-card__label">میانگین قیمت</span>
+                        <h2 class="tests-metric-card__value">@FormatPrice(Model.Statistics.AveragePrice)</h2>
+                    </div>
+                    <span class="tests-metric-card__icon">
+                        <i class="bi bi-cash-coin"></i>
+                    </span>
+                </div>
+                <p class="tests-metric-card__hint">بازه قیمت آزمون‌های فعال</p>
+                <div class="tests-metric-card__footer">
+                    <span class="tests-metric-card__chip tests-metric-card__chip--primary">
+                        <i class="bi bi-arrow-up"></i>
+                        بیشترین: @FormatPrice(Model.Statistics.HighestPrice)
+                    </span>
+                    <span class="tests-metric-card__chip tests-metric-card__chip--secondary">
+                        <i class="bi bi-arrow-down"></i>
+                        کمترین: @FormatPrice(Model.Statistics.LowestPrice)
+                    </span>
+                </div>
+            </div>
+        </article>
+
+        <article class="tests-metric-card tests-metric-card--info">
+            <div class="tests-metric-card__body">
+                <div class="tests-metric-card__header">
+                    <div>
+                        <span class="tests-metric-card__label">آمار سوالات</span>
+                        <h2 class="tests-metric-card__value">@Model.Statistics.TotalQuestions</h2>
+                    </div>
+                    <span class="tests-metric-card__icon">
+                        <i class="bi bi-question-circle"></i>
+                    </span>
+                </div>
+                <p class="tests-metric-card__hint">@Model.Statistics.TotalParticipants نفر شرکت‌کننده در آزمون‌ها</p>
+                <div class="tests-metric-card__footer">
+                    <span class="tests-metric-card__chip tests-metric-card__chip--info">
+                        <i class="bi bi-people"></i>
+                        شرکت‌کنندگان: @Model.Statistics.TotalParticipants
+                    </span>
+                    <span class="tests-metric-card__chip tests-metric-card__chip--accent">
+                        <i class="bi bi-archive"></i>
+                        آرشیو: @Model.Statistics.ArchivedTests
+                    </span>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="card tests-list-card">
+        <div class="card-body">
+            @if (Model.Tests.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover tests-table">
+                        <thead>
+                            <tr>
+                                <th>عنوان</th>
+                                <th>دسته‌بندی</th>
+                                <th>نوع</th>
+                                <th>وضعیت</th>
+                                <th>قیمت</th>
+                                <th>تعداد سوالات</th>
+                                <th>شرکت‌کنندگان</th>
+                                <th>تاریخ ایجاد</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var test in Model.Tests)
+                            {
+                                <tr>
+                                    <td class="tests-table__title">@test.Title</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(test.CategoryName))
+                                        {
+                                            <span class="badge bg-light text-dark border">@test.CategoryName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-type badge-type--@test.Type.ToString().ToLower()">
+                                            @GetTestTypeName(test.Type)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-status badge-status--@test.Status.ToString().ToLower()">
+                                            @GetTestStatusName(test.Status)
+                                        </span>
+                                    </td>
+                                    <td class="tests-table__price">@FormatPrice(test.Price) تومان</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary-subtle text-primary">@test.QuestionsCount</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info-subtle text-info">@test.AttemptsCount</span>
+                                    </td>
+                                    <td class="tests-table__date">@test.CreateDate.ToString("yyyy/MM/dd")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                                ویرایش
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete('@test.Id', '@test.Title')">
+                                                <i class="bi bi-trash"></i>
+                                                حذف
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="tests-pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.Page ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" 
+                                       asp-route-page="@i" 
+                                       asp-route-search="@Model.Search"
+                                       asp-route-type="@Model.Type"
+                                       asp-route-status="@Model.Status">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="tests-empty-state">
+                    <div class="tests-empty-state__icon">
+                        <i class="bi bi-clipboard-x"></i>
+                    </div>
+                    <h2 class="tests-empty-state__title">هیچ آزمونی یافت نشد</h2>
+                    <p class="tests-empty-state__subtitle">اولین آزمون خود را ایجاد کنید یا فیلترهای جستجو را تغییر دهید.</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i>
+                        ایجاد آزمون جدید
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="bi bi-funnel me-2"></i>
+                    فیلتر پیشرفته آزمون‌ها
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="filterSearch" class="form-label">جستجو</label>
+                        <input type="text" id="filterSearch" name="search" value="@Model.Search" class="form-control" placeholder="عنوان آزمون..." />
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterType" class="form-label">نوع آزمون</label>
+                        <select id="filterType" name="type" class="form-select" asp-items="Model.TestTypes">
+                            <option value="">همه انواع</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterStatus" class="form-label">وضعیت</label>
+                        <select id="filterStatus" name="status" class="form-select" asp-items="Model.TestStatuses">
+                            <option value="">همه وضعیت‌ها</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a asp-action="Index" class="btn btn-link text-decoration-none">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        بازنشانی فیلترها
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                        اعمال فیلتر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="post" asp-action="Delete">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="deleteId" name="id" />
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, title) {
+            if (confirm(`آیا مطمئن هستید که می‌خواهید آزمون "${title}" را حذف کنید؟`)) {
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+    </script>
+}
+
+@functions {
+    private static string GetTestTypeName(TestType type) => type switch
+    {
+        TestType.General => "عمومی",
+        TestType.Disc => "DISC",
+        TestType.Clifton => "کلیفتون",
+        TestType.CliftonSchwartz => "کلیفتون + شوارتز",
+        TestType.Raven => "ریون",
+        TestType.Personality => "شخصیت‌شناسی",
+        _ => type.ToString()
+    };
+
+    private static string GetTestStatusName(TestStatus status) => status switch
+    {
+        TestStatus.Draft => "پیش‌نویس",
+        TestStatus.Published => "منتشر شده",
+        TestStatus.Archived => "آرشیو",
+        _ => status.ToString()
+    };
+}

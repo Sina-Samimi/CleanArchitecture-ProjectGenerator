@@ -1,0 +1,198 @@
+@model BlogDetailViewModel
+@{
+    var seoTitle = string.IsNullOrWhiteSpace(Model.Post.SeoTitle) ? Model.Post.Title : Model.Post.SeoTitle;
+    var seoDescription = string.IsNullOrWhiteSpace(Model.Post.SeoDescription) ? Model.Post.Summary : Model.Post.SeoDescription;
+    var seoKeywords = Model.Post.SeoKeywords;
+    var robots = string.IsNullOrWhiteSpace(Model.Post.RobotsDirective) ? "index,follow" : Model.Post.RobotsDirective;
+    var canonicalUrl = Url.Action("Details", "Blog", new { slug = Model.Post.Slug }, Context.Request.Scheme) ?? string.Empty;
+
+    ViewData["Title"] = seoTitle;
+    ViewData["ContainerClass"] = "container blog-container";
+    ViewData["MainClass"] = "site-main blog-main";
+    ViewData["MetaDescription"] = seoDescription;
+    ViewData["MetaKeywords"] = seoKeywords;
+    ViewData["MetaRobots"] = robots;
+    ViewData["CanonicalUrl"] = canonicalUrl;
+    ViewData["MetaOgTitle"] = seoTitle;
+    ViewData["MetaOgDescription"] = seoDescription;
+    ViewData["MetaOgImage"] = Model.Post.HeroImageUrl;
+    ViewData["MetaOgType"] = "article";
+    ViewData["MetaOgUrl"] = canonicalUrl;
+    ViewData["MetaArticleAuthor"] = Model.Post.AuthorName;
+    ViewData["MetaArticlePublished"] = Model.Post.PublishedAt.ToString("o");
+}
+
+<article class="blog-detail" itemscope itemtype="https://schema.org/Article">
+    <header class="blog-detail__header">
+        <a class="blog-detail__back" asp-controller="Blog" asp-action="Index" aria-label="بازگشت به فهرست بلاگ">
+            <span aria-hidden="true">←</span>
+            <span>بازگشت</span>
+        </a>
+        <div class="blog-detail__meta">
+            <span class="blog-detail__badge">مجله آرسیس</span>
+            <h1 class="blog-detail__title" itemprop="headline">@Model.Post.Title</h1>
+            <div class="blog-detail__info">
+                <div class="blog-detail__author" itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <span class="blog-detail__avatar" aria-hidden="true">✍️</span>
+                    <div>
+                        <span class="blog-detail__author-name" itemprop="name">@Model.Post.AuthorName</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.Post.AuthorRole))
+                        {
+                            <span class="blog-detail__author-role">@Model.Post.AuthorRole</span>
+                        }
+                    </div>
+                </div>
+                <div class="blog-detail__timing">
+                    <time datetime="@Model.Post.PublishedAt.ToString("yyyy-MM-dd")" itemprop="datePublished">@Model.Post.GetFormattedPublishDate()</time>
+                    <span aria-hidden="true">•</span>
+                    <span>@Model.Post.GetReadingTimeLabel()</span>
+                    <span aria-hidden="true">•</span>
+                    <span>@Model.Post.GetViewCountLabel()</span>
+                    <span aria-hidden="true">•</span>
+                    <span>@Model.Post.CommentCount.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) دیدگاه</span>
+                </div>
+            </div>
+            @if (Model.Post.Tags.Any())
+            {
+                <ul class="blog-detail__tags" aria-label="برچسب‌ها">
+                    @foreach (var tag in Model.Post.Tags)
+                    {
+                        <li>@tag</li>
+                    }
+                </ul>
+            }
+        </div>
+    </header>
+
+    <figure class="blog-detail__cover" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+        <img src="@Model.Post.HeroImageUrl" alt="@Model.Post.Title" loading="lazy" itemprop="url" />
+    </figure>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Post.FeaturedQuote))
+    {
+        <blockquote class="blog-detail__quote">@Model.Post.FeaturedQuote</blockquote>
+    }
+
+    @if (Model.Post.ContentSections.Any())
+    {
+        <section class="blog-detail__content" itemprop="articleBody">
+            @foreach (var contentSection in Model.Post.ContentSections)
+            {
+                <div class="blog-detail__section @(contentSection.IsHighlighted ? "blog-detail__section--highlight" : string.Empty)">
+                    @if (!string.IsNullOrWhiteSpace(contentSection.Heading))
+                    {
+                        <h2>@contentSection.Heading</h2>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(contentSection.Body))
+                    {
+                        <p>@contentSection.Body</p>
+                    }
+                </div>
+            }
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.Post.ContentHtml))
+    {
+        <section class="blog-detail__content" itemprop="articleBody">
+            @Html.Raw(Model.Post.ContentHtml)
+        </section>
+    }
+
+    @if (Model.Post.KeyInsights.Any())
+    {
+        <section class="blog-detail__insights" aria-labelledby="blogInsightsTitle">
+            <h2 id="blogInsightsTitle">نکات کلیدی</h2>
+            <ul>
+                @foreach (var insight in Model.Post.KeyInsights)
+                {
+                    <li>@insight</li>
+                }
+            </ul>
+        </section>
+    }
+</article>
+
+<section class="blog-comments" id="comments" aria-labelledby="blogCommentsTitle">
+    <div class="blog-comments__header">
+        <h2 class="blog-comments__title" id="blogCommentsTitle">دیدگاه‌ها (@Model.Post.CommentCount.ToString("N0", new System.Globalization.CultureInfo("fa-IR")))</h2>
+    </div>
+
+    @if (Model.Comments.Any())
+    {
+        <ol class="blog-comments__list">
+            @foreach (var comment in Model.Comments)
+            {
+                @await Html.PartialAsync("_CommentThread", comment)
+            }
+        </ol>
+    }
+    else
+    {
+        <p class="blog-comments__empty">هنوز دیدگاهی برای این مطلب ثبت نشده است. نخستین نفر باشید!</p>
+    }
+
+    <section class="blog-comments__form" aria-labelledby="commentFormTitle">
+        <h3 class="blog-comments__form-title" id="commentFormTitle">ثبت دیدگاه جدید</h3>
+        <p class="blog-comments__form-subtitle">دیدگاه شما پس از بررسی نمایش داده می‌شود.</p>
+        <form asp-action="AddComment" asp-route-slug="@Model.Post.Slug" method="post" class="blog-comment-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="NewComment.BlogId" />
+            <input type="hidden" asp-for="NewComment.ParentId" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="blog-comment-form__row">
+                <div class="blog-comment-form__field">
+                    <label asp-for="NewComment.AuthorName" class="form-label"></label>
+                    <input asp-for="NewComment.AuthorName" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="NewComment.AuthorName" class="text-danger"></span>
+                </div>
+                <div class="blog-comment-form__field">
+                    <label asp-for="NewComment.AuthorEmail" class="form-label"></label>
+                    <input asp-for="NewComment.AuthorEmail" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="NewComment.AuthorEmail" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="blog-comment-form__field">
+                <label asp-for="NewComment.Content" class="form-label"></label>
+                <textarea asp-for="NewComment.Content" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="NewComment.Content" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="blog-comment-form__submit">ارسال دیدگاه</button>
+        </form>
+    </section>
+</section>
+
+@if (Model.RelatedPosts.Any())
+{
+    <section class="blog-related" aria-labelledby="blogRelatedTitle">
+        <div class="blog-related__header">
+            <h2 class="blog-related__title" id="blogRelatedTitle">مطالب مرتبط</h2>
+            <a class="blog-related__more" asp-controller="Blog" asp-action="Index">مشاهده همه مطالب</a>
+        </div>
+        <div class="blog-related__grid">
+            @foreach (var post in Model.RelatedPosts)
+            {
+                <article class="blog-related__card">
+                    <a class="blog-related__link" asp-controller="Blog" asp-action="Details" asp-route-slug="@post.Slug">
+                        <div class="blog-related__media" aria-hidden="true">
+                            <img src="@post.HeroImageUrl" alt="" loading="lazy" />
+                        </div>
+                        <div class="blog-related__body">
+                            <time datetime="@post.PublishedAt.ToString("yyyy-MM-dd")">@post.GetFormattedPublishDate()</time>
+                            <h3>@post.Title</h3>
+                            <p>@post.Summary</p>
+                        </div>
+                    </a>
+                </article>
+            }
+        </div>
+    </section>
+}
+
+@section Scripts
+{
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

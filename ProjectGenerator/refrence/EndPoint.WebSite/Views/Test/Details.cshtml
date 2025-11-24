@@ -1,0 +1,208 @@
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Domain.Enums
+@model TestDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Test.Title;
+    var test = Model.Test;
+    var latestAttempt = test.LatestUserAttempt;
+    var latestAttemptStatus = latestAttempt?.Status;
+}
+
+<div class="container py-5">
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <h1>@test.Title</h1>
+            
+            <div class="mb-4">
+                @if (!string.IsNullOrEmpty(test.CategoryName))
+                {
+                    <span class="badge bg-secondary fs-6">@test.CategoryName</span>
+                }
+                <span class="badge bg-primary fs-6">@GetTestTypeName(test.Type)</span>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">درباره این آزمون</h5>
+                    <p class="card-text">@test.Description</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">جزئیات آزمون</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-question-circle text-primary"></i>
+                            <strong>تعداد سوالات:</strong> @test.Questions.Count سوال
+                        </li>
+                        @if (test.DurationMinutes.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-clock text-primary"></i>
+                                <strong>مدت زمان:</strong> @test.DurationMinutes دقیقه
+                            </li>
+                        }
+                        @if (test.MaxAttempts.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-arrow-repeat text-primary"></i>
+                                <strong>تعداد دفعات مجاز:</strong> @test.MaxAttempts بار
+                            </li>
+                        }
+                        @if (test.PassingScore.HasValue)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-trophy text-primary"></i>
+                                <strong>نمره قبولی:</strong> @test.PassingScore
+                            </li>
+                        }
+                        @if (test.ShowResultsImmediately)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                نتایج بلافاصله نمایش داده می‌شود
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    @if (test.Price > 0)
+                    {
+                        <div class="text-center mb-3">
+                            <div class="h2 text-primary mb-0">@test.Price.ToString("N0") تومان</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center mb-3">
+                            <span class="badge bg-success fs-5">رایگان</span>
+                        </div>
+                    }
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        if (Model.CanStart)
+                        {
+                            if (latestAttempt is not null && latestAttemptStatus == TestAttemptStatus.InProgress)
+                            {
+                                <a asp-action="Take" asp-route-attemptId="@latestAttempt.Id" class="btn btn-primary btn-lg w-100">
+                                    ادامه آزمون
+                                </a>
+                            }
+                            else if (latestAttempt is not null && latestAttemptStatus == TestAttemptStatus.Completed)
+                            {
+                                <div class="d-grid gap-3">
+                                    <a asp-action="Result" asp-route-attemptId="@latestAttempt.Id" class="btn btn-outline-primary btn-lg w-100">
+                                        مشاهده نتیجه آزمون قبلی
+                                    </a>
+                                    @if (test.Price > 0)
+                                    {
+                                        <a asp-controller="Checkout" asp-action="Test" asp-route-testId="@test.Id" class="btn btn-primary btn-lg w-100">
+                                            خرید مجدد و شروع آزمون
+                                        </a>
+                                    }
+                                </div>
+                            }
+                            else if (test.Price > 0)
+                            {
+                                <p class="text-muted small">برای شروع آزمون ابتدا باید هزینه آن را پرداخت کنید.</p>
+                                <a asp-controller="Checkout" asp-action="Test" asp-route-testId="@test.Id" class="btn btn-primary btn-lg w-100">
+                                    پرداخت و شروع آزمون
+                                </a>
+                            }
+                            else
+                            {
+                                <form method="post" asp-action="Start" asp-route-id="@test.Id">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        @if (test.Type == TestType.CliftonSchwartz)
+                                        {
+                                            <text>شروع آزمون Clifton + PVQ</text>
+                                        }
+                                        else
+                                        {
+                                            <text>شروع آزمون</text>
+                                        }
+                                    </button>
+                                </form>
+                            }
+                        }
+                        else if (!test.IsAvailable)
+                        {
+                            <div class="alert alert-warning">
+                                این آزمون در حال حاضر در دسترس نیست.
+                            </div>
+                        }
+                        else if (!test.CanUserAttempt && test.Price == 0)
+                        {
+                            <div class="alert alert-info">
+                                شما به حداکثر تعداد دفعات شرکت در این آزمون رسیده‌اید.
+                            </div>
+                            @if (latestAttempt is not null)
+                            {
+                                if (latestAttemptStatus == TestAttemptStatus.Completed)
+                                {
+                                    <a asp-action="Result" asp-route-attemptId="@latestAttempt.Id" class="btn btn-outline-primary w-100">
+                                        مشاهده نتیجه آزمون
+                                    </a>
+                                }
+                                else if (latestAttemptStatus == TestAttemptStatus.InProgress)
+                                {
+                                    <a asp-action="Take" asp-route-attemptId="@latestAttempt.Id" class="btn btn-primary w-100">
+                                        ادامه آزمون
+                                    </a>
+                                }
+                            }
+                            <a asp-action="MyTests" class="btn btn-outline-primary w-100">
+                                مشاهده نتایج قبلی
+                            </a>
+                        }
+
+                        if (test.UserAttemptsCount > 0)
+                        {
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    شما @test.UserAttemptsCount بار در این آزمون شرکت کرده‌اید.
+                                </small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="PhoneLogin" asp-route-returnUrl="@Context.Request.Path" class="btn btn-primary btn-lg w-100">
+                            ورود برای شرکت در آزمون
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTestTypeName(TestType type) => type switch
+    {
+        TestType.General => "تست عمومی",
+        TestType.Disc => "تست DISC",
+        TestType.Clifton => "تست کلیفتون",
+        TestType.CliftonSchwartz => "تست کلیفتون + شوارتز",
+        TestType.Raven => "تست هوش ریون",
+        TestType.Personality => "تست شخصیت‌شناسی",
+        _ => type.ToString()
+    };
+}

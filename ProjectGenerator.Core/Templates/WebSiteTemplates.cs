@@ -14,7 +14,7 @@ public class WebSiteTemplates
     }
 
     // ==================== Admin Area Controllers ====================
-    
+
     public string GetAdminHomeControllerTemplate()
     {
         return $@"using Microsoft.AspNetCore.Authorization;
@@ -1053,7 +1053,7 @@ public class BlogsController : Controller
     }
 
     // ==================== Seller Area Controllers ====================
-    
+
     public string GetSellerHomeControllerTemplate()
     {
         return $@"using Microsoft.AspNetCore.Authorization;
@@ -1150,7 +1150,7 @@ public class OrdersController : Controller
     }
 
     // ==================== User Area Controllers ====================
-    
+
     public string GetUserHomeControllerTemplate()
     {
         return $@"using Microsoft.AspNetCore.Authorization;
@@ -1172,68 +1172,158 @@ public class HomeController : Controller
 
     public string GetUserProfileControllerTemplate()
     {
-        return $@"using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using {_namespace}.Domain.Entities;
-using {_projectName}.WebSite.Areas.User.Models;
-
-namespace {_projectName}.WebSite.Areas.User.Controllers;
-
-[Area(""User"")]
-[Authorize]
-public class ProfileController : Controller
-{{
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public ProfileController(UserManager<ApplicationUser> userManager)
-    {{
-        _userManager = userManager;
-    }}
-
-    public async Task<IActionResult> Index()
-    {{
-        var user = await _userManager.GetUserAsync(User);
-        return View(user);
-    }}
-
-    public async Task<IActionResult> Edit()
-    {{
-        var user = await _userManager.GetUserAsync(User);
-        return View(user);
-    }}
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(ProfileEditViewModel model)
-    {{
-        if (ModelState.IsValid)
-        {{
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
-            {{
-                user.Email = model.Email;
-                user.PhoneNumber = model.PhoneNumber;
-
-                var result = await _userManager.UpdateAsync(user);
-                
-                if (result.Succeeded)
-                {{
-                    TempData[""SuccessMessage""] = ""پروفایل با موفقیت ویرایش شد"";
-                    return RedirectToAction(nameof(Index));
-                }}
-
-                foreach (var error in result.Errors)
-                {{
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }}
-            }}
-        }}
-
-        return View(model);
-    }}
-}}
-";
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("using System;");
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using Microsoft.AspNetCore.Identity;");
+        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+        sb.AppendLine($"using {_namespace}.Domain.Entities;");
+        sb.AppendLine($"using {_projectName}.WebSite.Areas.User.Models;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {_projectName}.WebSite.Areas.User.Controllers;");
+        sb.AppendLine();
+        sb.AppendLine("[Area(\"User\")]");
+        sb.AppendLine("[Authorize]");
+        sb.AppendLine("public class ProfileController : Controller");
+        sb.AppendLine("{");
+        sb.AppendLine("    private readonly UserManager<ApplicationUser> _userManager;");
+        sb.AppendLine();
+        sb.AppendLine("    public ProfileController(UserManager<ApplicationUser> userManager)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _userManager = userManager;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public async Task<IActionResult> Index()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var user = await _userManager.GetUserAsync(User);");
+        sb.AppendLine("        if (user is null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return Challenge();");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        var viewModel = BuildViewModel(user);");
+        sb.AppendLine("        SetupViewData(viewModel.Summary);");
+        sb.AppendLine("        return View(viewModel);");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpPost]");
+        sb.AppendLine("    [ValidateAntiForgeryToken]");
+        sb.AppendLine("    public async Task<IActionResult> UpdateProfile([Bind(Prefix = \"UpdateProfile\")] UpdateProfileInputModel model)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var user = await _userManager.GetUserAsync(User);");
+        sb.AppendLine("        if (user is null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return Challenge();");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        if (!ModelState.IsValid)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var invalidModel = BuildViewModel(user, model);");
+        sb.AppendLine("            SetupViewData(invalidModel.Summary);");
+        sb.AppendLine("            return View(\"Index\", invalidModel);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        user.FullName = model.FullName?.Trim() ?? user.FullName;");
+        sb.AppendLine("        user.Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();");
+        sb.AppendLine("        user.PhoneNumber = model.PhoneNumber?.Trim();");
+        sb.AppendLine("        user.LastModifiedOn = DateTimeOffset.UtcNow;");
+        sb.AppendLine();
+        sb.AppendLine("        var result = await _userManager.UpdateAsync(user);");
+        sb.AppendLine("        if (!result.Succeeded)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            foreach (var error in result.Errors)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                ModelState.AddModelError(string.Empty, error.Description);");
+        sb.AppendLine("            }");
+        sb.AppendLine();
+        sb.AppendLine("            var failedModel = BuildViewModel(user, model);");
+        sb.AppendLine("            SetupViewData(failedModel.Summary);");
+        sb.AppendLine("            return View(\"Index\", failedModel);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        TempData[\"StatusMessage\"] = \"پروفایل شما با موفقیت بروزرسانی شد.\";");
+        sb.AppendLine("        return RedirectToAction(nameof(Index));");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private UserSettingsViewModel BuildViewModel(ApplicationUser user, UpdateProfileInputModel? form = null)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var displayName = !string.IsNullOrWhiteSpace(user.FullName)");
+        sb.AppendLine("            ? user.FullName");
+        sb.AppendLine("            : user.UserName ?? \"کاربر جدید\";");
+        sb.AppendLine("        var email = string.IsNullOrWhiteSpace(user.Email) ? \"ایمیل ثبت نشده\" : user.Email!;");
+        sb.AppendLine("        var phone = string.IsNullOrWhiteSpace(user.PhoneNumber) ? \"شماره ثبت نشده\" : user.PhoneNumber!;");
+        sb.AppendLine();
+        sb.AppendLine("        var completionScore = 0d;");
+        sb.AppendLine("        if (!string.IsNullOrWhiteSpace(user.FullName))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            completionScore++;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        if (!string.IsNullOrWhiteSpace(user.Email))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            completionScore++;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        if (!string.IsNullOrWhiteSpace(user.PhoneNumber))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            completionScore++;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        var completionPercent = (int)Math.Round((completionScore / 3d) * 100d, MidpointRounding.AwayFromZero);");
+        sb.AppendLine();
+        sb.AppendLine("        var summary = new ProfileSummaryViewModel");
+        sb.AppendLine("        {");
+        sb.AppendLine("            FullName = displayName,");
+        sb.AppendLine("            Email = email,");
+        sb.AppendLine("            PhoneNumber = phone,");
+        sb.AppendLine("            CreatedOn = user.CreatedOn,");
+        sb.AppendLine("            LastUpdatedOn = user.LastModifiedOn,");
+        sb.AppendLine("            CompletionPercent = Math.Clamp(completionPercent, 0, 100),");
+        sb.AppendLine("            AvatarUrl = user.AvatarPath");
+        sb.AppendLine("        };");
+        sb.AppendLine();
+        sb.AppendLine("        var formModel = form ?? new UpdateProfileInputModel");
+        sb.AppendLine("        {");
+        sb.AppendLine("            FullName = user.FullName ?? string.Empty,");
+        sb.AppendLine("            Email = user.Email,");
+        sb.AppendLine("            PhoneNumber = user.PhoneNumber ?? string.Empty");
+        sb.AppendLine("        };");
+        sb.AppendLine();
+        sb.AppendLine("        return new UserSettingsViewModel");
+        sb.AppendLine("        {");
+        sb.AppendLine("            Summary = summary,");
+        sb.AppendLine("            UpdateProfile = formModel");
+        sb.AppendLine("        };");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private void SetupViewData(ProfileSummaryViewModel summary)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var greetingInitial = !string.IsNullOrWhiteSpace(summary.FullName)");
+        sb.AppendLine("            ? summary.FullName.Trim()[0].ToString()");
+        sb.AppendLine("            : \"ک\";");
+        sb.AppendLine();
+        sb.AppendLine("        ViewData[\"Title\"] = \"پروفایل کاربری\";");
+        sb.AppendLine("        ViewData[\"Subtitle\"] = \"نمای کلی از اطلاعات حساب\";");
+        sb.AppendLine("        ViewData[\"TitleSuffix\"] = \"پنل کاربری\";");
+        sb.AppendLine("        ViewData[\"GreetingTitle\"] = $\"سلام، {summary.FullName} 👋\";");
+        sb.AppendLine("        ViewData[\"GreetingSubtitle\"] = \"پروفایل خود را کامل نگه دارید\";");
+        sb.AppendLine("        ViewData[\"GreetingInitial\"] = greetingInitial;");
+        sb.AppendLine("        ViewData[\"AccountName\"] = summary.FullName;");
+        sb.AppendLine("        ViewData[\"AccountInitial\"] = greetingInitial;");
+        sb.AppendLine("        ViewData[\"AccountAvatarUrl\"] = summary.AvatarUrl;");
+        sb.AppendLine("        ViewData[\"GreetingAvatarUrl\"] = summary.AvatarUrl;");
+        sb.AppendLine("        ViewData[\"SearchPlaceholder\"] = \"جستجو در پنل کاربری\";");
+        sb.AppendLine("        ViewData[\"ShowSearch\"] = false;");
+        sb.AppendLine("        ViewData[\"AccountEmail\"] = summary.Email;");
+        sb.AppendLine("        ViewData[\"AccountPhone\"] = summary.PhoneNumber;");
+        sb.AppendLine("        ViewData[\"Sidebar:Email\"] = summary.Email;");
+        sb.AppendLine("        ViewData[\"Sidebar:Phone\"] = summary.PhoneNumber;");
+        sb.AppendLine("        ViewData[\"Sidebar:Completion\"] = summary.CompletionPercent;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        return sb.ToString();
     }
 
     public string GetUserOrdersControllerTemplate()
@@ -1700,15 +1790,360 @@ public class BlogController : Controller
 ";
     }
 
+    // ==================== ViewComponents ====================
+
+    public string GetAdminSidebarViewComponentTemplate()
+    {
+        return $@"using System;
+using Microsoft.AspNetCore.Mvc;
+
+namespace {_projectName}.WebSite.ViewComponents;
+
+public class AdminSidebarViewComponent : ViewComponent
+{{
+    public IViewComponentResult Invoke(string? currentArea, string? currentController, string? currentAction)
+    {{
+        var area = !string.IsNullOrWhiteSpace(currentArea)
+            ? currentArea
+            : ViewContext.RouteData.Values[""area""]?.ToString();
+
+        var accountName = ViewContext.ViewData[""AccountName""] as string;
+        if (string.IsNullOrWhiteSpace(accountName))
+        {{
+            accountName = ""مدیر سیستم"";
+        }}
+
+        var accountInitial = ViewContext.ViewData[""AccountInitial""] as string;
+        if (string.IsNullOrWhiteSpace(accountInitial))
+        {{
+            accountInitial = accountName.Trim().Length > 0
+                ? accountName.Trim()[0].ToString()
+                : ""م"";
+        }}
+
+        var accountAvatarUrl = ViewContext.ViewData[""AccountAvatarUrl""] as string;
+        var accountEmail = ViewContext.ViewData[""AccountEmail""] as string ?? ViewContext.ViewData[""Sidebar:Email""] as string;
+        var accountPhone = ViewContext.ViewData[""AccountPhone""] as string ?? ViewContext.ViewData[""Sidebar:Phone""] as string;
+        var profileCompletion = ReadPercent(ViewContext.ViewData[""Sidebar:Completion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletionPercent""]);
+        var greetingSubtitle = ViewContext.ViewData[""GreetingSubtitle""] as string;
+        var activeTab = ViewContext.ViewData[""Sidebar:ActiveTab""] as string;
+
+        var model = new AdminSidebarViewModel(
+            area,
+            currentController,
+            currentAction,
+            accountName!,
+            accountInitial!,
+            accountAvatarUrl,
+            accountEmail,
+            accountPhone,
+            profileCompletion,
+            greetingSubtitle,
+            NormalizeTabKey(activeTab));
+
+        return View(model);
+    }}
+
+    private static int? ReadPercent(object? value)
+    {{
+        return value switch
+        {{
+            null => null,
+            int i => Math.Clamp(i, 0, 100),
+            double d => Math.Clamp((int)Math.Round(d, MidpointRounding.AwayFromZero), 0, 100),
+            float f => Math.Clamp((int)Math.Round(f, MidpointRounding.AwayFromZero), 0, 100),
+            string s when int.TryParse(s, out var parsed) => Math.Clamp(parsed, 0, 100),
+            _ => null
+        }};
+    }}
+
+    private static string? NormalizeTabKey(string? value)
+    {{
+        if (string.IsNullOrWhiteSpace(value))
+        {{
+            return ""settings"";
+        }}
+
+        return value.Trim();
+    }}
+}}
+
+public record AdminSidebarViewModel(
+    string? CurrentArea,
+    string? CurrentController,
+    string? CurrentAction,
+    string AccountName,
+    string AccountInitial,
+    string? AccountAvatarUrl,
+    string? AccountEmail,
+    string? AccountPhone,
+    int? ProfileCompletionPercent,
+    string? GreetingSubtitle,
+    string? ActiveTab);
+";
+    }
+
+    public string GetSellerSidebarViewComponentTemplate()
+    {
+        return $@"using System;
+using Microsoft.AspNetCore.Mvc;
+
+namespace {_projectName}.WebSite.ViewComponents;
+
+public class SellerSidebarViewComponent : ViewComponent
+{{
+    public IViewComponentResult Invoke(string? currentArea, string? currentController, string? currentAction)
+    {{
+        var area = !string.IsNullOrWhiteSpace(currentArea)
+            ? currentArea
+            : ViewContext.RouteData.Values[""area""]?.ToString();
+
+        var accountName = ViewContext.ViewData[""AccountName""] as string;
+        if (string.IsNullOrWhiteSpace(accountName))
+        {{
+            accountName = ""فروشنده گرامی"";
+        }}
+
+        var accountInitial = ViewContext.ViewData[""AccountInitial""] as string;
+        if (string.IsNullOrWhiteSpace(accountInitial))
+        {{
+            accountInitial = accountName.Trim().Length > 0
+                ? accountName.Trim()[0].ToString()
+                : ""ف"";
+        }}
+
+        var accountAvatarUrl = ViewContext.ViewData[""AccountAvatarUrl""] as string;
+        var accountEmail = ViewContext.ViewData[""AccountEmail""] as string ?? ViewContext.ViewData[""Sidebar:Email""] as string;
+        var accountPhone = ViewContext.ViewData[""AccountPhone""] as string ?? ViewContext.ViewData[""Sidebar:Phone""] as string;
+        var profileCompletion = ReadPercent(ViewContext.ViewData[""Sidebar:Completion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletionPercent""]);
+        var greetingSubtitle = ViewContext.ViewData[""GreetingSubtitle""] as string;
+        var activeTab = ViewContext.ViewData[""Sidebar:ActiveTab""] as string;
+
+        var model = new SellerSidebarViewModel(
+            area,
+            currentController,
+            currentAction,
+            accountName!,
+            accountInitial!,
+            accountAvatarUrl,
+            accountEmail,
+            accountPhone,
+            profileCompletion,
+            greetingSubtitle,
+            NormalizeTabKey(activeTab));
+
+        return View(model);
+    }}
+
+    private static int? ReadPercent(object? value)
+    {{
+        return value switch
+        {{
+            null => null,
+            int i => Math.Clamp(i, 0, 100),
+            double d => Math.Clamp((int)Math.Round(d, MidpointRounding.AwayFromZero), 0, 100),
+            float f => Math.Clamp((int)Math.Round(f, MidpointRounding.AwayFromZero), 0, 100),
+            string s when int.TryParse(s, out var parsed) => Math.Clamp(parsed, 0, 100),
+            _ => null
+        }};
+    }}
+
+    private static string? NormalizeTabKey(string? value)
+    {{
+        if (string.IsNullOrWhiteSpace(value))
+        {{
+            return ""products"";
+        }}
+
+        return value.Trim();
+    }}
+}}
+
+public record SellerSidebarViewModel(
+    string? CurrentArea,
+    string? CurrentController,
+    string? CurrentAction,
+    string AccountName,
+    string AccountInitial,
+    string? AccountAvatarUrl,
+    string? AccountEmail,
+    string? AccountPhone,
+    int? ProfileCompletionPercent,
+    string? GreetingSubtitle,
+    string? ActiveTab);
+";
+    }
+
+    public string GetUserSidebarViewComponentTemplate()
+    {
+        return $@"using System;
+using Microsoft.AspNetCore.Mvc;
+
+namespace {_projectName}.WebSite.ViewComponents;
+
+public class UserSidebarViewComponent : ViewComponent
+{{
+    public IViewComponentResult Invoke(string? currentArea, string? currentController, string? currentAction)
+    {{
+        var area = !string.IsNullOrWhiteSpace(currentArea)
+            ? currentArea
+            : ViewContext.RouteData.Values[""area""]?.ToString();
+
+        var accountName = ViewContext.ViewData[""AccountName""] as string;
+        if (string.IsNullOrWhiteSpace(accountName))
+        {{
+            accountName = ""کاربر گرامی"";
+        }}
+
+        var accountInitial = ViewContext.ViewData[""AccountInitial""] as string;
+        if (string.IsNullOrWhiteSpace(accountInitial))
+        {{
+            accountInitial = accountName.Trim().Length > 0
+                ? accountName.Trim()[0].ToString()
+                : ""ک"";
+        }}
+
+        var accountAvatarUrl = ViewContext.ViewData[""AccountAvatarUrl""] as string;
+        var accountEmail = ViewContext.ViewData[""AccountEmail""] as string ?? ViewContext.ViewData[""Sidebar:Email""] as string;
+        var accountPhone = ViewContext.ViewData[""AccountPhone""] as string ?? ViewContext.ViewData[""Sidebar:Phone""] as string;
+        var profileCompletion = ReadPercent(ViewContext.ViewData[""Sidebar:Completion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletion""]) ??
+                                ReadPercent(ViewContext.ViewData[""ProfileCompletionPercent""]);
+        var greetingSubtitle = ViewContext.ViewData[""GreetingSubtitle""] as string;
+        var activeTab = ViewContext.ViewData[""Sidebar:ActiveTab""] as string;
+
+        var model = new UserSidebarViewModel(
+            area,
+            currentController,
+            currentAction,
+            accountName!,
+            accountInitial!,
+            accountAvatarUrl,
+            accountEmail,
+            accountPhone,
+            profileCompletion,
+            greetingSubtitle,
+            NormalizeTabKey(activeTab));
+
+        return View(model);
+    }}
+
+    private static int? ReadPercent(object? value)
+    {{
+        return value switch
+        {{
+            null => null,
+            int i => Math.Clamp(i, 0, 100),
+            double d => Math.Clamp((int)Math.Round(d, MidpointRounding.AwayFromZero), 0, 100),
+            float f => Math.Clamp((int)Math.Round(f, MidpointRounding.AwayFromZero), 0, 100),
+            string s when int.TryParse(s, out var parsed) => Math.Clamp(parsed, 0, 100),
+            _ => null
+        }};
+    }}
+
+    private static string? NormalizeTabKey(string? value)
+    {{
+        if (string.IsNullOrWhiteSpace(value))
+        {{
+            return ""profile"";
+        }}
+
+        return value.Trim();
+    }}
+}}
+
+public record UserSidebarViewModel(
+    string? CurrentArea,
+    string? CurrentController,
+    string? CurrentAction,
+    string AccountName,
+    string AccountInitial,
+    string? AccountAvatarUrl,
+    string? AccountEmail,
+    string? AccountPhone,
+    int? ProfileCompletionPercent,
+    string? GreetingSubtitle,
+    string? ActiveTab);
+";
+    }
+
+    public string GetCartPreviewViewModelTemplate()
+    {
+        return $@"using System.Collections.Generic;
+using System.Linq;
+
+namespace {_projectName}.WebSite.Models.Cart;
+
+public class CartPreviewItemViewModel
+{{
+    public string? ThumbnailUrl {{ get; set; }}
+    public string Slug {{ get; set; }} = string.Empty;
+    public string Name {{ get; set; }} = string.Empty;
+    public int Quantity {{ get; set; }}
+    public decimal LineTotal {{ get; set; }}
+}}
+
+public class CartPreviewViewModel
+{{
+    public bool IsMenu {{ get; set; }}
+
+    public List<CartPreviewItemViewModel> Items {{ get; set; }} = new();
+
+    /// <summary>
+    /// True when there is at least one item in the cart.
+    /// </summary>
+    public bool HasItems => Items.Any();
+
+    /// <summary>
+    /// Total count of items (sum of quantities).
+    /// </summary>
+    public int ItemCount => Items.Sum(i => i.Quantity);
+
+    /// <summary>
+    /// Subtotal before discounts.
+    /// </summary>
+    public decimal Subtotal {{ get; set; }}
+
+    /// <summary>
+    /// Total discount applied to the cart.
+    /// </summary>
+    public decimal DiscountTotal {{ get; set; }}
+
+    /// <summary>
+    /// Final payable amount.
+    /// </summary>
+    public decimal GrandTotal {{ get; set; }}
+
+    /// <summary>
+    /// True when any discount is applied.
+    /// </summary>
+    public bool HasDiscount => DiscountTotal > 0;
+
+    /// <summary>
+    /// Optional: number of remaining items not shown in preview.
+    /// </summary>
+    public int RemainingItemCount {{ get; set; }}
+}}";
+    }
+
     // View Templates will continue in next file...
-    
+
     public string GetViewImportsTemplate()
     {
         return $@"@using {_projectName}.WebSite
+@using {_projectName}.WebSite.ViewComponents
+@using {_projectName}.WebSite.Models
+@using {_projectName}.WebSite.Models.Cart
+@using {_projectName}.WebSite.Areas.User.Models
+@using {_projectName}.WebSite.Extensions
 @using {_namespace}.Domain.Entities
 @using Microsoft.AspNetCore.Identity
-@inject UserManager<ApplicationUser> UserManager
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject UserManager<ApplicationUser> UserManager
 ";
     }
 
@@ -1717,6 +2152,374 @@ public class BlogController : Controller
         return @"@{
     Layout = ""_Layout"";
 }
+";
+    }
+
+    public string GetUserProductViewModelsTemplate()
+    {
+        return $@"using System;
+using System.Collections.Generic;
+
+namespace {_projectName}.WebSite.Areas.User.Models;
+
+public sealed class UserProductLibraryViewModel
+{{
+    public IReadOnlyCollection<UserProductLibraryMetricViewModel> Metrics {{ get; init; }} = Array.Empty<UserProductLibraryMetricViewModel>();
+    public IReadOnlyCollection<UserPurchasedProductViewModel> Purchases {{ get; init; }} = Array.Empty<UserPurchasedProductViewModel>();
+    public UserProductLibraryFilterViewModel Filter {{ get; init; }} = new();
+    public int TotalPurchases {{ get; init; }}
+    public int FilteredPurchases {{ get; init; }}
+    public bool HasPurchases => Purchases.Count > 0;
+
+    public static UserProductLibraryViewModel CreateEmpty() => new UserProductLibraryViewModel();
+}}
+
+public sealed class UserProductLibraryMetricViewModel
+{{
+    public string Icon {{ get; init; }} = ""bi-bag"";
+    public string Label {{ get; init; }} = string.Empty;
+    public string Value {{ get; init; }} = ""0"";
+    public string? Description {{ get; init; }}
+    public string Tone {{ get; init; }} = ""primary"";
+}}
+
+public sealed class UserPurchasedProductViewModel
+{{
+    public Guid InvoiceId {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public Guid InvoiceItemId {{ get; init; }}
+    public Guid? ProductId {{ get; init; }}
+    public string Name {{ get; init; }} = string.Empty;
+    public string? Summary {{ get; init; }}
+    public string? CategoryName {{ get; init; }}
+    public string Type {{ get; init; }} = ""محصول"";
+    public bool IsDigital {{ get; init; }}
+    public bool CanDownload {{ get; init; }}
+    public string Status {{ get; init; }} = ""پرداخت نشده"";
+    public string StatusBadgeClass {{ get; init; }} = ""badge bg-secondary-subtle text-secondary-emphasis"";
+    public DateTimeOffset PurchasedAt {{ get; init; }} = DateTimeOffset.UtcNow;
+    public decimal Quantity {{ get; init; }}
+    public decimal UnitPrice {{ get; init; }}
+    public decimal Total {{ get; init; }}
+    public decimal InvoiceGrandTotal {{ get; init; }}
+    public decimal InvoicePaidAmount {{ get; init; }}
+    public decimal InvoiceOutstandingAmount {{ get; init; }}
+    public string? ThumbnailPath {{ get; init; }}
+    public string? DownloadUrl {{ get; init; }}
+}}
+
+public sealed class UserProductLibraryFilterViewModel
+{{
+    public string? Search {{ get; init; }}
+    public UserProductTypeFilter? Type {{ get; init; }}
+    public UserProductStatusFilter? Status {{ get; init; }}
+}}
+
+public sealed class UserProductLibraryFilterRequest
+{{
+    public string? Search {{ get; init; }}
+    public UserProductTypeFilter? Type {{ get; init; }}
+    public UserProductStatusFilter? Status {{ get; init; }}
+}}
+
+public enum UserProductTypeFilter
+{{
+    Digital = 0,
+    Physical = 1
+}}
+
+public enum UserProductStatusFilter
+{{
+    Paid = 0,
+    PartiallyPaid = 1,
+    Pending = 2,
+    Overdue = 3
+}}
+";
+    }
+
+    public string GetWalletViewModelsTemplate()
+    {
+        return $@"using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace {_projectName}.WebSite.Areas.User.Models;
+
+public sealed class WalletDashboardViewModel
+{{
+    public WalletSummaryViewModel Summary {{ get; init; }} = WalletSummaryViewModel.CreateEmpty();
+    public IReadOnlyCollection<WalletTransactionViewModel> Transactions {{ get; init; }} = Array.Empty<WalletTransactionViewModel>();
+    public IReadOnlyCollection<WalletInvoiceViewModel> Invoices {{ get; init; }} = Array.Empty<WalletInvoiceViewModel>();
+    public WalletCartViewModel? Cart {{ get; init; }}
+    public ChargeWalletInputModel Charge {{ get; init; }} = new();
+
+    public static WalletDashboardViewModel CreateEmpty() => new WalletDashboardViewModel();
+}}
+
+public sealed class WalletSummaryViewModel
+{{
+    public decimal Balance {{ get; init; }}
+    public string Currency {{ get; init; }} = ""IRT"";
+    public bool IsLocked {{ get; init; }}
+    public DateTimeOffset LastActivityOn {{ get; init; }} = DateTimeOffset.UtcNow;
+
+    public static WalletSummaryViewModel CreateEmpty() => new WalletSummaryViewModel();
+}}
+
+public sealed class WalletTransactionViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public decimal Amount {{ get; init; }}
+    public string Type {{ get; init; }} = ""واریز"";
+    public string Status {{ get; init; }} = ""موفق"";
+    public decimal BalanceAfter {{ get; init; }}
+    public string Reference {{ get; init; }} = string.Empty;
+    public string? Description {{ get; init; }}
+    public Guid? InvoiceId {{ get; init; }}
+    public DateTimeOffset OccurredAt {{ get; init; }} = DateTimeOffset.UtcNow;
+}}
+
+public sealed class WalletInvoiceViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public string Title {{ get; init; }} = string.Empty;
+    public string Status {{ get; init; }} = ""Pending"";
+    public decimal GrandTotal {{ get; init; }}
+    public decimal OutstandingAmount {{ get; init; }}
+    public DateTimeOffset IssueDate {{ get; init; }} = DateTimeOffset.UtcNow;
+}}
+
+public sealed class WalletCartViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public int ItemCount {{ get; init; }}
+    public decimal Subtotal {{ get; init; }}
+    public decimal DiscountTotal {{ get; init; }}
+    public decimal GrandTotal {{ get; init; }}
+    public DateTimeOffset UpdatedAt {{ get; init; }} = DateTimeOffset.UtcNow;
+    public IReadOnlyCollection<WalletCartItemViewModel> Items {{ get; init; }} = Array.Empty<WalletCartItemViewModel>();
+}}
+
+public sealed class WalletCartItemViewModel
+{{
+    public Guid ProductId {{ get; init; }}
+    public string ProductName {{ get; init; }} = string.Empty;
+    public int Quantity {{ get; init; }}
+    public decimal UnitPrice {{ get; init; }}
+    public decimal LineTotal {{ get; init; }}
+    public string? ThumbnailPath {{ get; init; }}
+    public string ProductType {{ get; init; }} = string.Empty;
+}}
+
+public sealed class ChargeWalletInputModel
+{{
+    [Required(ErrorMessage = ""مبلغ شارژ کیف پول الزامی است."")]
+    [Range(1000, 1_000_000_000, ErrorMessage = ""مبلغ باید بین ۱٬۰۰۰ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰ ریال باشد."")]
+    [Display(Name = ""مبلغ شارژ"")]
+    public decimal Amount {{ get; set; }} = 1000;
+
+    [StringLength(200, ErrorMessage = ""توضیحات نمی‌تواند بیش از ۲۰۰ کاراکتر باشد."")]
+    [Display(Name = ""توضیحات تراکنش"")]
+    public string? Description {{ get; set; }}
+
+    public string Currency {{ get; set; }} = ""IRT"";
+}}
+
+public sealed class UserInvoiceDetailViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public string Title {{ get; init; }} = string.Empty;
+    public string? Description {{ get; init; }}
+    public InvoiceStatus Status {{ get; init; }} = InvoiceStatus.Pending;
+    public string Currency {{ get; init; }} = ""IRT"";
+    public decimal Subtotal {{ get; init; }}
+    public decimal DiscountTotal {{ get; init; }}
+    public decimal TaxAmount {{ get; init; }}
+    public decimal AdjustmentAmount {{ get; init; }}
+    public decimal GrandTotal {{ get; init; }}
+    public decimal PaidAmount {{ get; init; }}
+    public decimal OutstandingAmount {{ get; init; }}
+    public DateTimeOffset IssueDate {{ get; init; }} = DateTimeOffset.UtcNow;
+    public DateTimeOffset? DueDate {{ get; init; }}
+    public string? ExternalReference {{ get; init; }}
+    public Guid? TestAttemptId {{ get; init; }}
+    public TestAttemptStatus? TestAttemptStatus {{ get; init; }}
+    public IReadOnlyCollection<UserInvoiceItemViewModel> Items {{ get; init; }} = Array.Empty<UserInvoiceItemViewModel>();
+    public IReadOnlyCollection<UserInvoiceTransactionViewModel> Transactions {{ get; init; }} = Array.Empty<UserInvoiceTransactionViewModel>();
+
+    public static UserInvoiceDetailViewModel CreateEmpty() => new UserInvoiceDetailViewModel();
+}}
+
+public sealed class UserInvoiceItemViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public string Name {{ get; init; }} = string.Empty;
+    public string? Description {{ get; init; }}
+    public InvoiceItemType ItemType {{ get; init; }} = InvoiceItemType.Product;
+    public Guid? ReferenceId {{ get; init; }}
+    public decimal Quantity {{ get; init; }}
+    public decimal UnitPrice {{ get; init; }}
+    public decimal? DiscountAmount {{ get; init; }}
+    public decimal Subtotal {{ get; init; }}
+    public decimal Total {{ get; init; }}
+    public IReadOnlyCollection<UserInvoiceItemAttributeViewModel> Attributes {{ get; init; }} = Array.Empty<UserInvoiceItemAttributeViewModel>();
+}}
+
+public sealed class UserInvoiceItemAttributeViewModel
+{{
+    public string Key {{ get; init; }} = string.Empty;
+    public string Value {{ get; init; }} = string.Empty;
+}}
+
+public sealed class UserInvoiceTransactionViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public decimal Amount {{ get; init; }}
+    public string Method {{ get; init; }} = string.Empty;
+    public string Status {{ get; init; }} = string.Empty;
+    public string Reference {{ get; init; }} = string.Empty;
+    public string? GatewayName {{ get; init; }}
+    public string? Description {{ get; init; }}
+    public string? Metadata {{ get; init; }}
+    public DateTimeOffset OccurredAt {{ get; init; }} = DateTimeOffset.UtcNow;
+}}
+
+public sealed class InvoicePaymentOptionsViewModel
+{{
+    public Guid InvoiceId {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public string Title {{ get; init; }} = string.Empty;
+    public string Status {{ get; init; }} = string.Empty;
+    public string Currency {{ get; init; }} = ""IRT"";
+    public decimal GrandTotal {{ get; init; }}
+    public decimal PaidAmount {{ get; init; }}
+    public decimal OutstandingAmount {{ get; init; }}
+    public DateTimeOffset IssueDate {{ get; init; }} = DateTimeOffset.UtcNow;
+    public DateTimeOffset? DueDate {{ get; init; }}
+    public decimal WalletBalance {{ get; init; }}
+    public bool IsWalletLocked {{ get; init; }}
+    public bool WalletCanCover {{ get; init; }}
+
+    public static InvoicePaymentOptionsViewModel CreateEmpty() => new InvoicePaymentOptionsViewModel();
+}}
+
+public sealed class BankPaymentSessionViewModel
+{{
+    public Guid InvoiceId {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public string Title {{ get; init; }} = string.Empty;
+    public string GatewayName {{ get; init; }} = string.Empty;
+    public string Reference {{ get; init; }} = string.Empty;
+    public string PaymentUrl {{ get; init; }} = string.Empty;
+    public DateTimeOffset ExpiresAt {{ get; init; }} = DateTimeOffset.UtcNow.AddMinutes(10);
+    public decimal Amount {{ get; init; }}
+    public string Currency {{ get; init; }} = ""IRT"";
+    public string? Description {{ get; init; }}
+
+    public static BankPaymentSessionViewModel CreateEmpty() => new BankPaymentSessionViewModel();
+}}
+
+public enum InvoiceItemType
+{{
+    Product = 0,
+    Service = 1,
+    Test = 2
+}}
+
+public enum InvoiceStatus
+{{
+    Draft = 0,
+    Pending = 1,
+    PartiallyPaid = 2,
+    Paid = 3,
+    Overdue = 4,
+    Cancelled = 5
+}}
+
+public enum TestAttemptStatus
+{{
+    Pending = 0,
+    InProgress = 1,
+    Completed = 2,
+    Cancelled = 3
+}}
+";
+    }
+
+    public string GetUserInvoiceListViewModelTemplate()
+    {
+        return $@"using System;
+using System.Collections.Generic;
+
+namespace {_projectName}.WebSite.Areas.User.Models;
+
+public sealed class UserInvoiceListViewModel
+{{
+    public IReadOnlyCollection<UserInvoiceListItemViewModel> Items {{ get; init; }} = Array.Empty<UserInvoiceListItemViewModel>();
+    public UserInvoiceListSummaryViewModel Summary {{ get; init; }} = new();
+
+    public static UserInvoiceListViewModel CreateEmpty() => new UserInvoiceListViewModel();
+}}
+
+public sealed class UserInvoiceListItemViewModel
+{{
+    public Guid Id {{ get; init; }}
+    public string InvoiceNumber {{ get; init; }} = string.Empty;
+    public string Title {{ get; init; }} = string.Empty;
+    public InvoiceStatus Status {{ get; init; }} = InvoiceStatus.Pending;
+    public string Currency {{ get; init; }} = ""IRT"";
+    public decimal GrandTotal {{ get; init; }}
+    public decimal PaidAmount {{ get; init; }}
+    public decimal OutstandingAmount {{ get; init; }}
+    public DateTimeOffset IssueDate {{ get; init; }} = DateTimeOffset.UtcNow;
+}}
+
+public sealed class UserInvoiceListSummaryViewModel
+{{
+    public int TotalInvoices {{ get; init; }}
+    public int PaidInvoices {{ get; init; }}
+    public int PendingInvoices {{ get; init; }}
+    public decimal OutstandingTotal {{ get; init; }}
+}}
+";
+    }
+
+    public string GetPersianDateExtensionsTemplate()
+    {
+        return $@"using System;
+using System.Globalization;
+
+namespace {_projectName}.WebSite.Extensions;
+
+public static class PersianDateExtensions
+{{
+    public static string ToPersianDateString(this DateTimeOffset value)
+    {{
+        var calendar = new PersianCalendar();
+        var date = value.ToLocalTime().DateTime;
+        return $""{{calendar.GetYear(date):0000}}/{{calendar.GetMonth(date):00}}/{{calendar.GetDayOfMonth(date):00}}"";
+    }}
+
+    public static string ToPersianDateTimeString(this DateTimeOffset value)
+    {{
+        var calendar = new PersianCalendar();
+        var date = value.ToLocalTime().DateTime;
+        return $""{{calendar.GetYear(date):0000}}/{{calendar.GetMonth(date):00}}/{{calendar.GetDayOfMonth(date):00}} {{calendar.GetHour(date):00}}:{{calendar.GetMinute(date):00}}"";
+    }}
+
+    public static string? ToPersianDateString(this DateTimeOffset? value)
+    {{
+        return value?.ToPersianDateString();
+    }}
+
+    public static string? ToPersianDateTimeString(this DateTimeOffset? value)
+    {{
+        return value?.ToPersianDateTimeString();
+    }}
+}}
 ";
     }
 
@@ -2441,101 +3244,231 @@ public class BlogController : Controller
     {
         return @"@{
     ViewData[""Title""] = ""داشبورد مدیریت"";
-    var displayName = User?.Identity?.Name ?? ""مدیر"";
+    var displayName = User?.Identity?.Name ?? ""مدیر سیستم"";
+    var today = DateTime.Now.ToString(""yyyy/MM/dd"");
 }
 
-<div class=""dashboard-hero"">
-    <div>
-        <div class=""hero-label""><i class=""fas fa-shield-alt ms-1""></i>پنل مدیریت</div>
-        <h3>سلام، @displayName</h3>
-        <p>ظاهر و چیدمان دقیقاً مشابه نسخه ArsisTest با تمرکز بر کارت‌های خلاصه و دایره وضعیت.</p>
-        <div class=""hero-meta"">
-            <span class=""meta-chip""><i class=""fas fa-thumbtack""></i>بدون تست و سازمان</span>
-            <span class=""meta-chip""><i class=""fas fa-magic""></i>الهام از متریکون</span>
+<div class=""admin-dashboard"">
+    <section class=""admin-hero card border-0 shadow-sm mb-4"">
+        <div class=""card-body d-flex flex-column flex-lg-row justify-content-between gap-4"">
+            <div>
+                <p class=""text-uppercase text-muted fw-semibold mb-1"">پنل مدیریت</p>
+                <h1 class=""h3 fw-bold mb-2"">سلام، @displayName 👋</h1>
+                <p class=""text-muted mb-0"">مروری سریع از عملکرد سازمان در یک نگاه. تاریخ امروز: <strong>@today</strong></p>
+            </div>
+            <div class=""admin-hero__stats"">
+                <div class=""admin-hero__circle text-success"">
+                    94%
+                </div>
+                <div class=""admin-hero__note text-muted"">
+                    <span>سلامت سیستم</span>
+                    <small>همان دایره شمارنده‌ای که در ArsisTest بالای کارت‌ها می‌بینیم.</small>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class=""stat-stack"">
-        <div class=""stat-circle"">0</div>
-        <div class=""stat-note"">
-            <span class=""fw-bold"">کاربران</span>
-            <small class=""text-muted"">همان دایره شمارنده بالای کارت‌ها</small>
+    </section>
+
+    <section class=""row g-3"">
+        <div class=""col-12 col-md-6 col-xxl-3"">
+            <article class=""admin-metric admin-metric--primary"">
+                <div class=""admin-metric__icon""><i class=""bi bi-people-fill""></i></div>
+                <div>
+                    <p class=""admin-metric__label"">کاربران فعال</p>
+                    <strong class=""admin-metric__value"">1,482</strong>
+                    <small class=""text-muted"">+12٪ نسبت به هفته گذشته</small>
+                </div>
+            </article>
         </div>
-    </div>
+        <div class=""col-12 col-md-6 col-xxl-3"">
+            <article class=""admin-metric admin-metric--success"">
+                <div class=""admin-metric__icon""><i class=""bi bi-cart-check""></i></div>
+                <div>
+                    <p class=""admin-metric__label"">سفارشات امروز</p>
+                    <strong class=""admin-metric__value"">264</strong>
+                    <small class=""text-success""><i class=""bi bi-arrow-up-short""></i> رشد 8٪ی</small>
+                </div>
+            </article>
+        </div>
+        <div class=""col-12 col-md-6 col-xxl-3"">
+            <article class=""admin-metric admin-metric--warning"">
+                <div class=""admin-metric__icon""><i class=""bi bi-cash-stack""></i></div>
+                <div>
+                    <p class=""admin-metric__label"">درآمد ماه جاری</p>
+                    <strong class=""admin-metric__value"">8.2M</strong>
+                    <small class=""text-muted"">ریال</small>
+                </div>
+            </article>
+        </div>
+        <div class=""col-12 col-md-6 col-xxl-3"">
+            <article class=""admin-metric admin-metric--info"">
+                <div class=""admin-metric__icon""><i class=""bi bi-patch-check""></i></div>
+                <div>
+                    <p class=""admin-metric__label"">درخواست‌های پشتیبانی</p>
+                    <strong class=""admin-metric__value"">32</strong>
+                    <small class=""text-muted"">5 مورد نیازمند پیگیری فوری</small>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class=""row g-3 mt-1"">
+        <div class=""col-12 col-xxl-8"">
+            <div class=""card border-0 shadow-sm h-100"">
+                <div class=""card-header bg-white border-0 pb-0"">
+                    <h2 class=""h5 mb-1"">گزارش فعالیت هفتگی</h2>
+                    <p class=""text-muted small mb-0"">نمودار نمایشی مشابه بخش تحلیل در نسخه مرجع (جایگزین با Placeholder)</p>
+                </div>
+                <div class=""card-body"">
+                    <div class=""chart-placeholder"">
+                        <span>نمودار فروش و ثبت‌نام‌ها</span>
+                    </div>
+                    <div class=""row text-center mt-3"">
+                        <div class=""col"">
+                            <p class=""text-muted small mb-1"">ثبت‌نام</p>
+                            <strong>+320</strong>
+                        </div>
+                        <div class=""col"">
+                            <p class=""text-muted small mb-1"">سفارش</p>
+                            <strong>+158</strong>
+                        </div>
+                        <div class=""col"">
+                            <p class=""text-muted small mb-1"">بازگشت وجه</p>
+                            <strong>12</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class=""col-12 col-xxl-4"">
+            <div class=""card border-0 shadow-sm h-100"">
+                <div class=""card-header bg-white border-0 pb-0"">
+                    <h2 class=""h5 mb-1"">اقدامات سریع</h2>
+                    <p class=""text-muted small mb-0"">لیست کارت سفید همانند ArsisTest</p>
+                </div>
+                <div class=""list-group list-group-flush"">
+                    <a class=""list-group-item list-group-item-action d-flex justify-content-between align-items-center"" asp-area=""Admin"" asp-controller=""Users"" asp-action=""Create"">
+                        <span><i class=""bi bi-person-plus ms-1""></i> افزودن کاربر جدید</span>
+                        <span class=""badge bg-primary-subtle text-primary"">جدید</span>
+                    </a>
+                    <a class=""list-group-item list-group-item-action"" asp-area=""Admin"" asp-controller=""Catalog"" asp-action=""Create"">
+                        <i class=""bi bi-box-seam ms-1""></i> افزودن محصول / دوره
+                    </a>
+                    <a class=""list-group-item list-group-item-action"" asp-area=""Admin"" asp-controller=""Orders"" asp-action=""Index"">
+                        <i class=""bi bi-receipt ms-1""></i> بررسی سفارش‌های پرداخت نشده
+                    </a>
+                    <a class=""list-group-item list-group-item-action"" asp-area=""Admin"" asp-controller=""Blog"" asp-action=""Create"">
+                        <i class=""bi bi-journal-plus ms-1""></i> انتشار مقاله جدید
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class=""row g-3 mt-1"">
+        <div class=""col-12 col-xl-6"">
+            <div class=""card border-0 shadow-sm h-100"">
+                <div class=""card-header bg-white border-0 pb-0"">
+                    <h2 class=""h5 mb-1"">آخرین سفارش‌ها</h2>
+                    <p class=""text-muted small mb-0"">جدول کامپکت مشابه نمونه مرجع</p>
+                </div>
+                <div class=""table-responsive"">
+                    <table class=""table align-middle mb-0"">
+                        <thead>
+                            <tr>
+                                <th>مشتری</th>
+                                <th>محصول</th>
+                                <th>مبلغ</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class=""fw-semibold"">مائده کاظمی</div>
+                                    <small class=""text-muted"">#INV-5480</small>
+                                </td>
+                                <td>دوره استعدادسنجی</td>
+                                <td>4,500,000 ریال</td>
+                                <td><span class=""badge bg-success-subtle text-success"">پرداخت شده</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class=""fw-semibold"">اشکان بهرامی</div>
+                                    <small class=""text-muted"">#INV-5474</small>
+                                </td>
+                                <td>اشتراک وبلاگ</td>
+                                <td>950,000 ریال</td>
+                                <td><span class=""badge bg-warning-subtle text-warning"">در انتظار</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class=""fw-semibold"">سارا محمدی</div>
+                                    <small class=""text-muted"">#INV-5469</small>
+                                </td>
+                                <td>بسته مشاوره</td>
+                                <td>2,100,000 ریال</td>
+                                <td><span class=""badge bg-danger-subtle text-danger"">بازگشت وجه</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class=""col-12 col-xl-6"">
+            <div class=""card border-0 shadow-sm h-100"">
+                <div class=""card-header bg-white border-0 pb-0"">
+                    <h2 class=""h5 mb-1"">اعلان‌ها و وظایف</h2>
+                    <p class=""text-muted small mb-0"">کارت‌های عمودی شبیه رابط ArsisTest</p>
+                </div>
+                <div class=""card-body"">
+                    <div class=""admin-task"">
+                        <div class=""admin-task__icon text-primary"">
+                            <i class=""bi bi-person-lines-fill""></i>
+                        </div>
+                        <div>
+                            <div class=""fw-semibold"">بررسی درخواست دسترسی</div>
+                            <small class=""text-muted"">دو کاربر جدید منتظر تایید نقش هستند.</small>
+                        </div>
+                        <a class=""btn btn-sm btn-outline-primary"" asp-area=""Admin"" asp-controller=""AccessLevels"" asp-action=""Index"">بررسی</a>
+                    </div>
+                    <div class=""admin-task"">
+                        <div class=""admin-task__icon text-success"">
+                            <i class=""bi bi-layout-text-sidebar-reverse""></i>
+                        </div>
+                        <div>
+                            <div class=""fw-semibold"">انتشار محتوای جدید</div>
+                            <small class=""text-muted"">دو مقاله در حالت پیش‌نویس قرار دارد.</small>
+                        </div>
+                        <a class=""btn btn-sm btn-outline-success"" asp-area=""Admin"" asp-controller=""Blog"" asp-action=""Index"">مشاهده</a>
+                    </div>
+                    <div class=""admin-task"">
+                        <div class=""admin-task__icon text-warning"">
+                            <i class=""bi bi-cloud-arrow-down""></i>
+                        </div>
+                        <div>
+                            <div class=""fw-semibold"">نسخه جدید نرم‌افزار</div>
+                            <small class=""text-muted"">پروفایل پابلیش 1.4 آماده است.</small>
+                        </div>
+                        <a class=""btn btn-sm btn-outline-secondary"" asp-area=""Admin"" asp-controller=""DeploymentProfiles"" asp-action=""Index"">دانلود</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<div class=""dashboard-grid"">
-    <div class=""summary-card primary"">
-        <div class=""icon-badge""><i class=""fas fa-users""></i></div>
-        <div class=""label"">کاربران</div>
-        <div class=""value"">128</div>
-        <p class=""desc"">همان کارت گرد با آیکن آبی</p>
-    </div>
-    <div class=""summary-card info"">
-        <div class=""icon-badge""><i class=""fas fa-shield-alt""></i></div>
-        <div class=""label"">سطح دسترسی</div>
-        <div class=""value"">کامل</div>
-        <p class=""desc"">هم‌راستا با کارت سبز ArsisTest</p>
-    </div>
-    <div class=""summary-card success"">
-        <div class=""icon-badge""><i class=""fas fa-box""></i></div>
-        <div class=""label"">محصولات</div>
-        <div class=""value"">342</div>
-        <p class=""desc"">مدیریت کالا و دسته‌ها</p>
-    </div>
-    <div class=""summary-card warning"">
-        <div class=""icon-badge""><i class=""fas fa-receipt""></i></div>
-        <div class=""label"">سفارشات</div>
-        <div class=""value"">57</div>
-        <p class=""desc"">پردازش و صدور فاکتور</p>
-    </div>
-</div>
-
-<div class=""row g-3"">
-    <div class=""col-lg-7"">
-        <div class=""action-card"">
-            <div class=""section-title-bar"">
-                <h5 class=""mb-0"">اقدامات سریع</h5>
-                <span class=""text-muted small"">چیدمان منویی شبیه لیست کنار کارت</span>
-            </div>
-            <div class=""list-group list-group-flush"">
-                <a class=""list-group-item"" asp-controller=""Users"" asp-action=""Create"">
-                    <span><i class=""fas fa-user-plus ms-2""></i>افزودن کاربر جدید</span>
-                    <span class=""badge bg-primary rounded-pill"">جدید</span>
-                </a>
-                <a class=""list-group-item"" asp-controller=""Roles"" asp-action=""Index"">
-                    <span><i class=""fas fa-user-shield ms-2""></i>مدیریت نقش‌ها</span>
-                    <i class=""fas fa-angle-left text-muted""></i>
-                </a>
-                <a class=""list-group-item"" asp-controller=""Products"" asp-action=""Create"">
-                    <span><i class=""fas fa-plus-circle ms-2""></i>افزودن محصول</span>
-                    <i class=""fas fa-angle-left text-muted""></i>
-                </a>
-                <a class=""list-group-item"" asp-controller=""Orders"" asp-action=""Index"">
-                    <span><i class=""fas fa-clipboard-list ms-2""></i>مشاهده سفارشات</span>
-                    <i class=""fas fa-angle-left text-muted""></i>
-                </a>
-                <a class=""list-group-item"" asp-controller=""Blogs"" asp-action=""Index"">
-                    <span><i class=""fas fa-pen ms-2""></i>مدیریت مقالات</span>
-                    <i class=""fas fa-angle-left text-muted""></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class=""col-lg-5"">
-        <div class=""action-card h-100"">
-            <div class=""section-title-bar"">
-                <h5 class=""mb-0"">مرور سیستم</h5>
-                <span class=""text-muted small"">نمای کلی وضعیت</span>
-            </div>
-            <ul class=""list-unstyled mb-0 small text-muted"">
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>دایره شمارنده و کارت‌ها در بالای صفحه</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت‌های سفید با حاشیه روشن</li>
-                <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>لیست اقدامات سریع درون کارت</li>
-                <li><i class=""fas fa-check-circle text-success ms-2""></i>بدون وابستگی به تست یا سازمان</li>
-            </ul>
-        </div>
-    </div>
-</div>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chart = document.querySelector('.chart-placeholder');
+            if (chart) {
+                chart.addEventListener('click', function () {{
+                    chart.classList.toggle('is-active');
+                }});
+            }
+        });
+    </script>
+}
 ";
     }
 
@@ -2718,115 +3651,393 @@ public class BlogController : Controller
 
     public string GetUserProfileIndexViewTemplate()
     {
-        return $@"@model {_namespace}.Domain.Entities.ApplicationUser
+        return $@"@using System
+@model {_projectName}.WebSite.Areas.User.Models.UserSettingsViewModel
 @{{
-    ViewData[""Title""] = ""پروفایل کاربری"";
-    var user = Model;
-    var membershipDate = user != null ? user.CreatedOn : DateTimeOffset.UtcNow;
-    var lastUpdate = user != null ? user.LastModifiedOn : DateTimeOffset.UtcNow;
-    var daysSinceMembership = (DateTimeOffset.UtcNow - membershipDate).Days;
-    var completionPercentage = 100; // Calculate based on filled fields
+    var summary = Model.Summary;
+    var formModel = Model.UpdateProfile;
+    var displayName = string.IsNullOrWhiteSpace(summary.FullName) ? ""کاربر جدید"" : summary.FullName;
+    var emailDisplay = string.IsNullOrWhiteSpace(summary.Email) ? ""ایمیل ثبت نشده"" : summary.Email;
+    var phoneDisplay = string.IsNullOrWhiteSpace(summary.PhoneNumber) ? ""شماره ثبت نشده"" : summary.PhoneNumber;
+    var avatarInitial = displayName.Trim().Length > 0 ? displayName.Trim()[0].ToString() : ""؟"";
+    var avatarUrl = summary.AvatarUrl;
+    var completion = Math.Clamp(summary.CompletionPercent, 0, 100);
+    var createdOn = summary.CreatedOn.ToString(""yyyy/MM/dd"");
+    var lastUpdated = summary.LastUpdatedOn.ToString(""yyyy/MM/dd HH:mm"");
+    var lastUpdatedShort = summary.LastUpdatedOn.ToString(""yyyy/MM/dd"");
+    var membershipDays = Math.Max(1, (int)Math.Floor((DateTimeOffset.UtcNow - summary.CreatedOn).TotalDays) + 1);
+    string ResolveProfileMood(int percent) => percent switch
+    {{
+        >= 90 => ""آماده دریافت گزارش‌ها"",
+        >= 60 => ""رو به تکمیل"",
+        _ => ""نیازمند تکمیل""
+    }};
+    string FormatTimestamp(DateTimeOffset value) => value.ToString(""yyyy/MM/dd HH:mm"");
+    var profileMood = ResolveProfileMood(completion);
+    var activityEntries = new[]
+    {{
+        new {{ Title = ""بروزرسانی پروفایل"", Timestamp = summary.LastUpdatedOn, Context = ""وب - دستگاه فعلی"" }},
+        new {{ Title = ""تکمیل ثبت‌نام"", Timestamp = summary.CreatedOn, Context = ""سامانه"" }}
+    }};
 }}
 
-<div class=""profile-page"">
-    <div class=""profile-shell"">
-        <div>
-            <div class=""profile-hero"">
-                <div class=""hero-row"">
-                    <div>
-                        <div class=""hero-chip""><i class=""fas fa-id-card ms-1""></i>پروفایل کاربری</div>
-                        <h2>@(user?.UserName ?? ""کاربر"")</h2>
-                        <div class=""hero-meta"">
-                            @if (!string.IsNullOrEmpty(user?.PhoneNumber))
+<div class=""profile-dashboard"" data-profile>
+    <div class=""row g-4"">
+        <div class=""col-12"">
+            <div class=""app-card profile-hero"">
+                <div class=""profile-hero__top"">
+                    <div class=""profile-hero__identity"">
+                        <div class=""profile-hero__avatar"" aria-hidden=""true"">
+                            @if (!string.IsNullOrWhiteSpace(avatarUrl))
                             {{
-                                <span class=""meta-chip""><i class=""fas fa-phone""></i>@user.PhoneNumber</span>
+                                <img src=""@avatarUrl"" alt=""@displayName"" />
                             }}
-                            @if (!string.IsNullOrEmpty(user?.Email))
+                            else
                             {{
-                                <span class=""meta-chip""><i class=""fas fa-envelope""></i>@user.Email</span>
+                                <span>@avatarInitial</span>
                             }}
                         </div>
+                        <div>
+                            <span class=""profile-hero__eyebrow"">پنل کاربری</span>
+                            <h1 class=""profile-hero__title"">@displayName</h1>
+                            <div class=""profile-hero__meta"" aria-label=""اطلاعات تماس"">
+                                <div class=""profile-hero__meta-item"">
+                                    <i class=""bi bi-envelope""></i>
+                                    <span>@emailDisplay</span>
+                                </div>
+                                <div class=""profile-hero__meta-item"">
+                                    <i class=""bi bi-phone""></i>
+                                    <span>@phoneDisplay</span>
+                                </div>
+                            </div>
+                            <div class=""profile-hero__timeline"">
+                                <div>
+                                    <span>عضویت از</span>
+                                    <strong>@createdOn</strong>
+                                </div>
+                                <div>
+                                    <span>آخرین بروزرسانی</span>
+                                    <strong>@lastUpdated</strong>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class=""avatar-circle-large"">
-                        <span>@(user?.UserName?.Length > 0 ? user.UserName[0].ToString() : ""آ"")</span>
-                    </div>
-                </div>
-                <div class=""profile-actions"">
-                    <a asp-action=""Edit"" class=""btn btn-edit-profile""><i class=""fas fa-edit ms-1""></i>ویرایش پروفایل</a>
-                    <a href=""#"" class=""btn btn-account-details""><i class=""fas fa-file-alt ms-1""></i>جزئیات حساب</a>
-                </div>
-                <div class=""info-pills"">
-                    <div class=""info-pill"">
-                        <div class=""label"">آخرین ورود</div>
-                        <div class=""value"">@DateTime.Now.ToString(""yyyy/MM/dd"")</div>
-                        <div class=""desc"">ورود با کد یک‌بار مصرف</div>
-                    </div>
-                    <div class=""info-pill"">
-                        <div class=""label"">روزهای همراهی</div>
-                        <div class=""value"">@daysSinceMembership</div>
-                        <div class=""desc"">از @membershipDate.ToString(""yyyy/MM/dd"")</div>
-                    </div>
-                    <div class=""info-pill"">
-                        <div class=""label"">درصد تکمیل</div>
-                        <div class=""value"">@completionPercentage%</div>
-                        <div class=""desc"">همان کارت پیشرفت ArsisTest</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class=""info-cards-row"">
-                <div class=""info-card"">
-                    <div class=""info-card-header"">
-                        <i class=""fas fa-sign-in-alt""></i>
-                        <h6>آخرین ورود</h6>
-                    </div>
-                    <div class=""info-card-body"">
-                        <div class=""info-value"">@DateTime.Now.ToString(""yyyy/MM/dd"")</div>
-                        <div class=""info-description"">ورود با کد یک بار مصرف</div>
+                    <div class=""profile-hero__actions"">
+                        <a class=""btn btn-primary"" style=""color:white"" href=""#profileForm"" data-scroll-anchor>
+                            <i class=""bi bi-pencil-square""></i>
+                            <span>ویرایش پروفایل</span>
+                        </a>
+                        <a class=""btn btn-outline-primary"" href=""#accountSummary"" data-scroll-anchor>
+                            <i class=""bi bi-card-list""></i>
+                            <span>جزئیات حساب</span>
+                        </a>
                     </div>
                 </div>
-
-                <div class=""info-card"">
-                    <div class=""info-card-header"">
-                        <i class=""fas fa-calendar-alt""></i>
-                        <h6>روزهای همراهی</h6>
+                <div class=""row g-3 profile-hero__stats"" aria-label=""آمار حساب"">
+                    <div class=""col-12 col-md-4"">
+                        <div class=""profile-stat"">
+                            <span class=""profile-stat__label"">درصد تکمیل</span>
+                            <strong class=""profile-stat__value"">@completion%</strong>
+                            <small class=""profile-stat__note"">@profileMood</small>
+                        </div>
                     </div>
-                    <div class=""info-card-body"">
-                        <div class=""info-value"">@daysSinceMembership</div>
-                        <div class=""info-description"">از @membershipDate.ToString(""yyyy/MM/dd"")</div>
+                    <div class=""col-12 col-md-4"">
+                        <div class=""profile-stat"">
+                            <span class=""profile-stat__label"">روزهای همراهی</span>
+                            <strong class=""profile-stat__value"">@membershipDays</strong>
+                            <small class=""profile-stat__note"">از @createdOn</small>
+                        </div>
                     </div>
-                </div>
-
-                <div class=""info-card"">
-                    <div class=""info-card-header"">
-                        <i class=""fas fa-percentage""></i>
-                        <h6>درصد تکمیل</h6>
-                    </div>
-                    <div class=""info-card-body"">
-                        <div class=""info-value"">@completionPercentage%</div>
-                        <div class=""info-description"">آماده دریافت گزارشها</div>
+                    <div class=""col-12 col-md-4"">
+                        <div class=""profile-stat"">
+                            <span class=""profile-stat__label"">آخرین ورود</span>
+                            <strong class=""profile-stat__value"">@lastUpdatedShort</strong>
+                            <small class=""profile-stat__note"">ورود با کد یک‌بارمصرف</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div>
-            <div class=""action-card h-100"">
-                <div class=""section-title-bar"">
-                    <h5 class=""mb-0"">مرکز اطلاعات</h5>
-                    <span class=""text-muted small"">نمای کناری مشابه ArsisTest</span>
+
+        @await Html.PartialAsync(""_StatusMessage"")
+
+        <div class=""col-12 col-lg-8"">
+            <div class=""row g-4"">
+                <div class=""col-12"">
+                    <div id=""profileForm"" class=""app-card profile-card profile-card--form"">
+                        <div class=""profile-card__header"">
+                            <div>
+                                <h2>به‌روزرسانی اطلاعات کاربری</h2>
+                                <p>اطلاعات حساب خود را تازه نگه دارید تا گزارش‌های استعداد دقیق‌تری دریافت کنید.</p>
+                            </div>
+                            <span class=""profile-card__timestamp"">آخرین ویرایش: @lastUpdated</span>
+                        </div>
+
+                        <form asp-action=""UpdateProfile"" method=""post"" class=""profile-form"">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary=""ModelOnly"" class=""alert alert-danger"" role=""alert""></div>
+                            <div class=""row g-4 align-items-start"">
+                                <div class=""col-12 col-md-4"">
+                                    <label class=""form-label"" for=""avatarInput"">تصویر پروفایل</label>
+                                    <div class=""profile-avatar-upload"">
+                                        <div class=""profile-avatar-upload__preview"">
+                                            @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                                            {{
+                                                <img src=""@avatarUrl"" alt=""@displayName"" />
+                                            }}
+                                            else
+                                            {{
+                                                <span>@avatarInitial</span>
+                                            }}
+                                        </div>
+                                        <input id=""avatarInput"" name=""UpdateProfile.Avatar"" type=""file"" accept="".png,.jpg,.jpeg,.webp"" class=""form-control"" />
+                                        <small class=""text-muted d-block mt-2"">فرمت‌های مجاز: png, jpg, jpeg, webp - حداکثر 2 مگابایت</small>
+                                    </div>
+                                </div>
+                                <div class=""col-12 col-md-8"">
+                                    <div class=""row g-3"">
+                                        <div class=""col-12"">
+                                            <label class=""form-label"" asp-for=""UpdateProfile.FullName""></label>
+                                            <input asp-for=""UpdateProfile.FullName"" class=""form-control"" autocomplete=""name"" />
+                                            <span asp-validation-for=""UpdateProfile.FullName"" class=""text-danger""></span>
+                                        </div>
+                                        <div class=""col-12 col-md-6"">
+                                            <label class=""form-label"" asp-for=""UpdateProfile.Email""></label>
+                                            <input asp-for=""UpdateProfile.Email"" class=""form-control"" autocomplete=""email"" placeholder=""example@gmail.com"" />
+                                            <span asp-validation-for=""UpdateProfile.Email"" class=""text-danger""></span>
+                                        </div>
+                                        <div class=""col-12 col-md-6"">
+                                            <label class=""form-label"" asp-for=""UpdateProfile.PhoneNumber""></label>
+                                            <input asp-for=""UpdateProfile.PhoneNumber"" class=""form-control"" inputmode=""tel"" maxlength=""11"" />
+                                            <span asp-validation-for=""UpdateProfile.PhoneNumber"" class=""text-danger""></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class=""profile-form__footer"">
+                                <button type=""submit"" class=""btn btn-primary"">ذخیره تغییرات</button>
+                                <p class=""text-muted mb-0"">در صورت تغییر شماره همراه، برای ورود کد یک‌بارمصرف دریافت می‌کنید.</p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <ul class=""list-unstyled mb-0 small text-muted"">
-                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>کارت پروفایل با پس‌زمینه آبی روشن</li>
-                    <li class=""mb-2""><i class=""fas fa-check-circle text-success ms-2""></i>دکمه‌های سبز و آبی مشابه تصویر</li>
-                    <li><i class=""fas fa-check-circle text-success ms-2""></i>همه جزئیات بدون ماژول تست/سازمان</li>
+
+                <div class=""col-12"">
+                    <div id=""accountSummary"" class=""app-card profile-card"">
+                        <div class=""profile-card__header"">
+                            <div>
+                                <h2>جزئیات حساب</h2>
+                                <p>مروری سریع بر اطلاعات ذخیره‌شده و وضعیت امنیت حساب.</p>
+                            </div>
+                        </div>
+                        <div class=""profile-details-grid"">
+                            <div class=""profile-details-card"">
+                                <h3>اطلاعات پایه</h3>
+                                <dl>
+                                    <div>
+                                        <dt>نام کامل</dt>
+                                        <dd>@displayName</dd>
+                                    </div>
+                                    <div>
+                                        <dt>ایمیل</dt>
+                                        <dd>@emailDisplay</dd>
+                                    </div>
+                                    <div>
+                                        <dt>شماره تماس</dt>
+                                        <dd>@phoneDisplay</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            <div class=""profile-details-card"">
+                                <h3>امنیت و دسترسی</h3>
+                                <dl>
+                                    <div>
+                                        <dt>روش ورود</dt>
+                                        <dd>کد یک‌بارمصرف پیامکی</dd>
+                                    </div>
+                                    <div>
+                                        <dt>تاریخ ایجاد حساب</dt>
+                                        <dd>@createdOn</dd>
+                                    </div>
+                                    <div>
+                                        <dt>آخرین بروزرسانی</dt>
+                                        <dd>@lastUpdated</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class=""col-12"">
+                    <div class=""app-card profile-card"">
+                        <div class=""profile-card__header"">
+                            <div>
+                                <h2>گزارش فعالیت</h2>
+                                <p>رخدادهای اخیر حساب برای ردیابی تغییرات و ورودها.</p>
+                            </div>
+                        </div>
+                        <div class=""table-responsive"">
+                            <table class=""table table-borderless align-middle profile-activity-table"" aria-label=""گزارش فعالیت حساب"">
+                                <thead>
+                                    <tr>
+                                        <th scope=""col"">زمان</th>
+                                        <th scope=""col"">شرح</th>
+                                        <th scope=""col"">مرجع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in activityEntries)
+                                    {{
+                                        <tr>
+                                            <td>@FormatTimestamp(entry.Timestamp)</td>
+                                            <td>@entry.Title</td>
+                                            <td>@entry.Context</td>
+                                        </tr>
+                                    }}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class=""col-12 col-lg-4"">
+            <div class=""app-card profile-side-card"">
+                <div class=""profile-side-card__header"">
+                    <div>
+                        <h2>پیشرفت پروفایل</h2>
+                        <p>با تکمیل اطلاعات دسترسی سریع‌تر به گزارش‌ها خواهید داشت.</p>
+                    </div>
+                    <span class=""profile-side-card__badge"" style=""font-size:14px;"">@profileMood</span>
+                </div>
+                <div class=""profile-progress"" role=""img"" aria-label=""@($""درصد تکمیل پروفایل {{completion}}"")"">
+                    <div class=""progress profile-progress__bar"">
+                        <div class=""progress-bar"" style=""width: @completion%"" aria-valuemin=""0"" aria-valuemax=""100"" aria-valuenow=""@completion"">@completion%</div>
+                    </div>
+                    <div class=""profile-progress__meta"">
+                        <div>
+                            <span>آخرین بروزرسانی</span>
+                            <strong>@lastUpdatedShort</strong>
+                        </div>
+                        <div>
+                            <span>روزهای همراهی</span>
+                            <strong>@membershipDays</strong>
+                        </div>
+                    </div>
+                </div>
+                <ul class=""profile-tips"" aria-label=""پیشنهادهای تکمیل پروفایل"">
+                    <li>
+                        <i class=""bi bi-check-circle""></i>
+                        <span>اطلاعات تماس خود را به‌روز نگه دارید.</span>
+                    </li>
+                    <li>
+                        <i class=""bi bi-check-circle""></i>
+                        <span>برای امنیت بیشتر از دستگاه‌های مطمئن وارد شوید.</span>
+                    </li>
                 </ul>
+            </div>
+
+            <div class=""app-card profile-side-card"" style=""margin-top: var(--bs-gutter-y);"">
+                <div class=""profile-side-card__header"">
+                    <div>
+                        <h2>پشتیبانی</h2>
+                        <p>در صورت بروز مشکل تیم ما همراه شماست.</p>
+                    </div>
+                </div>
+                <div class=""profile-support"">
+                    <i class=""bi bi-headset""></i>
+                    <div>
+                        <strong>پشتیبانی مرکزی</strong>
+                        <p>تماس: 021-00000000</p>
+                        <p>ایمیل: support@example.com</p>
+                    </div>
+                </div>
+                <a href=""tel:02100000000"" class=""btn btn-outline-primary w-100"">تماس با پشتیبانی</a>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {{
+    @{{ await Html.RenderPartialAsync(""_ValidationScriptsPartial""); }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {{
+            var phoneInput = document.querySelector('[name=""UpdateProfile.PhoneNumber""]');
+            if (phoneInput) {{
+                var normalisePhone = function (value) {{
+                    if (!value) {{
+                        return '';
+                    }}
+
+                    var digits = value.replace(/\D+/g, '');
+
+                    if (digits.startsWith('0098')) {{
+                        digits = digits.substring(4);
+                    }}
+
+                    if (digits.startsWith('98') && digits.length >= 12) {{
+                        digits = digits.substring(2);
+                    }}
+
+                    if (digits.startsWith('9') && digits.length === 10) {{
+                        digits = '0' + digits;
+                    }}
+
+                    if (digits.length > 11 && digits.startsWith('0')) {{
+                        digits = digits.slice(-11);
+                    }}
+
+                    if (digits.length === 11 && digits.startsWith('09')) {{
+                        return digits;
+                    }}
+
+                    return value.replace(/\D+/g, '');
+                }};
+
+                var sanitiseInput = function () {{
+                    var digits = phoneInput.value.replace(/\D+/g, '');
+                    if (phoneInput.value !== digits) {{
+                        var caret = phoneInput.selectionStart;
+                        phoneInput.value = digits;
+                        if (typeof phoneInput.setSelectionRange === 'function' && typeof caret === 'number') {{
+                            var next = Math.min(caret, digits.length);
+                            phoneInput.setSelectionRange(next, next);
+                        }}
+                    }}
+                }};
+
+                    phoneInput.addEventListener('input', sanitiseInput);
+                    phoneInput.addEventListener('blur', function () {{
+                        phoneInput.value = normalisePhone(phoneInput.value);
+                    }});
+
+                    phoneInput.value = normalisePhone(phoneInput.value);
+            }}
+
+            document.querySelectorAll('[data-scroll-anchor]').forEach(function (link) {{
+                link.addEventListener('click', function (event) {{
+                    var href = link.getAttribute('href');
+                    if (!href || !href.startsWith('#')) {{
+                        return;
+                    }}
+
+                    var target = document.querySelector(href);
+                    if (!target) {{
+                        return;
+                    }}
+
+                    event.preventDefault();
+                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                }});
+            }});
+        }});
+    </script>
+}}
+
 ";
     }
-
     public string GetUserProfileEditViewTemplate()
     {
         return $@"@model {_projectName}.WebSite.Areas.User.Models.ProfileEditViewModel
@@ -2874,7 +4085,7 @@ public class BlogController : Controller
     }
 
     // ==================== Main Site Views ====================
-    
+
     public string GetHomeIndexViewTemplate()
     {
         return $@"@{{
@@ -3077,7 +4288,7 @@ public class BlogController : Controller
         </div>
     </div>
 </div>
-"; 
+";
     }
 
     public string GetHomeAboutViewTemplate()
@@ -3613,7 +4824,7 @@ public class BlogController : Controller
     }
 
     // ==================== Admin Area Views ====================
-    
+
     public string GetAdminUsersIndexViewTemplate()
     {
         return $@"@model List<{_namespace}.Domain.Entities.ApplicationUser>
@@ -4163,7 +5374,7 @@ public class BlogController : Controller
     }
 
     // ==================== ViewModel Templates ====================
-    
+
     public string GetLoginViewModelTemplate()
     {
         return $@"namespace {_projectName}.WebSite.Models;
@@ -4231,4 +5442,212 @@ public class ProfileEditViewModel
 }}
 ";
     }
+
+
+    public string GetStatusMessagePartialTemplate()
+    {
+        return $@"@if (TempData[""StatusMessage""] is string status && !string.IsNullOrWhiteSpace(status))
+{{
+    <div class=""alert alert-success alert-dismissible fade show"" role=""alert"">
+        @status
+        <button type=""button"" class=""btn-close"" data-bs-dismiss=""alert"" aria-label=""Close""></button>
+    </div>
+}}
+
+@if (TempData[""ErrorMessage""] is string error && !string.IsNullOrWhiteSpace(error))
+{{
+    <div class=""alert alert-danger alert-dismissible fade show"" role=""alert"">
+        @error
+        <button type=""button"" class=""btn-close"" data-bs-dismiss=""alert"" aria-label=""Close""></button>
+    </div>
+}}";
+    }
+
+    public string GetValidationScriptsPartialTemplate()
+    {
+        return $@"<environment include=""Development"">
+    <script src=""~/lib/jquery/dist/jquery.js""></script>
+    <script src=""~/lib/jquery-validation/dist/jquery.validate.js""></script>
+    <script src=""~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js""></script>
+</environment>
+<environment exclude=""Development"">
+    <script src=""https://code.jquery.com/jquery-3.6.0.min.js"" integrity=""sha256-/xUj+3OJ+Y7kQJzF0d3bR9E7S6Kp9aLL9xM/YOv+B2U="" crossorigin=""anonymous""></script>
+    <script src=""https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"" integrity=""sha512-bZ3DoEo8m4GN28AL5soMgqd7qV3CyMfCVxYvBy06SnVAk0nnBYnCTKxR271GGBqBPdZiZsa1+lct2LBRefb1xA=="" crossorigin=""anonymous"" referrerpolicy=""no-referrer""></script>
+    <script src=""https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"" integrity=""sha512-gJPD7W82dManIeZDV4SSQdlqzTeWY5Avzkdxl3pNGdisz8Iky3Uczdlz7YT1DoP70uQgmO6ijLJrVN6a8tnR8Q=="" crossorigin=""anonymous"" referrerpolicy=""no-referrer""></script>
+</environment>";
+    }
+
+    public string GetUserProductsControllerTemplate()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+        sb.AppendLine($"using {_projectName}.WebSite.Areas.User.Models;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {_projectName}.WebSite.Areas.User.Controllers;");
+        sb.AppendLine();
+        sb.AppendLine("[Area(\"User\")]");
+        sb.AppendLine("[Authorize]");
+        sb.AppendLine("public sealed class ProductsController : Controller");
+        sb.AppendLine("{");
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult Index()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var model = UserProductLibraryViewModel.CreateEmpty();");
+        sb.AppendLine();
+        sb.AppendLine("        ViewData[\"Title\"] = \"محصولات خریداری شده\";");
+        sb.AppendLine("        ViewData[\"Subtitle\"] = \"کتابخانه محصولات و دسترسی فایل‌ها\";");
+        sb.AppendLine("        ViewData[\"Sidebar:ActiveTab\"] = \"library\";");
+        sb.AppendLine("        ViewData[\"TitleSuffix\"] = \"پنل کاربری\";");
+        sb.AppendLine("        ViewData[\"ShowSearch\"] = false;");
+        sb.AppendLine();
+        sb.AppendLine("        return View(model);");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        return sb.ToString();
+    }
+
+    public string GetUserWalletControllerTemplate()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+        sb.AppendLine($"using {_projectName}.WebSite.Areas.User.Models;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {_projectName}.WebSite.Areas.User.Controllers;");
+        sb.AppendLine();
+        sb.AppendLine("[Area(\"User\")]");
+        sb.AppendLine("[Authorize]");
+        sb.AppendLine("public sealed class WalletController : Controller");
+        sb.AppendLine("{");
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult Index()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"مدیریت کیف پول\", \"کنترل تراکنش‌ها و فاکتورها\");");
+        sb.AppendLine("        return View(WalletDashboardViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult InvoiceDetails()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"جزئیات فاکتور\", \"نمای کامل تراکنش‌های مالی\");");
+        sb.AppendLine("        return View(UserInvoiceDetailViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult PayInvoice()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"انتخاب روش پرداخت\", \"تسویه فاکتور\");");
+        sb.AppendLine("        return View(InvoicePaymentOptionsViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult BankPaymentSession()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"درگاه بانکی\", \"تکمیل پرداخت\");");
+        sb.AppendLine("        return View(BankPaymentSessionViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private void ConfigureLayout(string title, string subtitle)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ViewData[\"Title\"] = title;");
+        sb.AppendLine("        ViewData[\"Subtitle\"] = subtitle;");
+        sb.AppendLine("        ViewData[\"Sidebar:ActiveTab\"] = \"wallet\";");
+        sb.AppendLine("        ViewData[\"TitleSuffix\"] = \"پنل کاربری\";");
+        sb.AppendLine("        ViewData[\"ShowSearch\"] = false;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        return sb.ToString();
+    }
+
+    public string GetUserInvoicesControllerTemplate()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+        sb.AppendLine($"using {_projectName}.WebSite.Areas.User.Models;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {_projectName}.WebSite.Areas.User.Controllers;");
+        sb.AppendLine();
+        sb.AppendLine("[Area(\"User\")]");
+        sb.AppendLine("[Authorize]");
+        sb.AppendLine("public sealed class InvoiceController : Controller");
+        sb.AppendLine("{");
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult Index()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"فاکتورهای من\", \"لیست پرداخت‌ها و وضعیت تسویه\");");
+        sb.AppendLine("        return View(UserInvoiceListViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    [HttpGet]");
+        sb.AppendLine("    public IActionResult Details()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ConfigureLayout(\"جزئیات فاکتور\", \"نمای کامل تراکنش\");");
+        sb.AppendLine("        return View(UserInvoiceDetailViewModel.CreateEmpty());");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private void ConfigureLayout(string title, string subtitle)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        ViewData[\"Title\"] = title;");
+        sb.AppendLine("        ViewData[\"Subtitle\"] = subtitle;");
+        sb.AppendLine("        ViewData[\"Sidebar:ActiveTab\"] = \"invoices\";");
+        sb.AppendLine("        ViewData[\"TitleSuffix\"] = \"پنل کاربری\";");
+        sb.AppendLine("        ViewData[\"ShowSearch\"] = false;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        return sb.ToString();
+    }
+
+    public string GetUserSettingsViewModelTemplate()
+    {
+        return $@"using System;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+
+namespace {_projectName}.WebSite.Areas.User.Models;
+
+public sealed class UserSettingsViewModel
+{{
+    public ProfileSummaryViewModel Summary {{ get; init; }} = new();
+    public UpdateProfileInputModel UpdateProfile {{ get; init; }} = new();
+}}
+
+public sealed class ProfileSummaryViewModel
+{{
+    public string FullName {{ get; init; }} = string.Empty;
+    public string? Email {{ get; init; }}
+    public string PhoneNumber {{ get; init; }} = string.Empty;
+    public DateTimeOffset CreatedOn {{ get; init; }}
+    public DateTimeOffset LastUpdatedOn {{ get; init; }}
+    public int CompletionPercent {{ get; init; }}
+    public string? AvatarUrl {{ get; init; }}
+}}
+
+public sealed class UpdateProfileInputModel
+{{
+    [Required(ErrorMessage = ""نام کامل را وارد کنید."")]
+    [Display(Name = ""نام کامل"")]
+    [StringLength(200, ErrorMessage = ""نام کامل نمی‌تواند بیش از 200 کاراکتر باشد."")]
+    public string FullName {{ get; set; }} = string.Empty;
+
+    [EmailAddress(ErrorMessage = ""فرمت ایمیل معتبر نیست."")]
+    [Display(Name = ""ایمیل (اختیاری)"")]
+    public string? Email {{ get; set; }}
+
+    [Required(ErrorMessage = ""شماره تماس را وارد کنید."")]
+    [Display(Name = ""شماره تماس"")]
+    public string PhoneNumber {{ get; set; }} = string.Empty;
+
+    [Display(Name = ""تصویر پروفایل"")]
+    public IFormFile? Avatar {{ get; set; }}
+}}
+";
+    }
 }
+
+
+

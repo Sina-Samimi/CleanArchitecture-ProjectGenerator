@@ -1,0 +1,152 @@
+@model WalletChargeFormViewModel
+@{
+    ViewData["Title"] ??= "شارژ کیف پول کاربران";
+    ViewData["Subtitle"] ??= "افزودن اعتبار به کیف پول کاربران همراه با ثبت فاکتور";
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Invoices" asp-action="Index">فاکتورها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="wallet-charge" data-wallet-charge-form>
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+                        <div>
+                            <h1 class="h3 mb-2">@ViewData["Title"]</h1>
+                            <p class="text-muted mb-0">@ViewData["Subtitle"]</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a asp-area="Admin" asp-controller="Invoices" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-receipt"></i>
+                                مدیریت فاکتورها
+                            </a>
+                        </div>
+                    </div>
+
+                    <form asp-area="Admin" asp-controller="Wallets" asp-action="Charge" method="post" class="row g-3" novalidate>
+                        @Html.AntiForgeryToken()
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <select class="form-select"
+                                        asp-for="UserId"
+                                        asp-items="Model.UserOptions"
+                                        data-control="select2"
+                                        data-placeholder="انتخاب کاربر سیستم"
+                                        data-allow-clear="true"
+                                        data-dropdown-parent="[data-wallet-charge-form]"
+                                        data-wallet-user-select>
+                                    <option value="">انتخاب کاربر سیستم</option>
+                                </select>
+                                <label asp-for="UserId"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="UserId"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input asp-for="Amount" class="form-control" type="number" step="0.01" min="0" placeholder="مبلغ" />
+                                <label asp-for="Amount"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="Amount"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input asp-for="Currency" class="form-control" placeholder="واحد پول" />
+                                <label asp-for="Currency"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="Currency"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select asp-for="PaymentMethod" class="form-select" asp-items="Model.PaymentMethodOptions">
+                                </select>
+                                <label asp-for="PaymentMethod"></label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="InvoiceTitle" class="form-control" placeholder="عنوان فاکتور" />
+                                <label asp-for="InvoiceTitle"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="InvoiceTitle"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="PaymentReference" class="form-control" placeholder="شناسه مرجع پرداخت" />
+                                <label asp-for="PaymentReference"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="PaymentReference"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <textarea asp-for="InvoiceDescription" class="form-control" style="min-height: 120px" placeholder="شرح فاکتور"></textarea>
+                                <label asp-for="InvoiceDescription"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="InvoiceDescription"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <textarea asp-for="TransactionDescription" class="form-control" style="min-height: 120px" placeholder="توضیح تراکنش"></textarea>
+                                <label asp-for="TransactionDescription"></label>
+                            </div>
+                            <span class="text-danger" asp-validation-for="TransactionDescription"></span>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button type="reset" class="btn btn-light">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                پاکسازی فرم
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-wallet2"></i>
+                                ثبت شارژ کیف پول
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <h2 class="h5 mb-3">راهنمای ثبت شارژ</h2>
+                    <ul class="list-unstyled text-muted small mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-person-check ms-1 text-primary"></i>
+                            ابتدا کاربر موردنظر را از فهرست انتخاب کنید. در صورت غیر فعال بودن کاربر، برچسب مربوط نمایش داده می‌شود.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-cash-stack ms-1 text-success"></i>
+                            مبلغ شارژ به واحد پول مشخص‌شده به موجودی کیف پول افزوده خواهد شد.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-receipt ms-1 text-warning"></i>
+                            برای هر شارژ، فاکتور و تراکنش پرداخت موفق به‌صورت خودکار ایجاد می‌شود.
+                        </li>
+                        <li>
+                            <i class="bi bi-link-45deg ms-1 text-info"></i>
+                            پس از ثبت، به صفحه جزئیات فاکتور هدایت خواهید شد تا بتوانید وضعیت را بررسی یا چاپ کنید.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/wallets.js" asp-append-version="true"></script>
+}

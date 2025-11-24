@@ -1,0 +1,239 @@
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Domain.Enums
+@model MyTestsViewModel
+
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@{
+    ViewData["Title"] = "تست‌های من";
+    var isDevelopment = HostEnvironment.IsDevelopment();
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="User" asp-controller="Profile" asp-action="Index">پنل کاربری</a></li>
+    <li class="breadcrumb-item active" aria-current="page">تست‌های من</li>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 pb-0">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h4 mb-0">تست‌های خریداری شده</h2>
+            @if (isDevelopment)
+            {
+                <a asp-action="MyTests" asp-route-debug="true" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-bug"></i> Debug View
+                </a>
+            }
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.PurchasedTests.Any())
+        {
+            <div class="row g-3">
+                @foreach (var purchasedTest in Model.PurchasedTests)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100 border">
+                            <div class="card-body">
+                                <h5 class="card-title">@purchasedTest.TestTitle</h5>
+                                <div class="mb-2">
+                                    <span class="badge bg-info">@GetTestTypeName(purchasedTest.TestType)</span>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-calendar3"></i>
+                                    تاریخ خرید: @purchasedTest.PurchaseDate.ToString("yyyy/MM/dd")
+                                </p>
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-receipt"></i>
+                                    فاکتور: @purchasedTest.InvoiceNumber
+                                </p>
+
+                                @if (purchasedTest.Attempt != null)
+                                {
+                                    <div class="mb-3">
+                                        <span class="badge @GetStatusBadgeClass(purchasedTest.Attempt.Status)">
+                                            @GetStatusName(purchasedTest.Attempt.Status)
+                                        </span>
+                                        @if (purchasedTest.Attempt.Status == TestAttemptStatus.Completed)
+                                        {
+                                            @if (purchasedTest.Attempt.TotalScore.HasValue && purchasedTest.Attempt.MaxScore.HasValue)
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="small text-muted">نمره: @purchasedTest.Attempt.TotalScore.Value.ToString("F1") / @purchasedTest.Attempt.MaxScore.Value.ToString("F1")</div>
+                                                    @if (purchasedTest.Attempt.ScorePercentage.HasValue)
+                                                    {
+                                                        <div class="progress mt-1" style="height: 8px;">
+                                                            <div class="progress-bar @(purchasedTest.Attempt.IsPassed == true ? "bg-success" : "bg-primary")" 
+                                                                 style="width: @(purchasedTest.Attempt.ScorePercentage.Value)%">
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        }
+                                        else if (purchasedTest.Attempt.Status == TestAttemptStatus.InProgress)
+                                        {
+                                            @if (purchasedTest.Attempt.TimeRemainingMinutes.HasValue)
+                                            {
+                                                <div class="alert alert-warning alert-sm mt-2 mb-0 py-2">
+                                                    <i class="bi bi-clock"></i>
+                                                    زمان باقیمانده: @purchasedTest.Attempt.TimeRemainingMinutes دقیقه
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pt-0">
+                                @if (purchasedTest.Attempt == null)
+                                {
+                                    <form method="post" asp-action="Start" asp-route-id="@purchasedTest.TestId" asp-route-invoiceId="@purchasedTest.InvoiceId">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-play-circle ms-2"></i>
+                                            شروع تست
+                                        </button>
+                                    </form>
+                                }
+                                else if (purchasedTest.Attempt.Status == TestAttemptStatus.InProgress)
+                                {
+                                    <a asp-area="" asp-controller="Test" asp-action="Take" asp-route-attemptId="@purchasedTest.Attempt.Id" class="btn btn-primary w-100">
+                                        <i class="bi bi-play-circle ms-2"></i>
+                                        ادامه تست
+                                    </a>
+                                }
+                                else if (purchasedTest.Attempt.Status == TestAttemptStatus.Completed)
+                                {
+                                    <a asp-area="" asp-controller="Test" asp-action="Result" asp-route-attemptId="@purchasedTest.Attempt.Id" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-eye ms-2"></i>
+                                        مشاهده نتیجه
+                                    </a>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Start" asp-route-id="@purchasedTest.TestId" asp-route-invoiceId="@purchasedTest.InvoiceId">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-play-circle ms-2"></i>
+                                            شروع مجدد تست
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle fs-3 mb-3"></i>
+                <p class="mb-3">شما هنوز هیچ تستی خریداری نکرده‌اید.</p>
+                <a asp-area="" asp-controller="Test" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-arrow-left ms-2"></i>
+                    مشاهده تست‌های موجود
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.Attempts.Any())
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pb-0">
+            <h2 class="h4 mb-0">تست‌های بدون فاکتور (آزمون‌های رایگان یا فعال‌سازی مستقیم)</h2>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach (var attempt in Model.Attempts)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100 border">
+                            <div class="card-body">
+                                <h5 class="card-title">@attempt.TestTitle</h5>
+                                <div class="mb-2">
+                                    <span class="badge bg-info">@GetTestTypeName(attempt.TestType)</span>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-calendar3"></i>
+                                    تاریخ شروع: @attempt.StartedAt.ToString("yyyy/MM/dd HH:mm")
+                                </p>
+                                @if (attempt.CompletedAt.HasValue)
+                                {
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-flag-checkered"></i>
+                                        تاریخ اتمام: @attempt.CompletedAt.Value.ToString("yyyy/MM/dd HH:mm")
+                                    </p>
+                                }
+
+                                <div class="mb-3">
+                                    <span class="badge @GetStatusBadgeClass(attempt.Status)">
+                                        @GetStatusName(attempt.Status)
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pt-0">
+                                @if (attempt.Status == TestAttemptStatus.InProgress)
+                                {
+                                    <a asp-area="" asp-controller="Test" asp-action="Take" asp-route-attemptId="@attempt.Id" class="btn btn-primary w-100">
+                                        <i class="bi bi-play-circle ms-2"></i>
+                                        ادامه آزمون
+                                    </a>
+                                }
+                                else if (attempt.Status == TestAttemptStatus.Completed)
+                                {
+                                    <a asp-area="" asp-controller="Test" asp-action="Result" asp-route-attemptId="@attempt.Id" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-eye ms-2"></i>
+                                        مشاهده نتیجه
+                                    </a>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="Start" asp-route-id="@attempt.TestId">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-play-circle ms-2"></i>
+                                            شروع مجدد آزمون
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetTestTypeName(TestType type) => type switch
+    {
+        TestType.General => "تست عمومی",
+        TestType.Disc => "تست DISC",
+        TestType.Clifton => "تست کلیفتون",
+        TestType.CliftonSchwartz => "تست کلیفتون + شوارتز",
+        TestType.Raven => "تست هوش ریون",
+        TestType.Personality => "تست شخصیت‌شناسی",
+        _ => type.ToString()
+    };
+
+    string GetStatusName(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.InProgress => "در حال انجام",
+        TestAttemptStatus.Completed => "تکمیل شده",
+        TestAttemptStatus.Expired => "منقضی شده",
+        TestAttemptStatus.Cancelled => "لغو شده",
+        _ => status.ToString()
+    };
+
+    string GetStatusBadgeClass(TestAttemptStatus status) => status switch
+    {
+        TestAttemptStatus.InProgress => "bg-primary",
+        TestAttemptStatus.Completed => "bg-success",
+        TestAttemptStatus.Expired => "bg-warning",
+        TestAttemptStatus.Cancelled => "bg-secondary",
+        _ => "bg-info"
+    };
+}

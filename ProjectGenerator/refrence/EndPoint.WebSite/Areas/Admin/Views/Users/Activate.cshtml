@@ -1,0 +1,35 @@
+@model ActivateUserViewModel
+@{
+    ViewData["Title"] = "فعال‌سازی کاربر";
+}
+
+<h1 class="mb-4">فعال‌سازی کاربر</h1>
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="alert alert-success">با فعال‌سازی، کاربر می‌تواند دوباره به سامانه دسترسی داشته باشد.</div>
+
+<form asp-action="Activate" asp-route-id="@Model.Id" method="post" class="card">
+    <div class="card-body">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <dl class="row">
+            <dt class="col-sm-3">نام کامل</dt>
+            <dd class="col-sm-9">@Model.FullName</dd>
+            <dt class="col-sm-3">ایمیل</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+        </dl>
+        <p class="mb-0">آیا از فعال‌سازی مجدد این کاربر مطمئن هستید؟</p>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" asp-action="Index">انصراف</a>
+        <button type="submit" class="btn btn-success">تأیید فعال‌سازی</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

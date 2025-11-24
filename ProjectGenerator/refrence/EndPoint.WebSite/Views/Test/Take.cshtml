@@ -1,0 +1,722 @@
+@using System
+@using EndPoint.WebSite.Models.Test
+@using Arsis.Application.Assessments
+@using Arsis.Domain.Enums
+@using System.Text.Json
+@model TakeTestViewModel
+
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@{
+    ViewData["Title"] = $"انجام آزمون: {Model.Test.Title}";
+    var test = Model.Test;
+    var questions = test.RandomizeQuestions 
+        ? test.Questions.OrderBy(x => Guid.NewGuid()).ToList() 
+        : test.Questions.OrderBy(q => q.Order).ToList();
+    var isDevelopment = HostEnvironment.IsDevelopment();
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0">@test.Title</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            @if (isDevelopment)
+                            {
+                                <button type="button" class="btn btn-warning btn-sm" onclick="autoCompleteTest(this)" title="تکمیل خودکار با پاسخ‌های رندوم (فقط برای توسعه)">
+                                    <i class="bi bi-lightning-charge"></i> تکمیل خودکار
+                                </button>
+                            }
+                            @if (Model.Attempt.ExpiresAt.HasValue)
+                            {
+                                <div id="timer" class="h5 mb-0">
+                                    <i class="bi bi-clock"></i>
+                                    <span id="timeRemaining"></span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 5px;">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-white-50 small" id="progressInfo">0 از @questions.Count سوال پاسخ داده شده است</div>
+                </div>
+                <div class="card-body">
+                    @if (test.Type == TestType.CliftonSchwartz)
+                    {
+                        <div class="alert alert-info" role="alert">
+                            این آزمون ترکیبی شامل دو بخش «Clifton Strengths» و «Schwartz PVQ» است. لطفاً به ترتیب به همه سؤالات پاسخ دهید و برای هر عبارت میزان موافقت یا شباهت خود را مشخص کنید.
+                        </div>
+                    }
+                    <form id="testForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="attemptId" value="@Model.Attempt.Id" />
+
+                        @for (int i = 0; i < questions.Count; i++)
+                        {
+                            var question = questions[i];
+                            var existingAnswer = Model.Attempt.Answers.FirstOrDefault(a => a.QuestionId == question.Id);
+                            var metadata = GetAssessmentMetadata(question.Explanation);
+                            int scaleMin = metadata?.Min ?? 1;
+                            int scaleMax = metadata?.Max ?? 5;
+                            if (scaleMin > scaleMax)
+                            {
+                                var temp = scaleMin;
+                                scaleMin = scaleMax;
+                                scaleMax = temp;
+                            }
+                            var minLabel = !string.IsNullOrWhiteSpace(metadata?.MinLabel) ? metadata!.MinLabel! : "کاملاً مخالفم";
+                            var maxLabel = !string.IsNullOrWhiteSpace(metadata?.MaxLabel) ? metadata!.MaxLabel! : "کاملاً موافقم";
+                            var sectionLabel = GetAssessmentSectionLabel(metadata?.Assessment);
+                            var dimensionLabel = metadata?.Dimension;
+                            var existingLikertValue = existingAnswer?.LikertValue;
+                            
+                            <div class="question-container mb-5 p-4 border rounded-3" data-question-index="@i" data-question-id="@question.Id" data-required="@(question.IsRequired.ToString().ToLowerInvariant())" data-question-type="@question.QuestionType">
+                                <h4 class="mb-4">
+                                    سوال @(i + 1) از @questions.Count
+                                    @if (question.IsRequired)
+                                    {
+                                        <span class="text-danger">*</span>
+                                    }
+                                </h4>
+
+                                  @if (!string.IsNullOrWhiteSpace(sectionLabel) || !string.IsNullOrWhiteSpace(dimensionLabel))
+                                  {
+                                      <div class="mb-3 d-flex flex-wrap gap-2">
+                                          @if (!string.IsNullOrWhiteSpace(sectionLabel))
+                                          {
+                                              <span class="badge bg-info-subtle text-info fw-semibold">@sectionLabel</span>
+                                          }
+                                          @if (!string.IsNullOrWhiteSpace(dimensionLabel))
+                                          {
+                                              <span class="badge bg-light text-body-secondary border">@dimensionLabel</span>
+                                          }
+                                      </div>
+                                  }
+
+                                  <p class="lead">@question.Text</p>
+
+                                @if (!string.IsNullOrEmpty(question.ImageUrl))
+                                {
+                                    <div class="mb-3">
+                                        <img src="@question.ImageUrl" alt="Question image" class="img-fluid" style="max-height: 300px;" />
+                                    </div>
+                                }
+
+                                @if (question.QuestionType == TestQuestionType.MultipleChoice)
+                                {
+                                    var options = test.RandomizeOptions 
+                                        ? question.Options.OrderBy(x => Guid.NewGuid()).ToList()
+                                        : question.Options.OrderBy(o => o.Order).ToList();
+                                    
+                                    <div class="list-group">
+                                        @foreach (var option in options)
+                                        {
+                                            <label class="list-group-item list-group-item-action">
+                                                <input type="radio" 
+                                                       name="question_@question.Id" 
+                                                       value="@option.Id" 
+                                                       class="form-check-input me-2"
+                                                       @(existingAnswer?.SelectedOptionId == option.Id ? "checked" : "") />
+                                                @option.Text
+                                            </label>
+                                        }
+                                    </div>
+                                }
+                                else if (question.QuestionType == TestQuestionType.TrueFalse)
+                                {
+                                    var trueChecked = string.Equals(existingAnswer?.TextAnswer, "true", StringComparison.OrdinalIgnoreCase);
+                                    var falseChecked = string.Equals(existingAnswer?.TextAnswer, "false", StringComparison.OrdinalIgnoreCase);
+
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio"
+                                               class="btn-check"
+                                               name="question_@question.Id"
+                                               id="true_@question.Id"
+                                               value="true"
+                                               @(trueChecked ? "checked" : string.Empty)>
+                                        <label class="btn btn-outline-success" for="true_@question.Id">درست</label>
+
+                                        <input type="radio"
+                                               class="btn-check"
+                                               name="question_@question.Id"
+                                               id="false_@question.Id"
+                                               value="false"
+                                               @(falseChecked ? "checked" : string.Empty)>
+                                        <label class="btn btn-outline-danger" for="false_@question.Id">نادرست</label>
+                                    </div>
+                                }
+                                  else if (question.QuestionType == TestQuestionType.LikertScale)
+                                  {
+                                      <div class="likert-scale text-center">
+                                          <div class="d-flex justify-content-between mb-2">
+                                              <span>@minLabel</span>
+                                              <span>@maxLabel</span>
+                                          </div>
+                                          <div class="btn-group w-100" role="group">
+                                              @for (var val = scaleMin; val <= scaleMax; val++)
+                                              {
+                                                  var inputId = $"likert_{question.Id}_{val}";
+                                                  var isChecked = existingLikertValue.HasValue && existingLikertValue.Value == val;
+                                                  <input type="radio" class="btn-check" name="question_@question.Id" id="@inputId" value="@val" @(isChecked ? "checked" : string.Empty)>
+                                                  <label class="btn btn-outline-primary" for="@inputId">@val</label>
+                                              }
+                                          </div>
+                                      </div>
+                                }
+                                else if (question.QuestionType == TestQuestionType.ShortText)
+                                {
+                                    <input type="text" 
+                                           name="question_@question.Id" 
+                                           class="form-control" 
+                                           value="@existingAnswer?.TextAnswer"
+                                           placeholder="پاسخ خود را وارد کنید..." />
+                                }
+                                else if (question.QuestionType == TestQuestionType.LongText)
+                                {
+                                    <textarea name="question_@question.Id" 
+                                              class="form-control" 
+                                              rows="5"
+                                              placeholder="پاسخ خود را وارد کنید...">@existingAnswer?.TextAnswer</textarea>
+                                }
+                            </div>
+                        }
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" id="submitBtn" class="btn btn-success btn-lg" onclick="completeTest()">
+                            <i class="bi bi-check-circle"></i> پایان آزمون و مشاهده نتیجه
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+</div>
+
+<div id="completionOverlay" class="completion-overlay d-none" role="status" aria-live="polite">
+    <div class="completion-dialog">
+        <div class="completion-spinner"></div>
+        <div class="completion-message">
+            <h5>در حال آماده‌سازی نتیجه آزمون</h5>
+            <p class="text-muted mb-3">لطفاً چند لحظه صبر کنید تا تحلیل ترکیبی کلیفتون و شوارتز آماده شود.</p>
+        </div>
+        <div class="completion-progress">
+            <div class="completion-progress-bar">
+                <div id="completionProgressFill" class="completion-progress-fill"></div>
+            </div>
+            <div class="completion-progress-text">
+                <span id="completionProgressPercent">0%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const questionContainers = Array.from(document.querySelectorAll('.question-container'));
+        const totalQuestions = questionContainers.length;
+        const attemptId = '@Model.Attempt.Id';
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const progressBar = document.getElementById('progressBar');
+        const progressInfo = document.getElementById('progressInfo');
+        const expiresAt = @(Model.Attempt.ExpiresAt.HasValue ? $"new Date('{Model.Attempt.ExpiresAt.Value:yyyy-MM-ddTHH:mm:ss}')" : "null");
+        const completionOverlay = document.getElementById('completionOverlay');
+        const completionProgressFill = document.getElementById('completionProgressFill');
+        const completionProgressPercent = document.getElementById('completionProgressPercent');
+        let completionProgressTimer = null;
+        let completionProgressValue = 0;
+        let isSubmitting = false;
+
+        updateProgressBar();
+
+        document.addEventListener('change', (event) => {
+            if (!event.target.matches('input, textarea, select')) {
+                return;
+            }
+
+            const container = event.target.closest('.question-container');
+            if (!container) {
+                return;
+            }
+
+            saveAnswer(container);
+            if (isAnswered(container)) {
+                container.classList.remove('border-danger');
+            }
+            updateProgressBar();
+        });
+
+        function collectAnswer(container) {
+            const questionId = container.dataset.questionId;
+            const questionType = container.dataset.questionType;
+            let selectedOption = null;
+            let textAnswer = null;
+            let likertValue = null;
+
+            const radio = container.querySelector(`input[name="question_${questionId}"]:checked`);
+            if (radio) {
+                const value = radio.value ?? '';
+                if (value === 'true' || value === 'false') {
+                    textAnswer = value;
+                } else if (questionType === 'LikertScale') {
+                    const numericValue = Number(value);
+                    if (!Number.isNaN(numericValue)) {
+                        likertValue = numericValue;
+                    }
+                } else {
+                    selectedOption = value;
+                }
+            }
+
+            const textInput = container.querySelector(`input[type="text"][name="question_${questionId}"]`);
+            if (textInput && textInput.value.trim().length > 0) {
+                textAnswer = textInput.value;
+            }
+
+            const textarea = container.querySelector(`textarea[name="question_${questionId}"]`);
+            if (textarea && textarea.value.trim().length > 0) {
+                textAnswer = textarea.value;
+            }
+
+            const hasSelectedOption = selectedOption !== null && selectedOption !== '';
+            const hasTextAnswer = typeof textAnswer === 'string' && textAnswer.trim().length > 0;
+            const hasLikertValue = likertValue !== null && !Number.isNaN(likertValue);
+
+            return {
+                questionId,
+                selectedOption,
+                textAnswer,
+                likertValue,
+                hasSelectedOption,
+                hasTextAnswer,
+                hasLikertValue
+            };
+        }
+
+        async function saveAnswer(container) {
+            const answer = collectAnswer(container);
+            if (!answer) {
+                console.log('⚠️ No answer collected');
+                return true;
+            }
+
+            const { questionId, selectedOption, textAnswer, likertValue, hasSelectedOption, hasTextAnswer, hasLikertValue } = answer;
+
+            if (!(hasSelectedOption || hasTextAnswer || hasLikertValue)) {
+                console.log('⚠️ No valid answer data', { hasSelectedOption, hasTextAnswer, hasLikertValue });
+                return true;
+            }
+
+            const formData = new FormData();
+            formData.append('AttemptId', attemptId);
+            formData.append('QuestionId', questionId);
+            if (hasSelectedOption) {
+                formData.append('SelectedOptionId', selectedOption);
+            }
+            if (hasTextAnswer) {
+                formData.append('TextAnswer', textAnswer.trim());
+            }
+            if (hasLikertValue) {
+                formData.append('LikertValue', likertValue);
+            }
+            formData.append('__RequestVerificationToken', token);
+
+            console.log('📤 Sending answer:', {
+                attemptId,
+                questionId,
+                selectedOption,
+                textAnswer: textAnswer?.substring(0, 50),
+                likertValue
+            });
+
+            try {
+                const response = await fetch('@Url.Action("SubmitAnswer")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    console.error('❌ Failed to save answer: HTTP', response.status, response.statusText);
+                    return false;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    console.log('✅ Answer saved successfully');
+                    return true;
+                }
+
+                console.error('❌ Failed to save answer:', data.error);
+                return false;
+            }
+            catch (error) {
+                console.error('❌ Network error:', error);
+                return false;
+            }
+        }
+
+        function isAnswered(container) {
+            const answer = collectAnswer(container);
+            if (!answer) {
+                return false;
+            }
+
+            return answer.hasSelectedOption || answer.hasTextAnswer || answer.hasLikertValue;
+        }
+
+        function updateProgressBar() {
+            const answeredCount = questionContainers.filter(isAnswered).length;
+            const progress = totalQuestions === 0 ? 0 : (answeredCount / totalQuestions) * 100;
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+            if (progressInfo) {
+                progressInfo.textContent = `${answeredCount} از ${totalQuestions} سوال پاسخ داده شده است`;
+            }
+        }
+
+        async function saveAllAnswers() {
+            if (questionContainers.length === 0) {
+                return true;
+            }
+
+            const failures = [];
+            for (const container of questionContainers) {
+                try {
+                    const result = await saveAnswer(container);
+                    if (result === false) {
+                        failures.push(container.dataset.questionId || '[unknown]');
+                    }
+                } catch (error) {
+                    console.error('❌ Error while saving answer sequentially:', error);
+                    failures.push(container.dataset.questionId || '[unknown]');
+                }
+            }
+
+            if (failures.length > 0) {
+                console.error('Failed to persist some answers before completing the test.', failures);
+            }
+
+            return failures.length === 0;
+        }
+
+        function validateBeforeSubmit() {
+            for (const container of questionContainers) {
+                const isRequired = container.dataset.required === 'true';
+                if (isRequired && !isAnswered(container)) {
+                    container.classList.add('border-danger');
+                    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    alert('لطفاً به تمام سوالات الزامی پاسخ دهید.');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function updateCompletionProgress(value) {
+            if (!completionProgressFill || !completionProgressPercent) {
+                return;
+            }
+
+            const clampedValue = Math.max(0, Math.min(100, Math.round(value)));
+            completionProgressFill.style.width = `${clampedValue}%`;
+            completionProgressPercent.textContent = `${clampedValue}%`;
+        }
+
+        function startCompletionOverlay() {
+            if (!completionOverlay) {
+                return;
+            }
+
+            completionOverlay.classList.remove('d-none');
+            requestAnimationFrame(() => completionOverlay.classList.add('completion-overlay--active'));
+            completionProgressValue = 0;
+            updateCompletionProgress(0);
+
+            if (completionProgressTimer) {
+                clearInterval(completionProgressTimer);
+            }
+
+            completionProgressTimer = window.setInterval(() => {
+                if (completionProgressValue >= 92) {
+                    return;
+                }
+
+                const increment = Math.max(1, Math.round((100 - completionProgressValue) * 0.08));
+                completionProgressValue = Math.min(92, completionProgressValue + increment);
+                updateCompletionProgress(completionProgressValue);
+            }, 600);
+        }
+
+        function finishCompletionOverlay() {
+            if (completionProgressTimer) {
+                clearInterval(completionProgressTimer);
+                completionProgressTimer = null;
+            }
+
+            completionProgressValue = 100;
+            updateCompletionProgress(completionProgressValue);
+        }
+
+        function hideCompletionOverlay() {
+            if (!completionOverlay) {
+                return;
+            }
+
+            if (completionProgressTimer) {
+                clearInterval(completionProgressTimer);
+                completionProgressTimer = null;
+            }
+
+            completionOverlay.classList.remove('completion-overlay--active');
+            setTimeout(() => {
+                completionOverlay.classList.add('d-none');
+            }, 250);
+        }
+
+        async function completeTest() {
+            if (isSubmitting) {
+                return;
+            }
+
+            if (!validateBeforeSubmit()) {
+                return;
+            }
+
+            if (!confirm('آیا مطمئن هستید که می‌خواهید آزمون را به پایان برسانید؟')) {
+                return;
+            }
+
+            startCompletionOverlay();
+            isSubmitting = true;
+            const submitButton = document.getElementById('submitBtn');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add('disabled');
+            }
+
+            const allAnswersSaved = await saveAllAnswers();
+            if (!allAnswersSaved) {
+                alert('ذخیره برخی پاسخ‌ها ناموفق بود. لطفاً لحظاتی بعد دوباره تلاش کنید.');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('disabled');
+                }
+                hideCompletionOverlay();
+                isSubmitting = false;
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Complete")';
+
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+
+            const attemptIdInput = document.createElement('input');
+            attemptIdInput.type = 'hidden';
+            attemptIdInput.name = 'attemptId';
+            attemptIdInput.value = attemptId;
+            form.appendChild(attemptIdInput);
+
+            document.body.appendChild(form);
+            finishCompletionOverlay();
+            setTimeout(() => form.submit(), 150);
+        }
+
+        if (expiresAt) {
+            setInterval(() => {
+                const now = new Date();
+                const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+
+                if (remaining === 0) {
+                    alert('زمان آزمون به پایان رسیده است.');
+                    completeTest();
+                    return;
+                }
+
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+                const timerEl = document.getElementById('timeRemaining');
+                if (timerEl) {
+                    timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        window.completeTest = completeTest;
+
+        // Auto-complete function for development
+        async function autoCompleteTest(buttonElement) {
+            if (!confirm('آیا می‌خواهید همه سوالات را به صورت خودکار با پاسخ‌های رندوم تکمیل کنید؟\n\n⚠️ این عملکرد فقط برای تست و توسعه است!')) {
+                return;
+            }
+
+            const autoCompleteBtn = buttonElement instanceof HTMLElement
+                ? buttonElement
+                : document.querySelector('button[onclick*="autoCompleteTest"]');
+
+            const originalButtonLabel = autoCompleteBtn ? autoCompleteBtn.innerHTML : '';
+
+            if (autoCompleteBtn) {
+                autoCompleteBtn.disabled = true;
+                autoCompleteBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> در حال پردازش...';
+            }
+
+            let answeredCount = 0;
+            const totalCount = questionContainers.length;
+
+            // Process questions with a delay to prevent database overload
+            console.log(`🚀 Starting auto-complete for ${questionContainers.length} questions...`);
+
+            try {
+                for (let i = 0; i < questionContainers.length; i++) {
+                    const container = questionContainers[i];
+
+                    // Skip if already answered
+                    if (isAnswered(container)) {
+                        continue;
+                    }
+
+                    const questionId = container.dataset.questionId;
+                    const questionType = container.dataset.questionType;
+                    let valueApplied = false;
+
+                    if (questionType === 'MultipleChoice') {
+                        // Select random option
+                        const radioButtons = Array.from(container.querySelectorAll(`input[name="question_${questionId}"]`));
+                        if (radioButtons.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * radioButtons.length);
+                            radioButtons[randomIndex].checked = true;
+                            valueApplied = true;
+                        }
+                    } else if (questionType === 'LikertScale') {
+                        // Select random likert value
+                        const radioButtons = Array.from(container.querySelectorAll(`input[name="question_${questionId}"]`));
+                        if (radioButtons.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * radioButtons.length);
+                            radioButtons[randomIndex].checked = true;
+                            valueApplied = true;
+                        }
+                    } else if (questionType === 'TrueFalse') {
+                        // Randomly select true or false
+                        const options = [
+                            container.querySelector(`input[name="question_${questionId}"][value="true"]`),
+                            container.querySelector(`input[name="question_${questionId}"][value="false"]`)
+                        ].filter(Boolean);
+
+                        if (options.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * options.length);
+                            options[randomIndex].checked = true;
+                            valueApplied = true;
+                        }
+                    } else if (questionType === 'ShortText') {
+                        // Generate random short text
+                        const textInput = container.querySelector(`input[type="text"][name="question_${questionId}"]`);
+                        if (textInput) {
+                            textInput.value = `پاسخ رندوم ${Math.floor(Math.random() * 1000)}`;
+                            valueApplied = true;
+                        }
+                    } else if (questionType === 'LongText') {
+                        // Generate random long text
+                        const textarea = container.querySelector(`textarea[name="question_${questionId}"]`);
+                        if (textarea) {
+                            textarea.value = `این یک پاسخ رندوم است برای سوال شماره ${i + 1}. متن تصادفی: ${Math.random().toString(36).substring(7)}`;
+                            valueApplied = true;
+                        }
+                    }
+
+                    if (!valueApplied) {
+                        console.warn(`⚠️ Skipped question ${questionId} because no input was found for type ${questionType}.`);
+                        continue;
+                    }
+
+                    const saved = await saveAnswer(container);
+                    if (saved) {
+                        answeredCount++;
+                        container.classList.remove('border-danger');
+                    } else {
+                        container.classList.add('border-danger');
+                        console.warn(`⚠️ Failed to persist auto-generated answer for question ${questionId}.`);
+                    }
+
+                    updateProgressBar();
+
+                    // Wait briefly after each question to avoid overwhelming the server
+                    await new Promise(resolve => setTimeout(resolve, 75));
+
+                    // Show progress every 20 questions
+                    if (autoCompleteBtn && (i + 1) % 20 === 0) {
+                        console.log(`✅ Processed ${i + 1}/${questionContainers.length} questions...`);
+                        autoCompleteBtn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${i + 1}/${questionContainers.length}`;
+                    }
+                }
+
+                // Wait a bit for all saves to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Update progress bar
+                updateProgressBar();
+
+                // Show success message
+                alert(`✅ تکمیل خودکار انجام شد!\n\n${answeredCount} سوال با موفقیت ثبت شد.\n\nحالا می‌توانید آزمون را تکمیل کنید.`);
+
+                // Scroll to bottom to show submit button
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            finally {
+                if (autoCompleteBtn) {
+                    autoCompleteBtn.disabled = false;
+                    autoCompleteBtn.innerHTML = originalButtonLabel || '<i class="bi bi-lightning-charge"></i> تکمیل خودکار';
+                }
+            }
+        }
+
+        window.autoCompleteTest = autoCompleteTest;
+    </script>
+}
+
+@functions {
+    private static AssessmentQuestionMetadata? GetAssessmentMetadata(string? explanation)
+    {
+        if (string.IsNullOrWhiteSpace(explanation))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AssessmentQuestionMetadata>(explanation);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string GetAssessmentSectionLabel(string? assessmentKey)
+    {
+        if (string.IsNullOrWhiteSpace(assessmentKey))
+        {
+            return string.Empty;
+        }
+
+        return assessmentKey.Trim().ToLowerInvariant() switch
+        {
+            "clifton" => "بخش Clifton (استعدادها)",
+            "pvq" => "بخش Schwartz PVQ",
+            _ => string.Empty
+        };
+    }
+}

@@ -1,0 +1,28 @@
+@model ProductCommentViewModel
+<li class="blog-comment product-comment" id="comment-@Model.Id">
+    <article class="blog-comment__card product-comment__card">
+        <header class="product-comment__header">
+            <div class="product-comment__identity">
+                <span class="blog-comment__avatar" aria-hidden="true">💬</span>
+                <div class="product-comment__meta">
+                    <span class="blog-comment__author-name">@Model.AuthorName</span>
+                    <time datetime="@Model.CreatedAt.ToString("yyyy-MM-dd")" class="blog-comment__date">@Model.GetFormattedDate()</time>
+                </div>
+            </div>
+            <div class="product-comment__rating" aria-label="امتیاز @Model.Rating.ToString("0.0")">
+                <span class="product-comment__rating-icon" aria-hidden="true">★</span>
+                <span>@Model.Rating.ToString("0.0")</span>
+            </div>
+        </header>
+        <p class="blog-comment__content">@Model.Content</p>
+    </article>
+    @if (Model.Replies.Any())
+    {
+        <ol class="blog-comment__replies product-comment__replies" aria-label="پاسخ‌ها">
+            @foreach (var reply in Model.Replies)
+            {
+                @await Html.PartialAsync("_ProductComment", reply)
+            }
+        </ol>
+    }
+</li>

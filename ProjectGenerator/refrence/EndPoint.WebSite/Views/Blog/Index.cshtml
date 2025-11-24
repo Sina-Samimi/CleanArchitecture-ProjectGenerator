@@ -1,0 +1,79 @@
+@model BlogListViewModel
+@{
+    ViewData["Title"] = "مجله رشد آرسیس";
+    ViewData["ContainerClass"] = "container blog-container";
+    ViewData["MainClass"] = "site-main blog-main";
+}
+
+<section class="blog-hero" aria-labelledby="blogHeroTitle">
+    <div class="blog-hero__content">
+        <span class="blog-hero__badge">مجله تخصصی آرسیس</span>
+        <h1 class="blog-hero__title" id="blogHeroTitle">داستان‌ها و بینش‌های رشد استعداد</h1>
+        <p class="blog-hero__subtitle">
+            در اینجا تجربه‌ها، چارچوب‌ها و روش‌های عملی تیم ما برای توسعه سرمایه انسانی را می‌خوانید.
+            هر نوشته بر اساس پروژه‌های واقعی و تحلیل داده‌های پلتفرم تهیه شده است.
+        </p>
+        <div class="blog-hero__actions">
+            <a class="blog-hero__primary" asp-controller="Account" asp-action="PhoneLogin">شروع سفر رشد</a>
+            <a class="blog-hero__secondary" asp-controller="Home" asp-action="Index">بازگشت به صفحه اصلی</a>
+        </div>
+    </div>
+    <div class="blog-hero__visual" aria-hidden="true">
+        <div class="blog-hero__glow"></div>
+    </div>
+</section>
+
+@if (Model.Posts.Any())
+{
+    <section class="blog-list" aria-label="فهرست نوشته‌ها">
+        <div class="blog-grid">
+            @foreach (var post in Model.Posts)
+            {
+                <article class="blog-card">
+                    <a class="blog-card__link" asp-controller="Blog" asp-action="Details" asp-route-slug="@post.Slug">
+                        <div class="blog-card__media" aria-hidden="true">
+                            <img src="@post.HeroImageUrl" alt="" loading="lazy" />
+                        </div>
+                        <div class="blog-card__body">
+                            <div class="blog-card__meta">
+                                <time datetime="@post.PublishedAt.ToString("yyyy-MM-dd")">@post.GetFormattedPublishDate()</time>
+                                <span aria-hidden="true">•</span>
+                                <span>@post.GetReadingTimeLabel()</span>
+                            </div>
+                            <h2 class="blog-card__title">@post.Title</h2>
+                            <p class="blog-card__summary">@post.Summary</p>
+                            <div class="blog-card__footer">
+                                <div class="blog-card__author">
+                                    <span class="blog-card__avatar" aria-hidden="true">✍️</span>
+                                    <div class="blog-card__author-meta">
+                                        <span class="blog-card__author-name">@post.AuthorName</span>
+                                        @if (!string.IsNullOrWhiteSpace(post.AuthorRole))
+                                        {
+                                            <span class="blog-card__author-role">@post.AuthorRole</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="blog-card__tags" aria-label="برچسب‌ها">
+                                    @foreach (var tag in post.Tags)
+                                    {
+                                        <span class="blog-card__tag">@tag</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <section class="blog-empty" aria-live="polite">
+        <div class="blog-empty__card">
+            <h2 class="blog-empty__title">به زودی</h2>
+            <p class="blog-empty__text">در حال آماده‌سازی مطالب تخصصی هستیم. کمی بعد دوباره سر بزنید.</p>
+            <a class="blog-empty__link" asp-controller="Home" asp-action="Index">بازگشت به خانه</a>
+        </div>
+    </section>
+}

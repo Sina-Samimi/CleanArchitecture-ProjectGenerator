@@ -1,0 +1,43 @@
+@model EndPoint.WebSite.Controllers.PvqQuestionVm
+@{
+    ViewData["Title"] = "بخش PVQ";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">سؤال @Model.Index از @Model.Total</h4>
+                        <span class="badge bg-warning text-dark">PVQ</span>
+                    </div>
+
+                    @if (TempData["Error"] is string error)
+                    {
+                        <div class="alert alert-danger">@error</div>
+                    }
+
+                    <form method="post" asp-action="Pvq" asp-route-index="@Model.Index" asp-route-runId="@Model.RunId">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="runId" value="@Model.RunId" />
+
+                        <p class="lead">@Model.Text</p>
+
+                        <div class="d-flex flex-wrap gap-3 mb-3">
+                            @for (var i = 1; i <= 6; i++)
+                            {
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="answer" value="@i" class="form-check-input" required />
+                                    <span class="ms-2">@i</span>
+                                </label>
+                            }
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">ثبت و ادامه</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

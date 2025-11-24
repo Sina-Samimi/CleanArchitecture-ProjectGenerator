@@ -1,0 +1,161 @@
+@using EndPoint.WebSite.Areas.Admin.Models.Organizations
+@model EditOrganizationViewModel
+
+@{
+    ViewData["Title"] = "ویرایش سازمان";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/organizations.css" asp-append-version="true" />
+}
+
+<div class="organizations-page">
+    <div class="organizations-page__hero">
+        <div>
+            <h1 class="organizations-page__title">ویرایش سازمان</h1>
+            <p class="organizations-page__subtitle">تغییر اطلاعات سازمان @Model.Name</p>
+        </div>
+        <div class="organizations-page__actions">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                <i class="bi bi-eye me-2"></i>
+                مشاهده جزئیات
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>
+                بازگشت به لیست
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="organizations-form">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    ویرایش اطلاعات سازمان
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="Edit">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">نام سازمان *</label>
+                                <input asp-for="Name" class="form-control" placeholder="مثال: شرکت فولاد مبارکه" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Code" class="form-label">کد سازمان *</label>
+                                <input asp-for="Code" class="form-control" placeholder="مثال: FSM" maxlength="10" />
+                                <div class="form-text">حداکثر ۱۰ کاراکتر، باید منحصر به فرد باشد</div>
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">توضیحات</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="توضیحات اختیاری درباره سازمان..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="AdminName" class="form-label">نام مدیر *</label>
+                                <input asp-for="AdminName" class="form-control" placeholder="مثال: احمد رضایی" />
+                                <span asp-validation-for="AdminName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="AdminEmail" class="form-label">ایمیل مدیر *</label>
+                                <input asp-for="AdminEmail" class="form-control" type="email" placeholder="admin@company.com" />
+                                <span asp-validation-for="AdminEmail" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="PhoneNumber" class="form-label">شماره تلفن</label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="021-12345678" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="Address" class="form-label">آدرس</label>
+                                <input asp-for="Address" class="form-control" placeholder="آدرس سازمان..." />
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="Status" class="form-label">وضعیت *</label>
+                                <select asp-for="Status" class="form-select" asp-items="Model.StatusOptions"></select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="MaxUsers" class="form-label">حداکثر تعداد کاربر</label>
+                                <input asp-for="MaxUsers" class="form-control" type="number" min="1" max="10000" />
+                                <span asp-validation-for="MaxUsers" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="SubscriptionExpiry" class="form-label">انقضای اشتراک</label>
+                                <input asp-for="SubscriptionExpiry" class="form-control" type="datetime-local" />
+                                <div class="form-text">اختیاری - تاریخ انقضای اشتراک سازمان</div>
+                                <span asp-validation-for="SubscriptionExpiry" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>
+                            انصراف
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>
+                            ذخیره تغییرات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "ایمپورت سؤالات";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4">بارگذاری سؤالات پیش‌فرض Clifton و PVQ</h2>
+
+    @if (TempData["Success"] is string successMessage)
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
+    @if (TempData["Error"] is string errorMessage)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">ایمپورت دستی غیرفعال است</h5>
+                    <p class="text-muted">
+                        بارگذاری فایل از طریق این صفحه موقتاً متوقف شده است. لیست کامل سؤالات آزمون مستقیماً از سناریوهای تأیید شده بارگذاری می‌شود.
+                        در صورت نیاز می‌توانید با دکمه زیر، داده‌های پیش‌فرض Clifton و PVQ را دوباره در پایگاه داده ثبت کنید.
+                    </p>
+                    <form asp-area="Admin" asp-controller="Import" asp-action="SeedDefaults" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            بارگذاری مجدد سؤالات پیش‌فرض
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

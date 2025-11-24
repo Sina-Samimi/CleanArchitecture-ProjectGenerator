@@ -1,0 +1,209 @@
+@using System.Text.Json
+@model EndPoint.WebSite.Areas.Admin.Models.Assessments.AssessmentCalculationViewModel
+@{
+    ViewData["Title"] = "تحلیل آزمون ترکیبی";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">تحلیل آزمون کلیفتون + شوارتز</h2>
+            <p class="text-muted small mb-0">مدیریت ماتریس‌ها، محاسبه نمرات و پیشنهاد مهارت‌ها</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="~/samples/request.sample.json" download>دانلود نمونه درخواست</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <div class="alert alert-danger">@Model.Error</div>
+    }
+
+    <div class="row g-3 mb-4">
+        @foreach (var matrix in Model.Matrices)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title">@matrix.Name</h6>
+                        <p class="mb-1"><strong>ابعاد:</strong> @matrix.Rows × @matrix.Columns</p>
+                        <p class="mb-1"><strong>بارگذاری:</strong> @matrix.LoadedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</p>
+                        <p class="text-truncate mb-0" title="@matrix.SourcePath"><strong>مسیر:</strong> @matrix.SourcePath</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>محاسبه نمرات</span>
+            <div class="form-text mb-0">JSON را ویرایش کنید و محاسبه را انجام دهید.</div>
+        </div>
+        <div class="card-body">
+            <form method="post" class="row">
+                @Html.AntiForgeryToken()
+                <div class="col-12 mb-3">
+                    <label class="form-label">ورودی درخواست (JSON)</label>
+                    <textarea class="form-control" name="RequestJson" rows="12" dir="ltr">@Html.Raw(Model.RequestJson)</textarea>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="includeDebug" value="true" id="includeDebug" @(Model.DebugResult != null ? "checked" : string.Empty) />
+                        <label class="form-check-label" for="includeDebug">بازگشت اطلاعات دیباگ (G_from/PVQ, مصفوفه مهارت)</label>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label" for="jobGroup">گروه شغلی برای دیباگ (اختیاری)</label>
+                    <input class="form-control" type="text" name="jobGroup" id="jobGroup" placeholder="مثلاً G3" value="@(Model.DebugResult != null ? Model.DebugResult.Plans.FirstOrDefault()?.JobGroup : string.Empty)" />
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button type="reset" class="btn btn-light">پاک‌سازی</button>
+                    <button type="submit" class="btn btn-primary">محاسبه</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Result is not null)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">نتایج نهایی</div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold">نمرات Clifton</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Talent</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var entry in Model.Result.Scores.Clifton.OrderByDescending(e => e.Value))
+                                {
+                                    <tr>
+                                        <td>@entry.Key</td>
+                                        <td>@entry.Value.ToString("0.000")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold">نمرات PVQ</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Value</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var entry in Model.Result.Scores.Pvq.OrderByDescending(e => e.Value))
+                                {
+                                    <tr>
+                                        <td>@entry.Key</td>
+                                        <td>@entry.Value.ToString("0.000")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <h5 class="fw-bold">گروه‌های شغلی</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>گروه</th>
+                                <th>امتیاز</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var job in Model.Result.JobGroups.OrderByDescending(j => j.Value))
+                        {
+                            <tr>
+                                <td>@job.Key</td>
+                                <td>@job.Value.ToString("0.000")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">برنامه مهارت پیشنهادی</div>
+            <div class="card-body">
+                <div class="row g-3">
+                @foreach (var plan in Model.Result.Plans)
+                {
+                    <div class="col-xl-4 col-lg-6">
+                        <div class="card h-100 border-primary">
+                            <div class="card-header bg-primary text-white">@plan.JobGroup</div>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <h6>Self Awareness</h6>
+                                        <p class="mb-2">@string.Join("، ", plan.Top5SelfAwareness)</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <h6>Self Building</h6>
+                                        <p class="mb-2">@string.Join("، ", plan.Top5SelfBuilding)</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <h6>Self Development</h6>
+                                        <p class="mb-2">@string.Join("، ", plan.Top5SelfDevelopment)</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <h6>Self Actualization</h6>
+                                        <p class="mb-0">@string.Join("، ", plan.Top5SelfActualization)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.DebugResult is not null)
+    {
+        var debugPlan = Model.DebugResult.Plans.FirstOrDefault();
+        var debugJobGroupName = debugPlan?.JobGroup ?? "G1";
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">اطلاعات دیباگ</div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <h6>G از Clifton</h6>
+                        <pre class="bg-light p-3 rounded" dir="ltr">@System.Text.Json.JsonSerializer.Serialize(Model.DebugResult.JobGroupsFromClifton, new JsonSerializerOptions { WriteIndented = true })</pre>
+                    </div>
+                    <div class="col-lg-4">
+                        <h6>G از PVQ</h6>
+                        <pre class="bg-light p-3 rounded" dir="ltr">@System.Text.Json.JsonSerializer.Serialize(Model.DebugResult.JobGroupsFromPvq, new JsonSerializerOptions { WriteIndented = true })</pre>
+                    </div>
+                    <div class="col-lg-4">
+                        <h6>بردار مهارت از استعداد</h6>
+                        <pre class="bg-light p-3 rounded" dir="ltr">@System.Text.Json.JsonSerializer.Serialize(Model.DebugResult.SkillsFromTalent.Take(20).ToDictionary(pair => pair.Key, pair => pair.Value), new JsonSerializerOptions { WriteIndented = true })</pre>
+                    </div>
+                    <div class="col-lg-4">
+                        <h6>مهارت‌های نهایی برای @debugJobGroupName</h6>
+                        <pre class="bg-light p-3 rounded" dir="ltr">@System.Text.Json.JsonSerializer.Serialize(Model.DebugResult.SelectedJobSkills.Take(20).ToDictionary(pair => pair.Key, pair => pair.Value), new JsonSerializerOptions { WriteIndented = true })</pre>
+                    </div>
+                </div>
+                <p class="text-muted small mt-2">* فقط ۲۰ مهارت اول نمایش داده شده است.</p>
+            </div>
+        </div>
+    }
+</div>

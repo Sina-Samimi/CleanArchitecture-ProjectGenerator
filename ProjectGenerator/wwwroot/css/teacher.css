@@ -1,14 +1,14 @@
-/* Teacher Panel Customizations - Based on admin.css */
+/* Seller Panel Customizations - Based on admin.css */
 
 :root {
-    --app-teacher-primary: #f59e0b;
-    --app-teacher-primary-strong: #d97706;
-    --app-teacher-secondary: #fb923c;
-    --app-teacher-accent: rgba(245, 158, 11, 0.12);
-    --app-teacher-gradient: linear-gradient(135deg, #f59e0b, #fb923c);
+    --app-seller-primary: #f59e0b;
+    --app-seller-primary-strong: #d97706;
+    --app-seller-secondary: #fb923c;
+    --app-seller-accent: rgba(245, 158, 11, 0.12);
+    --app-seller-gradient: linear-gradient(135deg, #f59e0b, #fb923c);
 }
 
-body.app-body--teacher {
+body.app-body--seller {
     background:
         radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 55%),
         radial-gradient(circle at bottom left, rgba(251, 146, 60, 0.15), transparent 60%),

@@ -1,0 +1,351 @@
+@using System.Globalization
+@model InvoiceDetailViewModel
+@{
+    ViewData["Title"] ??= $"فاکتور {Model.InvoiceNumber}";
+    ViewData["Subtitle"] ??= "جزئیات فاکتور و تاریخچه تراکنش‌ها";
+
+    var culture = new CultureInfo("fa-IR");
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string StatusBadge(InvoiceStatus status) => status switch
+    {
+        InvoiceStatus.Paid => "badge bg-success-subtle text-success-emphasis",
+        InvoiceStatus.PartiallyPaid => "badge bg-warning-subtle text-warning-emphasis",
+        InvoiceStatus.Overdue => "badge bg-danger-subtle text-danger-emphasis",
+        InvoiceStatus.Cancelled => "badge bg-secondary-subtle text-secondary-emphasis",
+        InvoiceStatus.Draft => "badge bg-info-subtle text-info-emphasis",
+        _ => "badge bg-primary-subtle text-primary-emphasis"
+    };
+
+    string StatusText(InvoiceStatus status) => status switch
+    {
+        InvoiceStatus.Paid => "تسویه شده",
+        InvoiceStatus.PartiallyPaid => "تسویه جزئی",
+        InvoiceStatus.Overdue => "سررسید گذشته",
+        InvoiceStatus.Cancelled => "لغو شده",
+        InvoiceStatus.Draft => "پیش‌نویس",
+        _ => "در انتظار پرداخت"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/invoices.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Invoices" asp-action="Index">فاکتورها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@Model.InvoiceNumber</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="invoice-details" data-invoice-details>
+    <div class="invoice-details__header">
+        <div>
+            <h1 class="invoice-details__title">@Model.Title</h1>
+            <p class="invoice-details__subtitle">@ViewData["Subtitle"]</p>
+        </div>
+        <div class="invoice-details__actions">
+            <span class="@StatusBadge(Model.Status)">@StatusText(Model.Status)</span>
+            <a asp-area="Admin" asp-controller="Invoices" asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">
+                <i class="bi bi-file-earmark-pdf"></i>
+                دانلود PDF
+            </a>
+            <a asp-area="Admin" asp-controller="Invoices" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i>
+                ویرایش فاکتور
+            </a>
+            @if (Model.Status == InvoiceStatus.Cancelled)
+            {
+                <form method="post" asp-area="Admin" asp-controller="Invoices" asp-action="Reopen" asp-route-id="@Model.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-success" data-invoice-confirm="فاکتور دوباره فعال شود؟" data-invoice-confirm-style="success">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        فعال‌سازی مجدد
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form method="post" asp-area="Admin" asp-controller="Invoices" asp-action="Cancel" asp-route-id="@Model.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger" data-invoice-confirm="آیا از لغو فاکتور اطمینان دارید؟" data-invoice-confirm-style="danger">
+                        <i class="bi bi-x-circle"></i>
+                        لغو فاکتور
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="invoice-summary">
+        <div class="invoice-summary__card">
+            <h2>اطلاعات فاکتور</h2>
+            <dl>
+                <div>
+                    <dt>شماره فاکتور</dt>
+                    <dd>@Model.InvoiceNumber</dd>
+                </div>
+                <div>
+                    <dt>تاریخ صدور</dt>
+                    <dd>@Model.IssueDate.ToPersianDateTimeString()</dd>
+                </div>
+                <div>
+                    <dt>تاریخ سررسید</dt>
+                    <dd>@(Model.DueDate?.ToPersianDateTimeString() ?? "-" )</dd>
+                </div>
+                <div>
+                    <dt>کاربر</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.UserId) ? "مهمان" : Model.UserId)</dd>
+                </div>
+                <div>
+                    <dt>ارجاع خارجی</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.ExternalReference) ? "-" : Model.ExternalReference)</dd>
+                </div>
+            </dl>
+        </div>
+        <div class="invoice-summary__card">
+            <h2>مبالغ</h2>
+            <dl>
+                <div>
+                    <dt>جمع اقلام</dt>
+                    <dd>@FormatMoney(Model.Subtotal)</dd>
+                </div>
+                <div>
+                    <dt>تخفیف</dt>
+                    <dd>@FormatMoney(Model.DiscountTotal)</dd>
+                </div>
+                <div>
+                    <dt>مالیات</dt>
+                    <dd>
+                        @FormatMoney(Model.TaxAmount)
+                        @if (Model.TaxRatePercent > 0)
+                        {
+                            <span class="text-muted">(@Model.TaxRatePercent.ToString("0.##", culture)%)</span>
+                        }
+                    </dd>
+                </div>
+                <div>
+                    <dt>تعدیل</dt>
+                    <dd>@FormatMoney(Model.AdjustmentAmount)</dd>
+                </div>
+                <div>
+                    <dt>مبلغ نهایی</dt>
+                    <dd class="text-primary fw-semibold">@FormatMoney(Model.GrandTotal)</dd>
+                </div>
+                <div>
+                    <dt>دریافتی</dt>
+                    <dd class="text-success">@FormatMoney(Model.PaidAmount)</dd>
+                </div>
+                <div>
+                    <dt>مانده</dt>
+                    <dd class="text-warning">@FormatMoney(Model.OutstandingAmount)</dd>
+                </div>
+            </dl>
+        </div>
+        <div class="invoice-summary__card">
+            <h2>ثبت تراکنش جدید</h2>
+            <form asp-area="Admin" asp-controller="Invoices" asp-action="RecordTransaction" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input asp-for="NewTransaction.InvoiceId" type="hidden" />
+                <div class="mb-3">
+                    <label class="form-label" asp-for="NewTransaction.Amount"></label>
+                    <input class="form-control" asp-for="NewTransaction.Amount" type="number" step="0.01" />
+                    <span class="text-danger" asp-validation-for="NewTransaction.Amount"></span>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="NewTransaction.Method"></label>
+                        <select class="form-select" asp-for="NewTransaction.Method" asp-items="Html.GetEnumSelectList<PaymentMethod>()"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="NewTransaction.Status"></label>
+                        <select class="form-select" asp-for="NewTransaction.Status" asp-items="Html.GetEnumSelectList<TransactionStatus>()"></select>
+                    </div>
+                </div>
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="NewTransaction.Reference"></label>
+                        <input class="form-control" asp-for="NewTransaction.Reference" />
+                        <span class="text-danger" asp-validation-for="NewTransaction.Reference"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="NewTransaction.GatewayName"></label>
+                        <input class="form-control" asp-for="NewTransaction.GatewayName" />
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <label class="form-label" asp-for="NewTransaction.Description"></label>
+                    <textarea class="form-control" asp-for="NewTransaction.Description" rows="2"></textarea>
+                </div>
+                <div class="mt-2">
+                    <label class="form-label" asp-for="NewTransaction.Metadata"></label>
+                    <textarea class="form-control" asp-for="NewTransaction.Metadata" rows="2"></textarea>
+                </div>
+                <div class="mt-2" data-invoice-date data-optional="true">
+                    <label class="form-label" asp-for="NewTransaction.OccurredAtPersian"></label>
+                    <div class="jalali-picker" data-jalali-picker>
+                        <div class="jalali-picker__controls">
+                            <button type="button" class="btn btn-light" data-jalali-open>
+                                <i class="bi bi-calendar-event"></i>
+                                <span class="visually-hidden">انتخاب تاریخ</span>
+                            </button>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="انتخاب تاریخ"
+                                   value="@(Model.NewTransaction.OccurredAtPersian?.Replace("-", "/") ?? string.Empty)"
+                                   data-jalali-input
+                                   data-jdp
+                                   data-jdp-only-date
+                                   data-jdp-init-date="@(Model.NewTransaction.OccurredAtPersian?.Replace("-", "/") ?? string.Empty)"
+                                   autocomplete="off"
+                                   dir="ltr" />
+                            <button type="button" class="btn btn-outline-secondary" data-jalali-clear>حذف</button>
+                        </div>
+                        <input asp-for="NewTransaction.OccurredAtPersian" type="hidden" data-jalali-target />
+                    </div>
+                    <span class="text-danger" asp-validation-for="NewTransaction.OccurredAtPersian"></span>
+                </div>
+                <div class="d-grid mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cash-stack"></i>
+                        ثبت تراکنش
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="invoice-section">
+        <h2 class="invoice-section__title">آیتم‌های فاکتور</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th>عنوان</th>
+                        <th>نوع</th>
+                        <th>تعداد</th>
+                        <th>قیمت واحد</th>
+                        <th>تخفیف</th>
+                        <th>جمع خط</th>
+                        <th>ویژگی‌ها</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@item.Name</div>
+                            @if (!string.IsNullOrWhiteSpace(item.Description))
+                            {
+                                <small class="text-muted">@item.Description</small>
+                            }
+                        </td>
+                        <td>@item.ItemType.GetDisplayName()</td>
+                        <td>@item.Quantity</td>
+                        <td>@FormatMoney(item.UnitPrice)</td>
+                        <td>@FormatMoney(item.DiscountAmount ?? 0)</td>
+                        <td>@FormatMoney(item.Total)</td>
+                        <td>
+                            @if (item.Attributes is { Count: > 0 })
+                            {
+                                <ul class="invoice-attribute-list">
+                                @foreach (var attribute in item.Attributes)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(attribute.Key) || !string.IsNullOrWhiteSpace(attribute.Value))
+                                    {
+                                        <li><strong>@(attribute.Key):</strong> @(attribute.Value)</li>
+                                    }
+                                }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="invoice-section">
+        <h2 class="invoice-section__title">تراکنش‌ها</h2>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>تاریخ</th>
+                        <th>مبلغ</th>
+                        <th>روش</th>
+                        <th>وضعیت</th>
+                        <th>شناسه مرجع</th>
+                        <th>درگاه</th>
+                        <th>توضیحات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Transactions.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">تراکنشی ثبت نشده است.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var transaction in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@transaction.OccurredAt.ToPersianDateTimeString()</td>
+                            <td class="text-success">@FormatMoney(transaction.Amount)</td>
+                            <td>@transaction.Method.GetDisplayName()</td>
+                            <td>@transaction.Status.GetDisplayName()</td>
+                            <td>@transaction.Reference</td>
+                            <td>@(string.IsNullOrWhiteSpace(transaction.GatewayName) ? "-" : transaction.GatewayName)</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(transaction.Description))
+                                {
+                                    <div>@transaction.Description</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(transaction.Metadata))
+                                {
+                                    <small class="text-muted">@transaction.Metadata</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invoiceConfirmModal" tabindex="-1" aria-hidden="true" data-invoice-confirm-modal>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تایید عملیات</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" data-invoice-confirm-message>آیا از انجام این عملیات اطمینان دارید؟</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger" data-invoice-confirm-approve>تایید</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/invoices.js" asp-append-version="true"></script>
+}

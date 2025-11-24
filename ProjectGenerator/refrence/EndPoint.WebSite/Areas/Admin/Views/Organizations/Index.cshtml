@@ -1,0 +1,332 @@
+@using Arsis.Domain.Entities
+@using EndPoint.WebSite.Areas.Admin.Models.Organizations
+@using System.Globalization
+@model OrganizationIndexViewModel
+
+@{
+    ViewData["Title"] = "مدیریت سازمان‌ها";
+    var persianCulture = new CultureInfo("fa-IR");
+    string FormatNumber(int value) => string.Format(persianCulture, "{0:N0}", value);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/organizations.css" asp-append-version="true" />
+}
+
+<div class="organizations-page">
+    <div class="organizations-page__hero">
+        <div>
+            <h1 class="organizations-page__title">مدیریت سازمان‌ها</h1>
+            <p class="organizations-page__subtitle">مدیریت، ایجاد و ویرایش سازمان‌های مختلف سیستم</p>
+        </div>
+        <div class="organizations-page__actions">
+            <a asp-action="Create" class="btn btn-primary" style="color:white">
+                <i class="bi bi-plus-lg"></i>
+                ایجاد سازمان جدید
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-funnel"></i>
+                فیلتر پیشرفته
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="organizations-metrics">
+        <article class="organizations-metric-card organizations-metric-card--primary">
+            <div class="organizations-metric-card__body">
+                <div class="organizations-metric-card__header">
+                    <div>
+                        <span class="organizations-metric-card__label">کل سازمان‌ها</span>
+                        <h2 class="organizations-metric-card__value">@FormatNumber(Model.TotalCount)</h2>
+                    </div>
+                    <span class="organizations-metric-card__icon">
+                        <i class="bi bi-building"></i>
+                    </span>
+                </div>
+                <p class="organizations-metric-card__hint">@Model.Organizations.Count() نتیجه مطابق فیلتر فعلی</p>
+                <div class="organizations-metric-card__footer">
+                    <span class="organizations-metric-card__chip organizations-metric-card__chip--success">
+                        <i class="bi bi-check-circle"></i>
+                        @FormatNumber(Model.Organizations.Count(o => o.Status == OrganizationStatus.Active)) فعال
+                    </span>
+                    <span class="organizations-metric-card__chip organizations-metric-card__chip--muted">
+                        <i class="bi bi-pause-circle"></i>
+                        @FormatNumber(Model.Organizations.Count(o => o.Status == OrganizationStatus.Inactive)) غیرفعال
+                    </span>
+                </div>
+            </div>
+        </article>
+
+        <article class="organizations-metric-card organizations-metric-card--success">
+            <div class="organizations-metric-card__body">
+                <div class="organizations-metric-card__header">
+                    <div>
+                        <span class="organizations-metric-card__label">میانگین کاربران</span>
+                        <h2 class="organizations-metric-card__value">@FormatNumber(Model.Organizations.Any() ? (int)Model.Organizations.Average(o => o.UserCount) : 0)</h2>
+                    </div>
+                    <span class="organizations-metric-card__icon">
+                        <i class="bi bi-people"></i>
+                    </span>
+                </div>
+                <p class="organizations-metric-card__hint">کاربران فعال در سازمان‌ها</p>
+                <div class="organizations-metric-card__footer">
+                    <span class="organizations-metric-card__chip organizations-metric-card__chip--primary">
+                        <i class="bi bi-person-check"></i>
+                        @FormatNumber(Model.Organizations.Sum(o => o.UserCount)) کل کاربران
+                    </span>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    @if (Model.Organizations.Any())
+    {
+        <div class="organizations-table">
+            <div class="organizations-table__header">
+                <h3 class="organizations-table__title">
+                    <i class="bi bi-list-ul me-2"></i>
+                    لیست سازمان‌ها
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>نام سازمان</th>
+                            <th>کد</th>
+                            <th>مدیر</th>
+                            <th>کاربران</th>
+                            <th>تست‌های فعال</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ ایجاد</th>
+                            <th class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var org in Model.Organizations)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="organizations-table__name">
+                                        <strong>@org.Name</strong>
+                                        <small class="text-muted d-block">@org.AdminEmail</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code class="organizations-table__code">@org.Code</code>
+                                </td>
+                                <td>@org.AdminName</td>
+                                <td>
+                                    <span class="badge bg-info text-white">@FormatNumber(org.UserCount)</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">@FormatNumber(org.ActiveTests)</span>
+                                </td>
+                                <td>
+                                    @switch (org.Status)
+                                    {
+                                        case OrganizationStatus.Active:
+                                            <span class="badge bg-success text-white">فعال</span>
+                                            break;
+                                        case OrganizationStatus.Inactive:
+                                            <span class="badge bg-secondary text-white">غیرفعال</span>
+                                            break;
+                                        case OrganizationStatus.Suspended:
+                                            <span class="badge bg-danger text-white">معلق</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@org.CreatedAt.ToPersianDateString()</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = org.Id })" class="btn btn-sm btn-outline-info" title="جزئیات">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = org.Id })" class="btn btn-sm btn-outline-warning" title="ویرایش">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal"
+                                                data-id="@org.Id"
+                                                data-name="@org.Name"
+                                                title="حذف">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.Page - 1, search = Model.Search, status = Model.Status, pageSize = Model.PageSize })">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i, search = Model.Search, status = Model.Status, pageSize = Model.PageSize })">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        @if (Model.Page < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.Page + 1, search = Model.Search, status = Model.Status, pageSize = Model.PageSize })">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="organizations-empty">
+            <div class="organizations-empty__icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h4 class="organizations-empty__title">سازمانی یافت نشد</h4>
+            <p class="organizations-empty__description">هیچ سازمانی با شرایط جستجوی شما یافت نشد.</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i>
+                ایجاد سازمان جدید
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="bi bi-funnel me-2"></i>
+                    فیلتر پیشرفته سازمان‌ها
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="filterSearch" class="form-label">جستجو</label>
+                        <input type="text" id="filterSearch" name="search" value="@Model.Search" class="form-control" placeholder="نام سازمان، کد یا مدیر..." />
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterStatus" class="form-label">وضعیت</label>
+                        <select id="filterStatus" name="status" class="form-select">
+                            <option value="">همه وضعیت‌ها</option>
+                            @foreach (var status in Model.StatusOptions)
+                            {
+                                <option value="@status.Value" selected="@(Model.Status?.ToString() == status.Value)">@status.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterPageSize" class="form-label">تعداد در صفحه</label>
+                        <select id="filterPageSize" name="pageSize" class="form-select" value="@Model.PageSize">
+                            <option value="10" selected="@(Model.PageSize == 10)">۱۰</option>
+                            <option value="20" selected="@(Model.PageSize == 20)">۲۰</option>
+                            <option value="30" selected="@(Model.PageSize == 30)">۳۰</option>
+                            <option value="50" selected="@(Model.PageSize == 50)">۵۰</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a asp-action="Index" class="btn btn-link text-decoration-none">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        بازنشانی فیلترها
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                        اعمال فیلتر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2 text-danger"></i>
+                    حذف سازمان
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>آیا از حذف سازمان <strong id="deleteOrganizationName"></strong> اطمینان دارید؟</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    این عملیات قابل بازگشت نیست و تمام داده‌های مرتبط با این سازمان حذف خواهد شد.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                <form method="post" asp-action="Delete" id="deleteForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="deleteId" name="id" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>
+                        بله، حذف شود
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Handle delete modal
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const name = button.getAttribute('data-name');
+
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteOrganizationName').textContent = name;
+            });
+        }
+    </script>
+}

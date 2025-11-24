@@ -1,0 +1,490 @@
+@model AdminSidebarViewModel
+@using System
+@{
+    var isUserArea = string.Equals(Model.CurrentArea, "User", StringComparison.OrdinalIgnoreCase);
+    var isTeacherArea = string.Equals(Model.CurrentArea, "Teacher", StringComparison.OrdinalIgnoreCase);
+
+    string NavLinkClass(string controller, string action = "Index")
+    {
+        var currentController = Model.CurrentController ?? string.Empty;
+        var currentAction = Model.CurrentAction ?? string.Empty;
+        var isActive = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+                       string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+
+        return isActive ? "app-menu__link is-active" : "app-menu__link";
+    }
+
+    string SubNavLinkClass(string controller, string action = "Index")
+    {
+        var linkClass = NavLinkClass(controller, action);
+        return linkClass.Replace("app-menu__link", "app-submenu__link", StringComparison.Ordinal);
+    }
+
+    bool IsGroupActive(params string[] controllers)
+    {
+        if (controllers is null || controllers.Length == 0 || string.IsNullOrWhiteSpace(Model.CurrentController))
+        {
+            return false;
+        }
+
+        foreach (var controller in controllers)
+        {
+            if (string.Equals(Model.CurrentController, controller, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    string GroupStateClass(params string[] controllers) => IsGroupActive(controllers) ? "is-open" : string.Empty;
+    string GroupButtonClass(params string[] controllers) => IsGroupActive(controllers) ? "is-active" : string.Empty;
+    string GroupAriaExpanded(params string[] controllers) => IsGroupActive(controllers) ? "true" : "false";
+
+    string UserNavClass(string tabKey)
+    {
+        var activeTab = string.IsNullOrWhiteSpace(Model.ActiveTab) ? "settings" : Model.ActiveTab;
+        var isActive = string.Equals(activeTab, tabKey, StringComparison.OrdinalIgnoreCase);
+        return isActive ? "app-menu__link is-active" : "app-menu__link";
+    }
+
+    string TeacherNavClass(string tabKey)
+    {
+        var activeTab = string.IsNullOrWhiteSpace(Model.ActiveTab) ? "products" : Model.ActiveTab;
+        var isActive = string.Equals(activeTab, tabKey, StringComparison.OrdinalIgnoreCase);
+        return isActive ? "app-menu__link is-active" : "app-menu__link";
+    }
+
+    var completionPercent = Model.ProfileCompletionPercent;
+    var hasAvatar = !string.IsNullOrWhiteSpace(Model.AccountAvatarUrl);
+    var sidebarGreeting = string.IsNullOrWhiteSpace(Model.GreetingSubtitle) ? "به پنل کاربری خوش آمدید" : Model.GreetingSubtitle;
+    var sidebarEmail = string.IsNullOrWhiteSpace(Model.AccountEmail) ? "ایمیل ثبت نشده" : Model.AccountEmail;
+    var sidebarPhone = string.IsNullOrWhiteSpace(Model.AccountPhone) ? "شماره ثبت نشده" : Model.AccountPhone;
+}
+
+<aside class="app-aside" id="appAside">
+    <div class="app-aside__inner">
+        @if (isUserArea)
+        {
+            <div class="app-aside__brand">
+                <button class="btn btn-icon btn-ghost d-lg-none" type="button" data-app-aside-close aria-label="بستن منو">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <span class="app-brand">
+                    <span class="app-brand__logo">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <span class="app-brand__text">
+                        <strong class="app-brand__name">پنل کاربری</strong>
+                        <small class="app-brand__subtitle">فضای شخصی استعداد شما</small>
+                    </span>
+                </span>
+            </div>
+            <div class="app-aside__body">
+                <div class="app-user app-user--profile">
+                    <div class="app-user__avatar">
+                        @if (hasAvatar)
+                        {
+                            <span class="avatar avatar-lg">
+                                <img src="@Model.AccountAvatarUrl" alt="@Model.AccountName" />
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="avatar avatar-lg text-bg-primary">@Model.AccountInitial</span>
+                        }
+                    </div>
+                    <div class="app-user__details">
+                        <div class="app-user__name">@Model.AccountName</div>
+                        <div class="app-user__subtitle">@sidebarGreeting</div>
+                        <ul class="app-user__meta" aria-label="اطلاعات تماس">
+                            <li>
+                                <i class="bi bi-envelope"></i>
+                                <span>@sidebarEmail</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-phone"></i>
+                                <span>@sidebarPhone</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                @if (completionPercent is not null)
+                {
+                    <div class="app-progress" role="img" aria-label="درصد تکمیل پروفایل @(completionPercent) درصد">
+                        <div class="app-progress__label">
+                            <span>پیشرفت تکمیل پروفایل</span>
+                            <strong>%@completionPercent</strong>
+                        </div>
+                        <div class="app-progress__bar">
+                            <span class="app-progress__value" style="--progress-value: @completionPercent%;"></span>
+                        </div>
+                    </div>
+                }
+
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">حساب من</div>
+                    <nav class="app-menu" aria-label="User navigation">
+                        <a class="@UserNavClass("settings")" asp-area="User" asp-controller="Profile" asp-action="Index" data-tab-link="settings">
+                            <span class="app-menu__icon"><i class="bi bi-sliders"></i></span>
+                            <span class="app-menu__title">تنظیمات حساب</span>
+                        </a>
+                        <a class="@UserNavClass("details")" asp-area="User" asp-controller="Profile" asp-action="Index" asp-route-tab="details" data-tab-link="details">
+                            <span class="app-menu__icon"><i class="bi bi-card-checklist"></i></span>
+                            <span class="app-menu__title">جزئیات پروفایل</span>
+                        </a>
+                        <a class="@UserNavClass("activity")" asp-area="User" asp-controller="Profile" asp-action="Index" asp-route-tab="activity" data-tab-link="activity">
+                            <span class="app-menu__icon"><i class="bi bi-shield-lock"></i></span>
+                            <span class="app-menu__title">اعلان‌ها و امنیت</span>
+                        </a>
+                        <a class="@UserNavClass("wallet")" asp-area="User" asp-controller="Wallet" asp-action="Index" data-tab-link="wallet">
+                            <span class="app-menu__icon"><i class="bi bi-wallet2"></i></span>
+                            <span class="app-menu__title">کیف پول</span>
+                        </a>
+                        <a class="@UserNavClass("library")" asp-area="User" asp-controller="Products" asp-action="Index" data-tab-link="library">
+                            <span class="app-menu__icon"><i class="bi bi-bag-check"></i></span>
+                            <span class="app-menu__title">محصولات من</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">میانبرهای مفید</div>
+                    <div class="app-quick-links">
+                        <a class="app-quick-link" asp-area="User" asp-controller="Profile" asp-action="Index" asp-route-tab="settings" asp-fragment="tab-settings" data-tab-shortcut="settings">
+                            <span class="app-quick-link__icon"><i class="bi bi-pencil-square"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>ویرایش سریع پروفایل</strong>
+                                <small>انتقال به فرم تنظیمات</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="User" asp-controller="Wallet" asp-action="Index" data-tab-shortcut="wallet">
+                            <span class="app-quick-link__icon"><i class="bi bi-wallet2"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>نمایش کیف پول</strong>
+                                <small>مدیریت تراکنش‌ها و فاکتورها</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="User" asp-controller="Products" asp-action="Index" data-tab-shortcut="library">
+                            <span class="app-quick-link__icon"><i class="bi bi-book"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>کتابخانه محصولات</strong>
+                                <small>دانلود و مدیریت خریدها</small>
+                            </div>
+                        </a>
+                        @if (User.IsInRole("SysAdmin"))
+                        {
+                            <a class="app-quick-link" asp-area="" asp-controller="admin" asp-action="users">
+                                <span class="app-quick-link__icon"><i class="bi bi-gear"></i></span>
+                                <div class="app-quick-link__text">
+                                    <strong>پنل مدیریت</strong>
+                                    <small>ورود به پنل مدیریت آرسیس</small>
+                                </div>
+                            </a>
+                        }
+                        <a class="app-quick-link" asp-area="" asp-controller="Home" asp-action="Index">
+                            <span class="app-quick-link__icon"><i class="bi bi-house"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>بازگشت به سایت</strong>
+                                <small>مشاهده صفحه اصلی آرسیس</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="" asp-controller="Account" asp-action="PhoneLogin">
+                            <span class="app-quick-link__icon"><i class="bi bi-arrow-repeat"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>ورود با حساب دیگر</strong>
+                                <small>بازگشت به صفحه ورود</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (isTeacherArea)
+        {
+            <div class="app-aside__brand">
+                <button class="btn btn-icon btn-ghost d-lg-none" type="button" data-app-aside-close aria-label="بستن منو">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <span class="app-brand">
+                    <span class="app-brand__logo">
+                        <i class="bi bi-easel"></i>
+                    </span>
+                    <span class="app-brand__text">
+                        <strong class="app-brand__name">پنل مدرس</strong>
+                        <small class="app-brand__subtitle">مدیریت محصولات آموزشی</small>
+                    </span>
+                </span>
+            </div>
+            <div class="app-aside__body">
+                <div class="app-user app-user--profile">
+                    <div class="app-user__avatar">
+                        @if (hasAvatar)
+                        {
+                            <span class="avatar avatar-lg">
+                                <img src="@Model.AccountAvatarUrl" alt="@Model.AccountName" />
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="avatar avatar-lg text-bg-primary">@Model.AccountInitial</span>
+                        }
+                    </div>
+                    <div class="app-user__details">
+                        <div class="app-user__name">@Model.AccountName</div>
+                        <div class="app-user__subtitle">سازنده دوره‌ها و محصولات آرسیس</div>
+                        <ul class="app-user__meta" aria-label="اطلاعات تماس مدرس">
+                            <li>
+                                <i class="bi bi-envelope"></i>
+                                <span>@sidebarEmail</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-phone"></i>
+                                <span>@sidebarPhone</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">مدیریت محصولات</div>
+                    <nav class="app-menu" aria-label="Teacher navigation">
+                        <a class="@TeacherNavClass("products")" asp-area="Teacher" asp-controller="Products" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-bag"></i></span>
+                            <span class="app-menu__title">محصولات من</span>
+                        </a>
+                        <a class="@TeacherNavClass("create")" asp-area="Teacher" asp-controller="Products" asp-action="Create">
+                            <span class="app-menu__icon"><i class="bi bi-plus-circle"></i></span>
+                            <span class="app-menu__title">درخواست محصول جدید</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">میانبرهای مفید</div>
+                    <div class="app-quick-links">
+                        <a class="app-quick-link" asp-area="Teacher" asp-controller="Products" asp-action="Index">
+                            <span class="app-quick-link__icon"><i class="bi bi-speedometer2"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>داشبورد محصولات</strong>
+                                <small>پیگیری وضعیت تایید</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="Teacher" asp-controller="Products" asp-action="Create">
+                            <span class="app-quick-link__icon"><i class="bi bi-lightbulb"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>ایده محصول جدید</strong>
+                                <small>درخواست سریع برای بررسی</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="User" asp-controller="Profile" asp-action="Index">
+                            <span class="app-quick-link__icon"><i class="bi bi-person-circle"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>بازگشت به پروفایل</strong>
+                                <small>مدیریت اطلاعات حساب</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="app-aside__brand">
+                <button class="btn btn-icon btn-ghost d-lg-none" type="button" data-app-aside-close aria-label="بستن منو">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <a class="app-brand" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                    <span class="app-brand__logo">
+                        <i class="bi bi-stars"></i>
+                    </span>
+                    <span class="app-brand__text">
+                        <strong class="app-brand__name">Metronic</strong>
+                        <small class="app-brand__subtitle">پنل مدیریت آرسیس</small>
+                    </span>
+                </a>
+            </div>
+            <div class="app-aside__body">
+                <div class="app-user">
+                    @if (hasAvatar)
+                    {
+                        <span class="avatar avatar-md">
+                            <img src="@Model.AccountAvatarUrl" alt="@Model.AccountName" />
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="avatar avatar-md text-bg-primary">@Model.AccountInitial</span>
+                    }
+                    <div>
+                        <div class="app-user__name">@Model.AccountName</div>
+                        <div class="app-user__status">
+                            <span class="status-dot status-dot--success"></span>
+                            آنلاین
+                        </div>
+                    </div>
+                </div>
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">مدیریت</div>
+                    <nav class="app-menu" aria-label="Admin navigation">
+                        <a class="@NavLinkClass("Dashboard")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <span class="app-menu__icon">
+                                <img src="@Url.Content("~/icons/dashboard.svg")" alt="آیکون داشبورد" />
+                            </span>
+                            <span class="app-menu__title">داشبورد</span>
+                        </a>
+                        <div class="app-menu__group @GroupStateClass("Users", "AccessLevels", "Permissions", "PageAccess")" data-menu-group>
+                            <button id="userManagementToggle" class="app-menu__link app-menu__link--parent @GroupButtonClass("Users", "AccessLevels", "Permissions", "PageAccess")" type="button" data-menu-toggle aria-expanded="@GroupAriaExpanded("Users", "AccessLevels", "Permissions", "PageAccess")" aria-controls="userManagementMenu">
+                                <span class="app-menu__icon">
+                                    <img src="@Url.Content("~/icons/users.svg")" alt="آیکون مدیریت کاربران" />
+                                </span>
+                                <span class="app-menu__title">مدیریت کاربران</span>
+                                <span class="app-menu__caret bi bi-chevron-down" aria-hidden="true"></span>
+                            </button>
+                            <div class="app-submenu" id="userManagementMenu" role="group" aria-labelledby="userManagementToggle" aria-hidden="@(IsGroupActive("Users", "AccessLevels", "Permissions", "PageAccess") ? "false" : "true")">
+                                <a class="@SubNavLinkClass("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
+                                    <span class="app-submenu__title">فهرست کاربران</span>
+                                </a>
+                                <a class="@SubNavLinkClass("AccessLevels")" asp-area="Admin" asp-controller="AccessLevels" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+                                    <span class="app-submenu__title">سطوح دسترسی</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Permissions")" asp-area="Admin" asp-controller="Permissions" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-key"></i></span>
+                                    <span class="app-submenu__title">مجوزها</span>
+                                </a>
+                                <a class="@SubNavLinkClass("PageAccess")" asp-area="Admin" asp-controller="PageAccess" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-lock"></i></span>
+                                    <span class="app-submenu__title">دسترسی صفحات</span>
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">مدیریت محتوا</div>
+                    <nav class="app-menu" aria-label="Content management">
+                        <a class="@NavLinkClass("Teachers")" asp-area="Admin" asp-controller="Teachers" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-person-video3"></i></span>
+                            <span class="app-menu__title">مدرسین</span>
+                        </a>
+                        <div class="app-menu__group @GroupStateClass("Tests")" data-menu-group>
+                            <button id="testsManagementToggle" class="app-menu__link app-menu__link--parent @GroupButtonClass("Tests")" type="button" data-menu-toggle aria-expanded="@GroupAriaExpanded("Tests")" aria-controls="testsManagementMenu">
+                                <span class="app-menu__icon"><i class="bi bi-clipboard-check"></i></span>
+                                <span class="app-menu__title">مدیریت آزمون‌ها</span>
+                                <span class="app-menu__caret bi bi-chevron-down" aria-hidden="true"></span>
+                            </button>
+                            <div class="app-submenu" id="testsManagementMenu" role="group" aria-labelledby="testsManagementToggle" aria-hidden="@(IsGroupActive("Tests") ? "false" : "true")">
+                                <a class="@SubNavLinkClass("Tests")" asp-area="Admin" asp-controller="Tests" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-list-task"></i></span>
+                                    <span class="app-submenu__title">فهرست آزمون‌ها</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Tests", "Attempts")" asp-area="Admin" asp-controller="Tests" asp-action="Attempts">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-bar-chart"></i></span>
+                                    <span class="app-submenu__title">سوابق شرکت‌کنندگان</span>
+                                </a>
+                            </div>
+                        </div>
+                        <a class="@NavLinkClass("Catalog", "Categories")" asp-area="Admin" asp-controller="Catalog" asp-action="Categories">
+                            <span class="app-menu__icon"><i class="bi bi-diagram-3"></i></span>
+                            <span class="app-menu__title">دسته‌بندی سایت</span>
+                        </a>
+                        <div class="app-menu__group @GroupStateClass("Catalog", "DiscountCodes", "Invoices", "Wallets")" data-menu-group>
+                            <button id="storeManagementToggle" class="app-menu__link app-menu__link--parent @GroupButtonClass("Catalog", "DiscountCodes", "Invoices", "Wallets")" type="button" data-menu-toggle aria-expanded="@GroupAriaExpanded("Catalog", "DiscountCodes", "Invoices", "Wallets")" aria-controls="storeManagementMenu">
+                                <span class="app-menu__icon"><i class="bi bi-shop"></i></span>
+                                <span class="app-menu__title">فروشگاه</span>
+                                <span class="app-menu__caret bi bi-chevron-down" aria-hidden="true"></span>
+                            </button>
+                            <div class="app-submenu" id="storeManagementMenu" role="group" aria-labelledby="storeManagementToggle" aria-hidden="@(IsGroupActive("Catalog", "DiscountCodes", "Invoices", "Wallets") ? "false" : "true")">
+                                <a class="@SubNavLinkClass("Catalog")" asp-area="Admin" asp-controller="Catalog" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
+                                    <span class="app-submenu__title">لیست محصولات</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Catalog", "ExecutionStepsOverview")" asp-area="Admin" asp-controller="Catalog" asp-action="ExecutionStepsOverview">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-kanban"></i></span>
+                                    <span class="app-submenu__title">گام‌های اجرایی</span>
+                                </a>
+                                <a class="@SubNavLinkClass("DiscountCodes")" asp-area="Admin" asp-controller="DiscountCodes" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+                                    <span class="app-submenu__title">کدهای تخفیف</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Invoices")" asp-area="Admin" asp-controller="Invoices" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+                                    <span class="app-submenu__title">فاکتورها</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Wallets", "Charge")" asp-area="Admin" asp-controller="Wallets" asp-action="Charge">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-wallet2"></i></span>
+                                    <span class="app-submenu__title">شارژ کیف پول</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="app-menu__group @GroupStateClass("Blog")" data-menu-group>
+                            <button id="blogManagementToggle" class="app-menu__link app-menu__link--parent @GroupButtonClass("Blog")" type="button" data-menu-toggle aria-expanded="@GroupAriaExpanded("Blog")" aria-controls="blogManagementMenu">
+                                <span class="app-menu__icon"><i class="bi bi-journal-text"></i></span>
+                                <span class="app-menu__title">وبلاگ</span>
+                                <span class="app-menu__caret bi bi-chevron-down" aria-hidden="true"></span>
+                            </button>
+                            <div class="app-submenu" id="blogManagementMenu" role="group" aria-labelledby="blogManagementToggle" aria-hidden="@(IsGroupActive("Blog") ? "false" : "true")">
+                                <a class="@SubNavLinkClass("Blog")" asp-area="Admin" asp-controller="Blog" asp-action="Index">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
+                                    <span class="app-submenu__title">لیست بلاگ‌ها</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Blog", "Categories")" asp-area="Admin" asp-controller="Blog" asp-action="Categories">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
+                                    <span class="app-submenu__title">دسته‌بندی‌ها</span>
+                                </a>
+                                <a class="@SubNavLinkClass("Blog", "Authors")" asp-area="Admin" asp-controller="Blog" asp-action="Authors">
+                                    <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-people"></i></span>
+                                    <span class="app-submenu__title">نویسندگان</span>
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">تنظیمات</div>
+                    <nav class="app-menu" aria-label="Settings">
+                        <a class="@NavLinkClass("SiteSettings")" asp-area="Admin" asp-controller="SiteSettings" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-gear"></i></span>
+                            <span class="app-menu__title">تنظیمات سایت</span>
+                        </a>
+                        <a class="@NavLinkClass("NavigationMenu")" asp-area="Admin" asp-controller="NavigationMenu" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-menu-button-wide"></i></span>
+                            <span class="app-menu__title">مدیریت منو</span>
+                        </a>
+                        <a class="@NavLinkClass("FinancialSettings")" asp-area="Admin" asp-controller="FinancialSettings" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-cash-coin"></i></span>
+                            <span class="app-menu__title">تنظیمات مالی</span>
+                        </a>
+                        <a class="@NavLinkClass("DeploymentProfiles")" asp-area="Admin" asp-controller="DeploymentProfiles" asp-action="Index">
+                            <span class="app-menu__icon"><i class="bi bi-cloud-upload"></i></span>
+                            <span class="app-menu__title">پروفایل‌های پابلیش</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="app-aside__section">
+                    <div class="app-aside__section-title">میانبرها</div>
+                    <div class="app-quick-links">
+                        <a class="app-quick-link" asp-area="" asp-controller="Home" asp-action="Index">
+                            <span class="app-quick-link__icon"><i class="bi bi-globe2"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>مشاهده وب‌سایت</strong>
+                                <small>باز شدن در تب جدید</small>
+                            </div>
+                        </a>
+                        <a class="app-quick-link" asp-area="Admin" asp-controller="Users" asp-action="Create">
+                            <span class="app-quick-link__icon"><i class="bi bi-person-plus"></i></span>
+                            <div class="app-quick-link__text">
+                                <strong>کاربر جدید</strong>
+                                <small>ثبت سریع کاربران</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</aside>

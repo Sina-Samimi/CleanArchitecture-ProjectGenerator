@@ -1,0 +1,515 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "آرسیس - پلتفرم تحلیل استعداد با هوش مصنوعی";
+    ViewData["MetaDescription"] = "با آرسیس، استعدادهای خود را کشف کنید. تحلیل هوشمند ۲۴ استعداد انسانی با هوش مصنوعی در کمتر از ۸ دقیقه";
+    ViewData["ContainerClass"] = "home-page";
+    ViewData["MainClass"] = "site-main home-main p-0";
+
+    var currentPath = Context?.Request?.Path.Value ?? Url.Action("Index", "Home") ?? "/";
+    var currentQuery = Context?.Request?.QueryString.Value;
+    var currentReturnUrl = string.IsNullOrEmpty(currentQuery) ? currentPath : $"{currentPath}{currentQuery}";
+}
+
+<!-- Hero Section -->
+<section class="hero-modern">
+    <div class="hero-modern__bg">
+        <div class="hero-modern__bg-gradient"></div>
+        <div class="hero-modern__bg-pattern"></div>
+    </div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-modern__content">
+                    <div class="hero-modern__badge" data-aos="fade-up">
+                        <span class="badge-icon">✨</span>
+                        <span>پیشرو در تحلیل استعداد</span>
+                    </div>
+                    <h1 class="hero-modern__title" data-aos="fade-up" data-aos-delay="100">
+                        استعدادهای پنهان خود را
+                        <span class="hero-modern__title-highlight">کشف کنید</span>
+                    </h1>
+                    <p class="hero-modern__description" data-aos="fade-up" data-aos-delay="200">
+                        با استفاده از هوش مصنوعی و الگوریتم‌های پیشرفته، ۲۴ استعداد اصلی خود را در کمتر از ۸ دقیقه تحلیل کنید و گزارش اختصاصی دریافت کنید.
+                    </p>
+                    <div class="hero-modern__actions" data-aos="fade-up" data-aos-delay="300">
+                        <a asp-controller="Account" asp-action="PhoneLogin" class="btn-modern btn-modern--primary">
+                            <span>شروع تست رایگان</span>
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                        <a href="#how-it-works" class="btn-modern btn-modern--outline">
+                            <i class="bi bi-play-circle"></i>
+                            <span>نحوه کار</span>
+                        </a>
+                    </div>
+                    <div class="hero-modern__stats" data-aos="fade-up" data-aos-delay="400">
+                        <div class="stat-item">
+                            <div class="stat-item__value">۱۸۰+</div>
+                            <div class="stat-item__label">سازمان فعال</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-item__value">۳,۲۰۰+</div>
+                            <div class="stat-item__label">تحلیل روزانه</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-item__value">۹.۴/۱۰</div>
+                            <div class="stat-item__label">رضایت کاربران</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-modern__visual" data-aos="fade-left" data-aos-delay="200">
+                    <div class="hero-visual">
+                        <div class="hero-visual__main">
+                            <div class="hero-visual__card hero-visual__card--primary">
+                                <div class="card-icon">🎯</div>
+                                <div class="card-content">
+                                    <div class="card-title">تحلیل دقیق</div>
+                                    <div class="card-value">۲۴ استعداد</div>
+                                </div>
+                            </div>
+                            <div class="hero-visual__card hero-visual__card--secondary">
+                                <div class="card-icon">⚡</div>
+                                <div class="card-content">
+                                    <div class="card-title">سرعت</div>
+                                    <div class="card-value">۸ دقیقه</div>
+                                </div>
+                            </div>
+                            <div class="hero-visual__card hero-visual__card--success">
+                                <div class="card-icon">📊</div>
+                                <div class="card-content">
+                                    <div class="card-title">گزارش</div>
+                                    <div class="card-value">اختصاصی</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hero-visual__orbs">
+                            <div class="orb orb--1"></div>
+                            <div class="orb orb--2"></div>
+                            <div class="orb orb--3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <span class="section-badge">ویژگی‌های کلیدی</span>
+            <h2 class="section-title">چرا آرسیس را انتخاب کنیم؟</h2>
+            <p class="section-description">
+                پلتفرم جامع تحلیل استعداد با فناوری هوش مصنوعی
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card">
+                    <div class="feature-card__icon feature-card__icon--primary">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <h3 class="feature-card__title">تحلیل سریع و دقیق</h3>
+                    <p class="feature-card__description">
+                        با الگوریتم‌های پیشرفته هوش مصنوعی، در کمتر از ۸ دقیقه استعدادهای خود را کشف کنید
+                    </p>
+                    <ul class="feature-card__list">
+                        <li><i class="bi bi-check-circle"></i> ۲۴ استعداد اصلی</li>
+                        <li><i class="bi bi-check-circle"></i> تحلیل شخصیت‌شناسی</li>
+                        <li><i class="bi bi-check-circle"></i> گزارش تفصیلی</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card">
+                    <div class="feature-card__icon feature-card__icon--success">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h3 class="feature-card__title">مسیر رشد شخصی</h3>
+                    <p class="feature-card__description">
+                        نقشه راه اختصاصی برای توسعه مهارت‌ها و استعدادهای شما
+                    </p>
+                    <ul class="feature-card__list">
+                        <li><i class="bi bi-check-circle"></i> برنامه توسعه فردی</li>
+                        <li><i class="bi bi-check-circle"></i> پیگیری پیشرفت</li>
+                        <li><i class="bi bi-check-circle"></i> مربیگری تخصصی</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card">
+                    <div class="feature-card__icon feature-card__icon--info">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 class="feature-card__title">امنیت و حریم خصوصی</h3>
+                    <p class="feature-card__description">
+                        تمامی اطلاعات شما کاملاً محرمانه و با بالاترین استانداردهای امنیتی محافظت می‌شود
+                    </p>
+                    <ul class="feature-card__list">
+                        <li><i class="bi bi-check-circle"></i> رمزنگاری پیشرفته</li>
+                        <li><i class="bi bi-check-circle"></i> سرورهای داخلی</li>
+                        <li><i class="bi bi-check-circle"></i> عدم اشتراک‌گذاری</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section" id="how-it-works">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <span class="section-badge">فرآیند کار</span>
+            <h2 class="section-title">چگونه کار می‌کند؟</h2>
+            <p class="section-description">
+                در چند مرحله ساده به تحلیل استعدادهای خود برسید
+            </p>
+        </div>
+
+        <div class="how-it-works-timeline">
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="100">
+                <div class="timeline-item__number">۱</div>
+                <div class="timeline-item__content">
+                    <div class="timeline-item__icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <h3 class="timeline-item__title">ثبت‌نام رایگان</h3>
+                    <p class="timeline-item__description">
+                        با شماره موبایل خود در پلتفرم ثبت‌نام کنید و پروفایل خود را تکمیل کنید
+                    </p>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-aos="fade-left" data-aos-delay="200">
+                <div class="timeline-item__number">۲</div>
+                <div class="timeline-item__content">
+                    <div class="timeline-item__icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <h3 class="timeline-item__title">انجام تست</h3>
+                    <p class="timeline-item__description">
+                        به سوالات هوشمند و تخصصی پاسخ دهید. فقط ۸ دقیقه زمان می‌برد
+                    </p>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-aos="fade-right" data-aos-delay="300">
+                <div class="timeline-item__number">۳</div>
+                <div class="timeline-item__content">
+                    <div class="timeline-item__icon">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h3 class="timeline-item__title">تحلیل هوشمند</h3>
+                    <p class="timeline-item__description">
+                        هوش مصنوعی ما پاسخ‌های شما را تحلیل و الگوهای رفتاری شما را شناسایی می‌کند
+                    </p>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-aos="fade-left" data-aos-delay="400">
+                <div class="timeline-item__number">۴</div>
+                <div class="timeline-item__content">
+                    <div class="timeline-item__icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <h3 class="timeline-item__title">دریافت گزارش</h3>
+                    <p class="timeline-item__description">
+                        گزارش جامع و اختصاصی استعدادها و مسیر رشد خود را دریافت کنید
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Talents Section -->
+<section class="talents-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <span class="section-badge">استعدادهای اصلی</span>
+            <h2 class="section-title">۲۴ استعداد انسانی</h2>
+            <p class="section-description">
+                ما ۲۴ استعداد اصلی انسانی را در ۴ دسته کلی تحلیل می‌کنیم
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
+                <div class="talent-category">
+                    <div class="talent-category__icon talent-category__icon--primary">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+                    <h3 class="talent-category__title">استعدادهای استراتژیک</h3>
+                    <ul class="talent-category__list">
+                        <li>تفکر تحلیلی</li>
+                        <li>چشم‌انداز آینده</li>
+                        <li>یادگیری</li>
+                        <li>تفکر راهبردی</li>
+                        <li>ایده‌پردازی</li>
+                        <li>تمرکز</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="200">
+                <div class="talent-category">
+                    <div class="talent-category__icon talent-category__icon--success">
+                        <i class="bi bi-rocket"></i>
+                    </div>
+                    <h3 class="talent-category__title">استعدادهای اجرایی</h3>
+                    <ul class="talent-category__list">
+                        <li>مسئولیت‌پذیری</li>
+                        <li>دستیابی به نتیجه</li>
+                        <li>نظم و ترتیب</li>
+                        <li>انضباط</li>
+                        <li>توجه به جزئیات</li>
+                        <li>پیگیری</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="300">
+                <div class="talent-category">
+                    <div class="talent-category__icon talent-category__icon--warning">
+                        <i class="bi bi-heart"></i>
+                    </div>
+                    <h3 class="talent-category__title">استعدادهای ارتباطی</h3>
+                    <ul class="talent-category__list">
+                        <li>همدلی</li>
+                        <li>ارتباط‌سازی</li>
+                        <li>شامل‌سازی</li>
+                        <li>توسعه‌دهندگی</li>
+                        <li>هماهنگی</li>
+                        <li>محبوبیت</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                <div class="talent-category">
+                    <div class="talent-category__icon talent-category__icon--info">
+                        <i class="bi bi-star"></i>
+                    </div>
+                    <h3 class="talent-category__title">استعدادهای تأثیرگذاری</h3>
+                    <ul class="talent-category__list">
+                        <li>فرماندهی</li>
+                        <li>رقابت</li>
+                        <li>اعتماد به نفس</li>
+                        <li>تأثیرگذاری</li>
+                        <li>فعال‌سازی</li>
+                        <li>حداکثرسازی</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <span class="section-badge">نظرات کاربران</span>
+            <h2 class="section-title">آنها چه می‌گویند؟</h2>
+            <p class="section-description">
+                تجربه واقعی کاربران آرسیس
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="testimonial-card">
+                    <div class="testimonial-card__rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="testimonial-card__text">
+                        "با تست آرسیس متوجه استعدادهایی شدم که اصلاً فکرش را نمی‌کردم. الان در مسیر شغلی‌ای هستم که واقعاً دوست دارم."
+                    </p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">👤</div>
+                        <div class="testimonial-card__info">
+                            <div class="testimonial-card__name">سارا احمدی</div>
+                            <div class="testimonial-card__role">مدیر محصول</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-card">
+                    <div class="testimonial-card__rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="testimonial-card__text">
+                        "تحلیل دقیق و حرفه‌ای بود. گزارشی که دریافت کردم به من کمک کرد تا تیمم را بهتر بشناسم و مدیریت کنم."
+                    </p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">👤</div>
+                        <div class="testimonial-card__info">
+                            <div class="testimonial-card__name">علی رضایی</div>
+                            <div class="testimonial-card__role">مدیر عامل</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="testimonial-card">
+                    <div class="testimonial-card__rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="testimonial-card__text">
+                        "پلتفرمی عالی برای شناخت بهتر خودمون. به همه دوستانم پیشنهاد دادم که حتماً تست رو انجام بدن."
+                    </p>
+                    <div class="testimonial-card__author">
+                        <div class="testimonial-card__avatar">👤</div>
+                        <div class="testimonial-card__info">
+                            <div class="testimonial-card__name">مریم کریمی</div>
+                            <div class="testimonial-card__role">کارشناس منابع انسانی</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.FeaturedProducts?.Any() ?? false)
+{
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="section-header text-center" data-aos="fade-up">
+                <span class="section-badge">محصولات ویژه</span>
+                <h2 class="section-title">پکیج‌های تخصصی</h2>
+                <p class="section-description">
+                    بسته‌های آموزشی و تست‌های تخصصی برای توسعه مهارت‌های شما
+                </p>
+            </div>
+
+            <div class="row g-4">
+                @foreach (var product in Model.FeaturedProducts.Take(3))
+                {
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="@((Model.FeaturedProducts.ToList().IndexOf(product) + 1) * 100)">
+                        <div class="product-card-modern">
+                            <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug" class="product-card-modern__link">
+                                <div class="product-card-modern__image">
+                                    <img src="@product.ThumbnailUrl" alt="@product.Name" loading="lazy" />
+                                    @if (!string.IsNullOrWhiteSpace(product.Badge))
+                                    {
+                                        <span class="product-card-modern__badge">@product.Badge</span>
+                                    }
+                                </div>
+                                <div class="product-card-modern__content">
+                                    @if (!string.IsNullOrWhiteSpace(product.Category))
+                                    {
+                                        <span class="product-card-modern__category">@product.Category</span>
+                                    }
+                                    <h3 class="product-card-modern__title">@product.Name</h3>
+                                    <p class="product-card-modern__description">@product.ShortDescription</p>
+                                    <div class="product-card-modern__footer">
+                                        <div class="product-card-modern__price">
+                                            <span class="current">@product.GetFormattedPrice()</span>
+                                            @if (product.OriginalPrice.HasValue)
+                                            {
+                                                <span class="original">@product.GetFormattedOriginalPrice()</span>
+                                            }
+                                        </div>
+                                        <div class="product-card-modern__rating">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span>@product.GetRatingLabel()</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            <div class="product-card-modern__actions">
+                                <form asp-controller="Cart" asp-action="Add" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                                    <button type="submit" class="btn-modern btn-modern--primary btn-modern--block">
+                                        <i class="bi bi-cart-plus"></i>
+                                        <span>افزودن به سبد</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-5" data-aos="fade-up">
+                <a asp-controller="Product" asp-action="Index" class="btn-modern btn-modern--outline btn-modern--large">
+                    <span>مشاهده همه محصولات</span>
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="cta-section__bg"></div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8" data-aos="fade-right">
+                <div class="cta-content">
+                    <h2 class="cta-content__title">آماده کشف استعدادهای خود هستید؟</h2>
+                    <p class="cta-content__description">
+                        همین الان شروع کنید و در کمتر از ۸ دقیقه گزارش جامع خود را دریافت کنید
+                    </p>
+                    <ul class="cta-content__features">
+                        <li><i class="bi bi-check-circle-fill"></i> تست کاملاً رایگان</li>
+                        <li><i class="bi bi-check-circle-fill"></i> گزارش فوری و دقیق</li>
+                        <li><i class="bi bi-check-circle-fill"></i> بدون نیاز به کارت اعتباری</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-4" data-aos="fade-left">
+                <div class="cta-action">
+                    <a asp-controller="Account" asp-action="PhoneLogin" class="btn-modern btn-modern--white btn-modern--large btn-modern--block">
+                        <span>شروع رایگان</span>
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <p class="cta-action__note">
+                        <i class="bi bi-shield-check"></i>
+                        اطلاعات شما کاملاً محفوظ است
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script src="~/js/home-modern.js" asp-append-version="true"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    </script>
+}

@@ -1,0 +1,165 @@
+@model ProductExecutionStepsViewModel
+@{
+    var isEditing = Model.Form.Id.HasValue;
+    var pageTitle = isEditing ? "ویرایش گام اجرایی" : "افزودن گام اجرایی";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Catalog" asp-action="Index">مدیریت محصولات</a></li>
+    <li class="breadcrumb-item active" aria-current="page">گام‌های اجرایی</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="product-steps-page" data-product-steps>
+    <div class="product-steps-page__hero">
+        <div>
+            <h1 class="product-steps-page__title">@ViewData["Title"]</h1>
+            <p class="product-steps-page__subtitle">گام‌های اجرایی محصول را تعریف، مرتب‌سازی و بروزرسانی کنید.</p>
+        </div>
+        <div class="product-steps-page__actions">
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Catalog" asp-action="Index">
+                <i class="bi bi-arrow-right"></i>
+                بازگشت به محصولات
+            </a>
+        </div>
+    </div>
+
+    <section class="product-steps-form card">
+        <div class="card-body">
+            <div class="product-steps-form__header">
+                <div>
+                    <h2 class="product-steps-form__title">@pageTitle</h2>
+                    <p class="product-steps-form__subtitle">@("محصول: " + Model.ProductName)</p>
+                </div>
+                <span class="product-steps-form__hint">ترتیب نمایش بر اساس مقدار «ترتیب» تعیین می‌شود.</span>
+            </div>
+            <form class="product-steps-form__form"
+                  asp-area="Admin"
+                  asp-controller="Catalog"
+                  asp-action="@(isEditing ? "UpdateExecutionStep" : "CreateExecutionStep")"
+                  asp-route-id="@Model.ProductId"
+                  method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Form.Id" />
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" asp-for="Form.Title"></label>
+                        <input class="form-control" asp-for="Form.Title" />
+                        <span class="text-danger" asp-validation-for="Form.Title"></span>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" asp-for="Form.Duration"></label>
+                        <input class="form-control" asp-for="Form.Duration" />
+                        <span class="text-danger" asp-validation-for="Form.Duration"></span>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" asp-for="Form.Order"></label>
+                        <input class="form-control" asp-for="Form.Order" type="number" min="0" />
+                        <span class="text-danger" asp-validation-for="Form.Order"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Form.Description"></label>
+                        <textarea class="form-control" asp-for="Form.Description" rows="4"></textarea>
+                        <span class="text-danger" asp-validation-for="Form.Description"></span>
+                    </div>
+                </div>
+                <div class="product-steps-form__actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi @(isEditing ? "bi-arrow-repeat" : "bi-plus-lg")"></i>
+                        @(isEditing ? "ذخیره تغییرات" : "افزودن گام")
+                    </button>
+                    @if (isEditing)
+                    {
+                        <a class="btn btn-link" asp-area="Admin" asp-controller="Catalog" asp-action="ExecutionSteps" asp-route-id="@Model.ProductId">
+                            انصراف از ویرایش
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="product-steps-list card">
+        <div class="card-body">
+            <div class="product-steps-list__header">
+                <div>
+                    <h2 class="product-steps-list__title">ساختار برنامه</h2>
+                    <p class="product-steps-list__subtitle">گام‌های زیر به ترتیب در صفحه محصول نمایش داده می‌شوند.</p>
+                </div>
+                <span class="product-steps-list__count">@Model.Steps.Count گام ثبت شده</span>
+            </div>
+
+            @if (!Model.Steps.Any())
+            {
+                <div class="product-steps-empty">
+                    <div class="product-steps-empty__icon" aria-hidden="true">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <h3 class="product-steps-empty__title">هنوز گامی برای این محصول ثبت نشده است</h3>
+                    <p class="product-steps-empty__subtitle">اولین گام را اضافه کنید تا ساختار برنامه کامل شود.</p>
+                </div>
+            }
+            else
+            {
+                <div class="product-steps-grid" role="list">
+                    @foreach (var step in Model.Steps)
+                    {
+                        var isHighlightedCard = Model.HighlightedStepId.HasValue && Model.HighlightedStepId.Value == step.Id;
+                        <article class="product-step-card @(isHighlightedCard ? "product-step-card--highlight" : null)" role="listitem">
+                            <header class="product-step-card__header">
+                                <span class="product-step-card__order">گام @(step.Order + 1)</span>
+                                <h3 class="product-step-card__title">@step.Title</h3>
+                                @if (!string.IsNullOrWhiteSpace(step.Duration))
+                                {
+                                    <span class="product-step-card__duration">
+                                        <i class="bi bi-clock"></i>
+                                        @step.Duration
+                                    </span>
+                                }
+                            </header>
+                            @if (!string.IsNullOrWhiteSpace(step.Description))
+                            {
+                                <p class="product-step-card__description">@step.Description</p>
+                            }
+                            <footer class="product-step-card__actions">
+                                <a class="btn btn-outline-primary btn-sm"
+                                   asp-area="Admin"
+                                   asp-controller="Catalog"
+                                   asp-action="ExecutionSteps"
+                                   asp-route-id="@Model.ProductId"
+                                   asp-route-stepId="@step.Id">
+                                    <i class="bi bi-pencil"></i>
+                                    ویرایش
+                                </a>
+                                <form method="post"
+                                      asp-area="Admin"
+                                      asp-controller="Catalog"
+                                      asp-action="DeleteExecutionStep"
+                                      asp-route-id="@Model.ProductId"
+                                      asp-route-stepId="@step.Id"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('آیا از حذف این گام مطمئن هستید؟');">
+                                        <i class="bi bi-trash"></i>
+                                        حذف
+                                    </button>
+                                </form>
+                            </footer>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

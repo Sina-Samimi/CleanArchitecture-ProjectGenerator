@@ -1,0 +1,417 @@
+@model PhoneLoginViewModel
+@{
+    ViewData["Title"] = "تایید کد ورود";
+    Layout = null;
+    var expiresAt = Model.CodeExpiresAt?.ToUniversalTime().ToString("o");
+    var debugCode = ViewData["DebugVerificationCode"] as string;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - آرسیس</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link href="~/css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/font/iransans/style.css" rel="stylesheet" />
+    <link href="/font/iransans/fontiran.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+</head>
+<body style="font-family: 'IRANSansX', 'IRANSans', sans-serif;">
+
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Illustration Side (Left) -->
+        <div class="auth-illustration">
+            <div class="auth-illustration__content">
+                <svg class="auth-illustration__svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Medical Brain Illustration -->
+                    <!-- Top Icon -->
+                    <g transform="translate(225, 40)">
+                        <rect x="0" y="0" width="50" height="50" rx="12" fill="#4A90E2"/>
+                        <path d="M 15 25 L 20 30 L 35 15" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Left Brain (Blue) -->
+                    <g transform="translate(100, 150)">
+                        <ellipse cx="60" cy="80" rx="55" ry="75" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <path d="M 30 50 Q 40 60, 30 70" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <path d="M 50 45 Q 60 55, 50 65" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <path d="M 70 50 Q 80 60, 70 70" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                        <circle cx="25" cy="30" r="8" fill="#A8C5DD"/>
+                        <circle cx="60" cy="25" r="8" fill="#A8C5DD"/>
+                        <circle cx="90" cy="35" r="8" fill="#A8C5DD"/>
+                    </g>
+                    
+                    <!-- Right Brain (Orange) -->
+                    <g transform="translate(240, 150)">
+                        <ellipse cx="60" cy="80" rx="55" ry="75" fill="#FF8E53" opacity="0.9"/>
+                        <path d="M 30 50 Q 40 60, 30 70" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                        <path d="M 50 45 Q 60 55, 50 65" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                        <path d="M 70 50 Q 80 60, 70 70" fill="none" stroke="#fff" stroke-width="2" opacity="0.6"/>
+                    </g>
+                    
+                    <!-- Plus Signs Decorations -->
+                    <g fill="#4A90E2" opacity="0.4">
+                        <text x="80" y="120" font-size="24" font-weight="bold">+</text>
+                        <text x="370" y="160" font-size="28" font-weight="bold">+</text>
+                        <text x="140" y="340" font-size="20" font-weight="bold">+</text>
+                        <text x="350" y="300" font-size="24" font-weight="bold">+</text>
+                    </g>
+                    
+                    <!-- Bottom Icon -->
+                    <g transform="translate(210, 380)">
+                        <ellipse cx="40" cy="45" rx="35" ry="40" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <circle cx="40" cy="35" r="20" fill="none" stroke="#4A90E2" stroke-width="3"/>
+                        <circle cx="40" cy="25" r="8" fill="#FF8E53"/>
+                        <path d="M 40 45 L 40 85" stroke="#4A90E2" stroke-width="3"/>
+                    </g>
+                    
+                    <!-- Left Profile Silhouette -->
+                    <g transform="translate(40, 100)">
+                        <path d="M 20 50 Q 30 30, 45 40 Q 50 60, 45 80 Q 30 90, 20 70 Z" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                        <circle cx="32" cy="40" r="12" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                    </g>
+                    
+                    <!-- Right Profile Silhouette -->
+                    <g transform="translate(400, 100)">
+                        <path d="M 35 50 Q 25 30, 10 40 Q 5 60, 10 80 Q 25 90, 35 70 Z" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                        <circle cx="23" cy="40" r="12" fill="none" stroke="#A8C5DD" stroke-width="2"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Form Side (Right) -->
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <span class="auth-logo-text">آ</span>
+                </div>
+                <h1 class="auth-title">تایید کد ورود</h1>
+                <p class="auth-subtitle">
+                    کد ارسال شده به شماره 
+                    <span class="auth-subtitle-strong">@Model.PhoneNumber</span> 
+                    را وارد کنید
+                </p>
+            </div>
+
+            @if (ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="auth-card__validation">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+            {
+                <div class="auth-message auth-message--info">
+                    <i class="bi bi-info-circle ms-2"></i>
+                    @Model.InfoMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="auth-message auth-message--error">
+                    <i class="bi bi-exclamation-triangle ms-2"></i>
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <div class="auth-meta">
+                <a class="auth-link" asp-action="PhoneLogin" asp-route-returnUrl="@Model.ReturnUrl">
+                    <i class="bi bi-pencil ms-1"></i>
+                    ویرایش شماره موبایل
+                </a>
+            </div>
+
+            <form asp-action="VerifyCode" method="post" class="auth-form" data-otp-form novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="NormalizedPhoneNumber" />
+                <input type="hidden" asp-for="VerificationCode" id="VerificationCode" />
+
+                <div class="auth-code">
+                    <div class="auth-code__intro">
+                        <p>کد ۶ رقمی ارسال شده را وارد کنید</p>
+                        <div class="auth-code__timer" data-expiration="@expiresAt">
+                            <i class="bi bi-clock ms-1"></i>
+                            <span id="timerValue">120</span>
+                            <span>ثانیه مانده</span>
+                        </div>
+                    </div>
+
+                    <div class="auth-code__inputs" data-otp-container>
+                        @for (var i = 0; i < 6; i++)
+                        {
+                            <input 
+                                type="tel"
+                                class="auth-code__input"
+                                inputmode="numeric"
+                                maxlength="1"
+                                pattern="[0-9]"
+                                dir="ltr"
+                                autocomplete="off"
+                                aria-label="رقم @(i + 1) کد تایید"
+                                data-otp-input
+                                data-index="@i"
+                                id="otp-@i" />
+                        }
+                    </div>
+                    <span asp-validation-for="VerificationCode" class="auth-form__error text-center d-block"></span>
+                </div>
+
+                <button type="submit" class="auth-button">
+                    تایید و ورود
+                </button>
+            </form>
+
+            <form asp-action="ResendCode" method="post" class="auth-form mt-3" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="NormalizedPhoneNumber" />
+                <button 
+                    type="submit" 
+                    id="resendButton" 
+                    class="auth-button auth-button--ghost"
+                    @(Model.AllowResend ? null : "disabled")>
+                    ارسال مجدد کد
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p class="auth-footer__text">
+                    کد را دریافت نکردید؟ 
+                    <a href="#" class="auth-link">راهنمای رفع مشکل</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    // Debug Code Display
+    @if (!string.IsNullOrWhiteSpace(debugCode))
+    {
+        var debugCodeJson = System.Text.Json.JsonSerializer.Serialize(debugCode);
+        <text>
+    (function() {
+        var debugCode = @Html.Raw(debugCodeJson);
+        console.log('%c═══════════════════════════════════════', 'color: #667eea; font-weight: bold;');
+        console.log('%c🔐 کد تایید برای تست (Development Only)', 'background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: bold; padding: 10px 15px; border-radius: 8px; font-size: 14px;');
+        console.log('%c' + debugCode, 'color: #667eea; font-weight: bold; font-size: 32px; letter-spacing: 8px; text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.3);');
+        console.log('%c═══════════════════════════════════════', 'color: #764ba2; font-weight: bold;');
+        console.log('%cبرای تست، این کد را در فیلدهای OTP وارد کنید', 'color: #64748b; font-style: italic; font-size: 12px;');
+        
+        // Auto-fill for easier testing (optional - uncomment to use)
+        // setTimeout(function() {
+        //     var inputs = document.querySelectorAll('[data-otp-input]');
+        //     debugCode.split('').forEach(function(digit, i) {
+        //         if (inputs[i]) inputs[i].value = digit;
+        //     });
+        // }, 500);
+    })();
+        </text>
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // OTP Input Management
+        const form = document.querySelector('[data-otp-form]');
+        const container = document.querySelector('[data-otp-container]');
+        const inputs = container ? Array.from(container.querySelectorAll('[data-otp-input]')) : [];
+        const hiddenInput = document.getElementById('VerificationCode');
+        const resendButton = document.getElementById('resendButton');
+        const timerElement = document.querySelector('.auth-code__timer');
+        const timerValue = document.getElementById('timerValue');
+
+        if (!form || !inputs.length || !hiddenInput) {
+            console.error('OTP form elements not found');
+            return;
+        }
+
+        console.log('OTP inputs initialized:', inputs.length);
+
+        const updateHidden = () => {
+            hiddenInput.value = inputs.map(input => input.value).join('');
+            console.log('Hidden input updated:', hiddenInput.value);
+        };
+
+        const focusNext = (index) => {
+            if (index < inputs.length - 1) {
+                setTimeout(() => {
+                    inputs[index + 1].focus();
+                    inputs[index + 1].select();
+                    console.log('Focused next input:', index + 1);
+                }, 10);
+            }
+        };
+
+        const focusPrev = (index) => {
+            if (index > 0) {
+                setTimeout(() => {
+                    inputs[index - 1].focus();
+                    inputs[index - 1].select();
+                    console.log('Focused prev input:', index - 1);
+                }, 10);
+            }
+        };
+
+        const handlePaste = (e, index) => {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const digits = paste.replace(/\D/g, '').split('');
+            
+            console.log('Pasted digits:', digits);
+            
+            digits.forEach((digit, i) => {
+                const targetIndex = index + i;
+                if (targetIndex < inputs.length) {
+                    inputs[targetIndex].value = digit;
+                }
+            });
+            
+            updateHidden();
+            const lastIndex = Math.min(index + digits.length - 1, inputs.length - 1);
+            setTimeout(() => {
+                inputs[lastIndex].focus();
+            }, 10);
+
+            // Check if all inputs are filled
+            if (inputs.every(inp => inp.value)) {
+                console.log('All inputs filled, auto-submitting...');
+                setTimeout(() => form.submit(), 500);
+            }
+        };
+
+        inputs.forEach((input, index) => {
+            // Clear previous value
+            input.value = '';
+
+            // Input event - handles typing
+            input.addEventListener('input', (e) => {
+                // Remove any non-digit characters
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // If multiple digits pasted, take only first one
+                if (value.length > 1) {
+                    value = value.charAt(0);
+                }
+                
+                e.target.value = value;
+                console.log('Input ' + index + ' value:', value);
+                
+                // Move to next input if digit entered
+                if (value.length === 1) {
+                    updateHidden();
+                    focusNext(index);
+                    
+                    // Check if all inputs are filled for auto-submit
+                    if (inputs.every(inp => inp.value)) {
+                        console.log('All inputs filled, auto-submitting...');
+                        setTimeout(() => {
+                            updateHidden();
+                            form.submit();
+                        }, 300);
+                    }
+                } else {
+                    updateHidden();
+                }
+            });
+
+            // Keydown event - handles backspace and arrows
+            input.addEventListener('keydown', (e) => {
+                // Backspace: if empty, go to previous
+                if (e.key === 'Backspace') {
+                    if (!input.value) {
+                        e.preventDefault();
+                        focusPrev(index);
+                    }
+                }
+                // Arrow Left
+                else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    focusPrev(index);
+                }
+                // Arrow Right  
+                else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    focusNext(index);
+                }
+                // Allow only digits
+                else if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            // Paste event
+            input.addEventListener('paste', (e) => handlePaste(e, index));
+
+            // Focus event - select all
+            input.addEventListener('focus', (e) => {
+                e.target.select();
+            });
+
+            // Click event - select all
+            input.addEventListener('click', (e) => {
+                e.target.select();
+            });
+        });
+
+        // Auto-focus first input
+        console.log('Auto-focusing first input...');
+        setTimeout(() => {
+            inputs[0].focus();
+            inputs[0].select();
+        }, 300);
+
+        // Timer Management
+        if (timerElement && resendButton && timerValue) {
+            const expirationAttr = timerElement.getAttribute('data-expiration');
+            
+            if (!expirationAttr) {
+                markExpired();
+            } else {
+                const expiration = new Date(expirationAttr).getTime();
+                
+                if (isNaN(expiration)) {
+                    markExpired();
+                } else {
+                    const updateTimer = () => {
+                        const now = Date.now();
+                        const remaining = Math.max(0, Math.floor((expiration - now) / 1000));
+                        timerValue.textContent = remaining;
+                        
+                        if (remaining <= 0) {
+                            clearInterval(interval);
+                            markExpired();
+                        }
+                    };
+
+                    updateTimer();
+                    const interval = setInterval(updateTimer, 1000);
+                }
+            }
+        }
+
+        function markExpired() {
+            if (resendButton) resendButton.removeAttribute('disabled');
+            if (timerElement) timerElement.classList.add('auth-code__timer--expired');
+            if (timerValue) timerValue.textContent = '0';
+        }
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            updateHidden();
+            const button = form.querySelector('.auth-button[type="submit"]');
+            if (button && form.checkValidity()) {
+                button.classList.add('auth-button--loading');
+                button.disabled = true;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

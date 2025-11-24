@@ -1,0 +1,129 @@
+@model SiteSettingsViewModel
+@{
+    ViewData["Title"] ??= "تنظیمات سایت";
+    ViewData["Subtitle"] ??= "مدیریت اطلاعات تماس و برند پلتفرم";
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-12 col-xl-8">
+        <form asp-area="Admin" asp-controller="SiteSettings" asp-action="Index" method="post" class="card h-100" novalidate>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="card-title h4 mb-1">مشخصات عمومی سایت</h2>
+                    <p class="card-subtitle text-muted mb-0">عنوان برند، کانال‌های ارتباطی و راه‌های تماس را در این بخش ثبت کنید.</p>
+                </div>
+                <span class="badge bg-light text-primary">به‌روز رسانی همیشگی</span>
+            </div>
+            <div class="card-body">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label asp-for="SiteTitle" class="form-label"></label>
+                        <input asp-for="SiteTitle" class="form-control" />
+                        <span asp-validation-for="SiteTitle" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="SiteEmail" class="form-label"></label>
+                        <input asp-for="SiteEmail" class="form-control text-start" dir="ltr" />
+                        <span class="form-text text-muted">ایمیل اصلی که در فوتر یا بخش تماس نمایش داده می‌شود.</span>
+                        <span asp-validation-for="SiteEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="SupportEmail" class="form-label"></label>
+                        <input asp-for="SupportEmail" class="form-control text-start" dir="ltr" />
+                        <span class="form-text text-muted">ایمیل اختصاصی تیم پشتیبانی برای پیگیری درخواست‌ها.</span>
+                        <span asp-validation-for="SupportEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ContactPhone" class="form-label"></label>
+                        <input asp-for="ContactPhone" class="form-control text-start" dir="ltr" />
+                        <span class="form-text text-muted">شماره نمایشی در صفحه تماس با ما یا فوتر سایت.</span>
+                        <span asp-validation-for="ContactPhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="SupportPhone" class="form-label"></label>
+                        <input asp-for="SupportPhone" class="form-control text-start" dir="ltr" />
+                        <span class="form-text text-muted">خط مستقیم پشتیبانی یا پاسخگویی خارج از ساعات اداری.</span>
+                        <span asp-validation-for="SupportPhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        <span class="form-text text-muted">آدرس دفتر مرکزی یا محل فعالیت جهت نمایش در صفحات تماس.</span>
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="ContactDescription" class="form-label"></label>
+                        <textarea asp-for="ContactDescription" class="form-control" rows="4"></textarea>
+                        <span class="form-text text-muted">توضیحات تکمیلی مانند ساعات پاسخگویی، شبکه‌های اجتماعی یا روش‌های جایگزین تماس.</span>
+                        <span asp-validation-for="ContactDescription" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="text-muted small">اطلاعات ذخیره‌شده در تمام صفحات عمومی که به تنظیمات سایت متکی هستند نمایش داده می‌شود.</div>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-save me-1"></i>
+                    ذخیره تنظیمات
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2 class="card-title h5 mb-1">پیشنمایش اطلاعات</h2>
+                <p class="card-subtitle text-muted mb-0">مرور سریع آنچه کاربران خواهند دید.</p>
+            </div>
+            <div class="card-body d-flex flex-column gap-4">
+                <div class="p-3 bg-light rounded-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">عنوان سایت</span>
+                        <span class="fw-semibold">@Model.SiteTitle</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">ایمیل اصلی</span>
+                        <span class="fw-semibold text-primary" dir="ltr">@Model.SiteEmail</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">ایمیل پشتیبانی</span>
+                        <span class="fw-semibold text-primary" dir="ltr">@Model.SupportEmail</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="h6 mb-3">راه‌های ارتباطی</h3>
+                    <ul class="list-unstyled mb-0 small text-muted">
+                        <li class="mb-2"><i class="bi bi-telephone text-primary me-2"></i>@Model.ContactPhone</li>
+                        <li class="mb-2"><i class="bi bi-headset text-success me-2"></i>@Model.SupportPhone</li>
+                        <li><i class="bi bi-geo-alt text-danger me-2"></i>@Model.Address</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="h6 mb-2">پیام به کاربران</h3>
+                    <p class="small text-muted mb-0">@Model.ContactDescription</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

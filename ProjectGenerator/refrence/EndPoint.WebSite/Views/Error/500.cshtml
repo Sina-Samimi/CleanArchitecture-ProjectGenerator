@@ -1,0 +1,32 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = ViewData["Title"] ?? "بروز خطای داخلی";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+                <div class="mb-4">
+                    <span class="display-4 text-danger d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-subtle shadow-sm" style="width: 96px; height: 96px;">
+                        <i class="bi bi-exclamation-octagon"></i>
+                    </span>
+                </div>
+                <h1 class="h3 mb-3">اوه! مشکلی در سرور رخ داده است</h1>
+                <p class="text-muted mb-4">
+                    هنگام پردازش درخواست شما با خطای غیرمنتظره‌ای مواجه شدیم. تیم فنی ما از وقوع این خطا مطلع می‌شود و آن را بررسی خواهد کرد. لطفاً چند لحظه بعد دوباره تلاش کنید.
+                </p>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-center">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-primary px-4">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        تلاش مجدد
+                    </a>
+                    <a href="mailto:support@example.com" class="btn btn-outline-danger px-4">
+                        <i class="bi bi-envelope-open me-1"></i>
+                        گزارش به پشتیبانی
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

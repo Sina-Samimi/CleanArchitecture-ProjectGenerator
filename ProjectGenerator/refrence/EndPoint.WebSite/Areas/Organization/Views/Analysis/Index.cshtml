@@ -1,0 +1,303 @@
+@model EndPoint.WebSite.Areas.Organization.Models.OrganizationAnalysisViewModel
+
+@{
+    ViewData["Title"] = "تحلیل سازمانی";
+    ViewData["GreetingTitle"] = "تحلیل سازمانی";
+    ViewData["GreetingSubtitle"] = "بررسی عملکرد و ضعف‌های سازمان شما";
+}
+
+<!-- Organization Weaknesses -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    ضعف‌های برتر سازمان
+                </h3>
+            </div>
+            <div class="card-body">
+                @if (Model.OrganizationWeaknesses.Any())
+                {
+                    <canvas id="weaknessesChart" style="min-height: 300px; height: 300px; max-height: 300px;"></canvas>
+                }
+                else
+                {
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <p>داده‌ای برای نمایش وجود ندارد</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-2"></i>
+                    جزئیات ضعف‌ها
+                </h3>
+            </div>
+            <div class="card-body">
+                @if (Model.OrganizationWeaknesses.Any())
+                {
+                    foreach (var weakness in Model.OrganizationWeaknesses.OrderByDescending(w => w.Count))
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <strong>@weakness.WeaknessType</strong>
+                                <br>
+                                <small class="text-muted">@weakness.Count کاربر</small>
+                            </div>
+                            <div class="progress" style="width: 120px;">
+                                <div class="progress-bar bg-danger" role="progressbar"
+                                     style="width: @(Math.Min(100, (weakness.Count * 100) / Model.OrganizationWeaknesses.Max(w => w.Count)))%"
+                                     aria-valuenow="@weakness.Count" aria-valuemin="0"
+                                     aria-valuemax="@Model.OrganizationWeaknesses.Max(w => w.Count)">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle fa-2x mb-2"></i>
+                        <p>داده‌ای برای نمایش وجود ندارد</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weak Users Analysis -->
+<div class="row">
+    <div class="col-12">
+        <div class="card organization-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-users mr-2"></i>
+                    تحلیل کاربران دارای ضعف خاص
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="weaknessTypeSelect">انتخاب نوع ضعف:</label>
+                        <select id="weaknessTypeSelect" class="form-control">
+                            <option value="">انتخاب کنید...</option>
+                            @foreach (var weaknessType in Model.AvailableWeaknessTypes)
+                            {
+                                <option value="@weaknessType.Value">@weaknessType.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label>
+                        <button id="analyzeWeakUsersBtn" class="btn btn-primary btn-block">
+                            <i class="fas fa-search"></i> تحلیل
+                        </button>
+                    </div>
+                </div>
+
+                <div id="weakUsersResults" class="mt-4" style="display: none;">
+                    <h5>کاربران دارای این ضعف:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>نام</th>
+                                    <th>نام خانوادگی</th>
+                                    <th>تاریخ آخرین تست</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weakUsersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Group Performance -->
+@if (Model.UserTestResults.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card organization-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        عملکرد سازمان در گروه‌های شغلی مختلف
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="jobGroupChart" style="min-height: 400px; height: 400px; max-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Organization Weaknesses Chart
+            @if (Model.OrganizationWeaknesses.Any())
+            {
+                <text>
+                const weaknessesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    Model.OrganizationWeaknesses,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                const ctxWeaknesses = document.getElementById('weaknessesChart').getContext('2d');
+
+                new Chart(ctxWeaknesses, {
+                    type: 'bar',
+                    data: {
+                        labels: weaknessesData.map(d => d.weaknessType),
+                        datasets: [{
+                            label: 'تعداد کاربران',
+                            data: weaknessesData.map(d => d.count),
+                            backgroundColor: '#dc3545',
+                            borderColor: '#c82333',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'تعداد کاربران'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'نوع ضعف'
+                                }
+                            }
+                        }
+                    }
+                });
+                </text>
+            }
+
+            // Job Group Performance Chart
+            @if (Model.UserTestResults.Any())
+            {
+                <text>
+                const jobGroupData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    Model.UserTestResults,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                const ctxJobGroup = document.getElementById('jobGroupChart').getContext('2d');
+
+                // Group by job group and calculate averages
+                const groupedData = {};
+                jobGroupData.forEach(item => {
+                    if (!groupedData[item.jobGroup]) {
+                        groupedData[item.jobGroup] = [];
+                    }
+                    groupedData[item.jobGroup].push(item.result);
+                });
+
+                const labels = Object.keys(groupedData);
+                const averages = labels.map(group => {
+                    const values = groupedData[group];
+                    return values.reduce((a, b) => a + b, 0) / values.length;
+                });
+
+                new Chart(ctxJobGroup, {
+                    type: 'radar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'میانگین عملکرد',
+                            data: averages,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10
+                            }
+                        }
+                    }
+                });
+                </text>
+            }
+
+            // Weak Users Analysis
+            $('#analyzeWeakUsersBtn').click(function() {
+                const weaknessType = $('#weaknessTypeSelect').val();
+                if (!weaknessType) {
+                    alert('لطفاً نوع ضعف را انتخاب کنید.');
+                    return;
+                }
+
+                // Show loading
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> در حال تحلیل...');
+
+                $.ajax({
+                    url: '@Url.Action("GetWeakUsers", "Analysis")',
+                    type: 'POST',
+                    data: { weaknessType: weaknessType },
+                    success: function(response) {
+                        if (response.success) {
+                            displayWeakUsers(response.data);
+                        } else {
+                            alert('خطا: ' + response.error);
+                        }
+                    },
+                    error: function() {
+                        alert('خطا در ارتباط با سرور');
+                    },
+                    complete: function() {
+                        $('#analyzeWeakUsersBtn').prop('disabled', false).html('<i class="fas fa-search"></i> تحلیل');
+                    }
+                });
+            });
+
+            function displayWeakUsers(users) {
+                const tbody = $('#weakUsersTableBody');
+                tbody.empty();
+
+                if (users.length === 0) {
+                    tbody.append('<tr><td colspan="3" class="text-center">کاربری یافت نشد</td></tr>');
+                } else {
+                    users.forEach(user => {
+                        const testDate = user.lastTestDateTime ? new Date(user.lastTestDateTime) : null;
+                        tbody.append(`
+                            <tr>
+                                <td>${user.name}</td>
+                                <td>${user.lastName}</td>
+                                <td>${testDate ? testDate.toLocaleDateString('fa-IR') : '-'}</td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                $('#weakUsersResults').show();
+            }
+        });
+    </script>
+}

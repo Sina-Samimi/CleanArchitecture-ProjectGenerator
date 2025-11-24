@@ -1,0 +1,171 @@
+@model EditUserViewModel
+@{
+    Layout = null;
+    var avatarPreview = string.IsNullOrWhiteSpace(Model.AvatarPath) ? null : Model.AvatarPath;
+    var avatarAlt = !string.IsNullOrWhiteSpace(Model.FullName) ? Model.FullName : Model.Email;
+    var roleOptions = Model.AvailableRoles?.ToList() ?? new List<RoleOptionViewModel>();
+    var selectedRoles = new HashSet<string>(Model.SelectedRoles ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+    var isDeleted = Model.IsDeleted;
+    var modalSubtitle = isDeleted
+        ? "این کاربر حذف شده است و تا زمان بازیابی امکان ویرایش اطلاعات وجود ندارد."
+        : "ویرایش اطلاعات کاربر و به‌روزرسانی دسترسی‌های او.";
+    var formState = isDeleted ? "deleted" : "active";
+    var cancelButtonText = isDeleted ? "بستن" : "انصراف";
+    var avatarButtonClass = $"btn btn-light w-100 mb-2{(isDeleted ? " disabled" : string.Empty)}";
+}
+
+<div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content user-form-modal">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">ویرایش کاربر</h5>
+                <p class="modal-subtitle">@modalSubtitle</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <form asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post"
+              enctype="multipart/form-data"
+              class="user-form"
+              data-user-form="true"
+              data-user-form-state="@formState">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="AvatarPath" />
+            <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                @if (isDeleted)
+                {
+                    <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-4" aria-hidden="true"></i>
+                        <div>
+                            <strong class="d-block mb-1">این کاربر در وضعیت حذف‌شده قرار دارد.</strong>
+                            <span class="small">برای ویرایش، ابتدا کاربر را بازیابی کنید.</span>
+                        </div>
+                    </div>
+                }
+                <div class="row g-4">
+                    <div class="col-12 col-lg-4">
+                        <div class="user-form__avatar" data-avatar-wrapper>
+                            <div class="user-form__avatar-preview" data-avatar-preview>
+                                @if (!string.IsNullOrWhiteSpace(avatarPreview))
+                                {
+                                    <img src="@avatarPreview" alt="@($"آواتار {avatarAlt}")" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person-circle"></i>
+                                }
+                            </div>
+                            <div class="user-form__avatar-actions">
+                                <label class="@avatarButtonClass" @if (isDeleted)
+                                       {
+                                           <text>tabindex="-1" aria-disabled="true"</text>
+                                       }>
+                                    تغییر تصویر
+                                    <input asp-for="Avatar"
+                                           class="d-none"
+                                           type="file"
+                                           accept=".png,.jpg,.jpeg,.webp"
+                                           data-avatar-input
+                                           disabled="@isDeleted" />
+                                </label>
+                                <small class="text-muted d-block">حداکثر ۲ مگابایت | فرمت‌های PNG, JPG, WEBP</small>
+                                <span asp-validation-for="Avatar" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label asp-for="FullName" class="form-label"></label>
+                                <input asp-for="FullName" class="form-control" placeholder="نام کامل" disabled="@isDeleted" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" placeholder="ایمیل" disabled="@isDeleted" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label"></label>
+                                <input asp-for="PhoneNumber"
+                                       class="form-control"
+                                       type="tel"
+                                       inputmode="tel"
+                                       data-user-phone
+                                       disabled="@isDeleted" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="SelectedRoles" class="form-label"></label>
+                                <div class="role-select" data-role-select>
+                                    <div class="role-select__options">
+                                        @if (roleOptions.Count == 0)
+                                        {
+                                            <div class="text-muted small">نقشی برای انتخاب موجود نیست. ابتدا سطح دسترسی ایجاد کنید.</div>
+                                        }
+                                        else
+                                        {
+                                            for (var index = 0; index < roleOptions.Count; index++)
+                                            {
+                                                var option = roleOptions[index];
+                                                var optionId = $"edit-role-{index}";
+                                                var isSelected = selectedRoles.Contains(option.Value);
+                                                var optionCss = "role-select__option";
+                                                if (isSelected)
+                                                {
+                                                    optionCss += " is-selected";
+                                                }
+                                                if (isDeleted)
+                                                {
+                                                    optionCss += " is-disabled";
+                                                }
+                                                <label class="@optionCss" for="@optionId" @if (isDeleted)
+                                                       {
+                                                           <text>aria-disabled="true"</text>
+                                                       }>
+                                                    <input type="checkbox"
+                                                           id="@optionId"
+                                                           name="SelectedRoles"
+                                                           value="@option.Value"
+                                                           class="form-check-input"
+                                                           @(isSelected ? "checked" : null)
+                                                           data-role-option @if (isDeleted)
+                                                           {
+                                                               <text>disabled</text>
+                                                           }>
+                                                    <span>@option.Label</span>
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <span asp-validation-for="SelectedRoles" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-switch user-form__switch">
+                                    <input asp-for="IsActive"
+                                           class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           data-user-active-toggle
+                                           disabled="@isDeleted" />
+                                    <label asp-for="IsActive" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">@cancelButtonText</button>
+                <button type="submit" class="btn btn-primary" @if (isDeleted)
+                        {
+                            <text>disabled</text>
+                        }>ثبت تغییرات</button>
+            </div>
+        </form>
+    </div>
+</div>

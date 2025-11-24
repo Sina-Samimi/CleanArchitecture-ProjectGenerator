@@ -12,4 +12,15 @@
     <ProjectReference Include="..\ProjectGenerator.Core\ProjectGenerator.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\ProjectGenerator\wwwroot\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+    <Content Include="..\ProjectGenerator\refrence\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>refrence\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>

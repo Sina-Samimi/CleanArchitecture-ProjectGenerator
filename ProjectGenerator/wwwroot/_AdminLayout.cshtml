@@ -38,7 +38,7 @@
     var accountInitial = (ViewData["AccountInitial"] as string)?.Trim();
     var accountAvatarUrl = ViewData["AccountAvatarUrl"] as string ?? greetingAvatarUrl;
     var titleSuffix = ViewData["TitleSuffix"] as string ?? "بخش مدیریت";
-    var persianYear = DateTime.Now.ToPersianDateString().Split('/')[0];
+    var persianYear = new System.Globalization.PersianCalendar().GetYear(DateTime.Now);
 
     var request = ViewContext?.HttpContext?.Request;
     string? logoutReturnUrl = null;
@@ -84,6 +84,7 @@
     <link href="/font/iransans/style.css" rel="stylesheet" />
     <link href="/font/iransans/fontiran.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme-vars.css" asp-append-version="true" />
     @RenderSection("Head", required: false)
 </head>
 <body class="app-body">

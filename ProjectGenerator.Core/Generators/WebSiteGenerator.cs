@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using ProjectGenerator.Core.Models;
 using ProjectGenerator.Core.Templates;
+using ProjectGenerator.Core.Utilities;
 
 namespace ProjectGenerator.Core.Generators;
 
@@ -56,7 +58,8 @@ public class WebSiteGenerator
             "Areas", 
             "Services",
             "ViewComponents",
-            "Authorization"
+            "Authorization",
+            "Properties"
         };
 
         foreach (var dir in dirs)
@@ -64,8 +67,17 @@ public class WebSiteGenerator
             Directory.CreateDirectory(Path.Combine(_websitePath, dir));
         }
 
+        // Generate launchSettings.json
+        GenerateLaunchSettings();
+
+        // Copy wwwroot files from template
+        CopyWwwrootFiles();
+        
         // Generate CSS files with theme settings
         GenerateThemeCss();
+        
+        // Generate ViewComponents
+        GenerateViewComponents();
     }
 
     private void GenerateThemeCss()
@@ -434,7 +446,18 @@ footer a:hover {{
         var userCss = GenerateUserPanelCss(theme);
         File.WriteAllText(Path.Combine(cssPath, "user.css"), userCss);
 
+        // Reapply original CSS to preserve full rule set
+        CopyCssFromTemplate();
+
+        var themeVars = $@":root {{
+    --primary-color: {theme.PrimaryColor};
+    --secondary-color: {theme.SecondaryColor};
+    --font-family: {theme.FontFamily};
+}}";
+        File.WriteAllText(Path.Combine(cssPath, "theme-vars.css"), themeVars);
+
         // Generate JavaScript files
+        GenerateJavaScriptFiles();
         GenerateJavaScriptFiles();
     }
 
@@ -1522,7 +1545,10 @@ body {{
             "Views",
             "Views/Home",
             "Views/Profile",
-            "Views/Orders"
+            "Views/Orders",
+            "Views/Products",
+            "Views/Wallet",
+            "Views/Invoice"
         };
 
         foreach (var dir in dirs)
@@ -1544,6 +1570,21 @@ body {{
         File.WriteAllText(
             Path.Combine(userPath, "Controllers", "OrdersController.cs"),
             _templates.GetUserOrdersControllerTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userPath, "Controllers", "ProductsController.cs"),
+            _templates.GetUserProductsControllerTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userPath, "Controllers", "WalletController.cs"),
+            _templates.GetUserWalletControllerTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userPath, "Controllers", "InvoiceController.cs"),
+            _templates.GetUserInvoicesControllerTemplate()
         );
 
         // Generate Views
@@ -1573,6 +1614,58 @@ body {{
             Path.Combine(profileViewsPath, "Edit.cshtml"),
             _templates.GetUserProfileEditViewTemplate()
         );
+
+        // User products / wallet / invoice views from reference
+        var viewReplacements = new Dictionary<string, string>
+        {
+            ["EndPoint.WebSite"] = $"{_config.ProjectName}.WebSite"
+        };
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Products", "Index.cshtml"),
+            Path.Combine(userPath, "Views", "Products", "Index.cshtml"),
+            viewReplacements);
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Wallet", "Index.cshtml"),
+            Path.Combine(userPath, "Views", "Wallet", "Index.cshtml"),
+            viewReplacements);
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Wallet", "InvoiceDetails.cshtml"),
+            Path.Combine(userPath, "Views", "Wallet", "InvoiceDetails.cshtml"),
+            viewReplacements);
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Wallet", "PayInvoice.cshtml"),
+            Path.Combine(userPath, "Views", "Wallet", "PayInvoice.cshtml"),
+            viewReplacements);
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Wallet", "BankPaymentSession.cshtml"),
+            Path.Combine(userPath, "Views", "Wallet", "BankPaymentSession.cshtml"),
+            viewReplacements);
+
+        var invoiceIndexReplacements = new Dictionary<string, string>(viewReplacements)
+        {
+            ["@model Arsis.Application.DTOs.Billing.InvoiceListResultDto"] = $"@model {_config.ProjectName}.WebSite.Areas.User.Models.UserInvoiceListViewModel"
+        };
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Invoice", "Index.cshtml"),
+            Path.Combine(userPath, "Views", "Invoice", "Index.cshtml"),
+            invoiceIndexReplacements);
+
+        var invoiceDetailReplacements = new Dictionary<string, string>(viewReplacements)
+        {
+            ["@model Arsis.Application.DTOs.Billing.InvoiceDetailDto"] = $"@model {_config.ProjectName}.WebSite.Areas.User.Models.UserInvoiceDetailViewModel",
+            ["@using Arsis.Domain.Enums"] = string.Empty
+        };
+
+        TryCopyReferenceFile(
+            Path.Combine("Areas", "User", "Views", "Invoice", "Details.cshtml"),
+            Path.Combine(userPath, "Views", "Invoice", "Details.cshtml"),
+            invoiceDetailReplacements);
     }
 
     private void GenerateControllers()
@@ -1625,27 +1718,36 @@ body {{
     {
         var sharedPath = Path.Combine(_websitePath, "Views", "Shared");
 
+        // Main public layout is generated from templates
         File.WriteAllText(
             Path.Combine(sharedPath, "_Layout.cshtml"),
             _templates.GetLayoutTemplate(_config.Theme)
         );
 
-        File.WriteAllText(
-            Path.Combine(sharedPath, "_AdminLayout.cshtml"),
-            _templates.GetAdminLayoutTemplate()
-        );
+        // Admin/User/Seller panel layouts are copied from pre-built Razor templates
+        // located in the generator's wwwroot folder. This keeps the panel UIs
+        // pixel-perfect copies of the reference implementation (ArsisTest) without
+        // embedding huge Razor strings inside C# source.
+        CopyPanelLayoutFromTemplatesRoot("_AdminLayout.cshtml", Path.Combine(sharedPath, "_AdminLayout.cshtml"));
 
         if (_config.Options.Features.SellerPanel)
         {
-            File.WriteAllText(
-                Path.Combine(sharedPath, "_SellerLayout.cshtml"),
-                _templates.GetSellerLayoutTemplate()
-            );
+            CopyPanelLayoutFromTemplatesRoot("_SellerLayout.cshtml", Path.Combine(sharedPath, "_SellerLayout.cshtml"));
         }
 
+        CopyPanelLayoutFromTemplatesRoot("_UserLayout.cshtml", Path.Combine(sharedPath, "_UserLayout.cshtml"));
+
+        // Shared alert modal partial used by all panel layouts
+        CopyPanelLayoutFromTemplatesRoot("_AlertModal.cshtml", Path.Combine(sharedPath, "_AlertModal.cshtml"));
+
         File.WriteAllText(
-            Path.Combine(sharedPath, "_UserLayout.cshtml"),
-            _templates.GetUserLayoutTemplate()
+            Path.Combine(sharedPath, "_StatusMessage.cshtml"),
+            _templates.GetStatusMessagePartialTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(sharedPath, "_ValidationScriptsPartial.cshtml"),
+            _templates.GetValidationScriptsPartialTemplate()
         );
 
         // Generate ViewImports and ViewStart
@@ -1664,6 +1766,242 @@ body {{
 
         // Generate ViewModels
         GenerateViewModels();
+
+        // Generate shared extensions/helpers
+        GenerateExtensions();
+    }
+
+    /// <summary>
+    /// Copies a Razor layout/partial file from the generator's template wwwroot
+    /// folder into the generated WebSite project, if the source file exists.
+    /// This method tries to be robust to different entry assemblies (console UI,
+    /// WinForms UI, tests) by walking up the directory tree and also checking
+    /// for a sibling ProjectGenerator/wwwroot folder.
+    /// </summary>
+    private void CopyPanelLayoutFromTemplatesRoot(string fileName, string destinationPath)
+    {
+        try
+        {
+            var sourcePath = FindPanelTemplatePath(fileName);
+
+            if (sourcePath == null)
+            {
+                Console.WriteLine($"⚠ Warning: Panel layout template '{fileName}' could not be located in generator wwwroot.");
+                return;
+            }
+
+            File.Copy(sourcePath, destinationPath, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠ Warning: Failed to copy panel layout '{fileName}': {ex.Message}");
+        }
+    }
+
+    private static string? FindPanelTemplatePath(string fileName)
+    {
+        // Start from the entry assembly base directory
+        var current = AppDomain.CurrentDomain.BaseDirectory;
+        
+        // 1) Walk up a few levels and look for a local wwwroot
+        for (var i = 0; i < 6 && !string.IsNullOrEmpty(current); i++)
+        {
+            var direct = Path.Combine(current, "wwwroot", fileName);
+            if (File.Exists(direct))
+            {
+                return direct;
+            }
+            
+            // Also check for a sibling ProjectGenerator/wwwroot folder
+            var siblingProjectGen = Path.Combine(current, "ProjectGenerator", "wwwroot", fileName);
+            if (File.Exists(siblingProjectGen))
+            {
+                return siblingProjectGen;
+            }
+            
+            var parent = Directory.GetParent(current);
+            if (parent == null)
+            {
+                break;
+            }
+            current = parent.FullName;
+        }
+        
+        return null;
+    }
+
+    private static string? FindComponentsTemplateRoot()
+    {
+        // Start from the entry assembly base directory and walk up,
+        // looking for a wwwroot/Components folder belonging to the generator.
+        var current = AppDomain.CurrentDomain.BaseDirectory;
+
+        for (var i = 0; i < 6 && !string.IsNullOrEmpty(current); i++)
+        {
+            var direct = Path.Combine(current, "wwwroot", "Components");
+            if (Directory.Exists(direct))
+            {
+                return direct;
+            }
+
+            // Also check for a sibling ProjectGenerator/wwwroot/Components folder
+            var siblingProjectGen = Path.Combine(current, "ProjectGenerator", "wwwroot", "Components");
+            if (Directory.Exists(siblingProjectGen))
+            {
+                return siblingProjectGen;
+            }
+
+            var parent = Directory.GetParent(current);
+            if (parent == null)
+            {
+                break;
+            }
+            current = parent.FullName;
+        }
+
+        return null;
+    }
+
+    private static string? FindGeneratorWwwroot()
+    {
+        // Start from the entry assembly base directory and walk up,
+        // looking for the generator's wwwroot folder that contains
+        // static assets (css, js, lib, font, etc.).
+        var current = AppDomain.CurrentDomain.BaseDirectory;
+
+        for (var i = 0; i < 6 && !string.IsNullOrEmpty(current); i++)
+        {
+            var direct = Path.Combine(current, "wwwroot");
+            var isDevOutput = current.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") ||
+                              current.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}");
+            if (Directory.Exists(direct) && !isDevOutput)
+            {
+                return direct;
+            }
+
+            // Also check for a sibling ProjectGenerator/wwwroot folder
+            var siblingProjectGen = Path.Combine(current, "ProjectGenerator", "wwwroot");
+            if (Directory.Exists(siblingProjectGen))
+            {
+                return siblingProjectGen;
+            }
+
+            var parent = Directory.GetParent(current);
+            if (parent == null)
+            {
+                break;
+            }
+            current = parent.FullName;
+        }
+
+        return null;
+    }
+
+    private bool TryCopyReferenceFile(string relativePath, string destinationPath, IDictionary<string, string>? replacements = null)
+    {
+        var referenceRoot = ReferencePaths.FindReferenceProjectRoot();
+        if (referenceRoot is null)
+        {
+            Console.WriteLine($"⚠ Warning: Reference project root could not be located. Skipping copy of '{relativePath}'.");
+            return false;
+        }
+
+        var sourcePath = Path.Combine(referenceRoot, relativePath);
+        if (!File.Exists(sourcePath))
+        {
+            Console.WriteLine($"⚠ Warning: Reference file '{relativePath}' does not exist.");
+            return false;
+        }
+
+        var content = File.ReadAllText(sourcePath);
+        if (replacements is not null)
+        {
+            foreach (var pair in replacements)
+            {
+                content = content.Replace(pair.Key, pair.Value);
+            }
+        }
+
+        var directory = Path.GetDirectoryName(destinationPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllText(destinationPath, content);
+        return true;
+    }
+
+    private void CopyCssFromTemplate()
+    {
+        var templateRoot = FindGeneratorWwwroot();
+        if (templateRoot == null)
+        {
+            return;
+        }
+
+        var sourceCssDir = Path.Combine(templateRoot, "css");
+        var targetCssDir = Path.Combine(_websitePath, "wwwroot", "css");
+
+        if (Directory.Exists(sourceCssDir))
+        {
+            CopyDirectory(sourceCssDir, targetCssDir, recursive: true);
+        }
+    }
+
+    private void FixComponentViewModelNamespaces(string componentsRoot)
+    {
+        // The WebSite project name is "<ProjectName>.WebSite"
+        var rootNamespace = $"{_config.ProjectName}.WebSite";
+
+        void PatchModel(string relativePath, string simpleModelName, string qualifiedModelName)
+        {
+            var fullPath = Path.Combine(componentsRoot, relativePath);
+            if (!File.Exists(fullPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(fullPath);
+
+            // If it's already using the qualified name, skip.
+            if (content.Contains($"@model {qualifiedModelName}"))
+            {
+                return;
+            }
+
+            if (content.Contains($"@model {simpleModelName}"))
+            {
+                content = content.Replace($"@model {simpleModelName}", $"@model {qualifiedModelName}");
+                File.WriteAllText(fullPath, content);
+            }
+        }
+
+        PatchModel(
+            Path.Combine("AdminSidebar", "Default.cshtml"),
+            "AdminSidebarViewModel",
+            $"{rootNamespace}.ViewComponents.AdminSidebarViewModel");
+
+        PatchModel(
+            Path.Combine("UserSidebar", "Default.cshtml"),
+            "UserSidebarViewModel",
+            $"{rootNamespace}.ViewComponents.UserSidebarViewModel");
+
+        // Teacher sidebar reuses the same SellerSidebarViewModel type
+        PatchModel(
+            Path.Combine("SellerSidebar", "Default.cshtml"),
+            "SellerSidebarViewModel",
+            $"{rootNamespace}.ViewComponents.SellerSidebarViewModel");
+
+        PatchModel(
+            Path.Combine("TeacherSidebar", "Default.cshtml"),
+            "SellerSidebarViewModel",
+            $"{rootNamespace}.ViewComponents.SellerSidebarViewModel");
+
+        PatchModel(
+            Path.Combine("CartPreview", "Default.cshtml"),
+            "CartPreviewViewModel",
+            $"{rootNamespace}.Models.Cart.CartPreviewViewModel");
     }
 
     private void GenerateViewModels()
@@ -1700,8 +2038,252 @@ body {{
             Path.Combine(userModelsPath, "ProfileEditViewModel.cs"),
             _templates.GetProfileEditViewModelTemplate()
         );
+
+        File.WriteAllText(
+            Path.Combine(userModelsPath, "UserSettingsViewModel.cs"),
+            _templates.GetUserSettingsViewModelTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userModelsPath, "UserProductViewModels.cs"),
+            _templates.GetUserProductViewModelsTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userModelsPath, "WalletViewModels.cs"),
+            _templates.GetWalletViewModelsTemplate()
+        );
+
+        File.WriteAllText(
+            Path.Combine(userModelsPath, "UserInvoiceViewModels.cs"),
+            _templates.GetUserInvoiceListViewModelTemplate()
+        );
+
+        // Cart / shared ViewModels
+        var cartModelsPath = Path.Combine(modelsPath, "Cart");
+        Directory.CreateDirectory(cartModelsPath);
+        File.WriteAllText(
+            Path.Combine(cartModelsPath, "CartPreviewViewModel.cs"),
+            _templates.GetCartPreviewViewModelTemplate()
+        );
     }
 
+    private void GenerateLaunchSettings()
+    {
+        var propertiesPath = Path.Combine(_websitePath, "Properties");
+        Directory.CreateDirectory(propertiesPath);
+        
+        var launchSettings = @"{
+  ""$schema"": ""http://json.schemastore.org/launchsettings.json"",
+  ""iisSettings"": {
+    ""windowsAuthentication"": false,
+    ""anonymousAuthentication"": true,
+    ""iisExpress"": {
+      ""applicationUrl"": ""http://localhost:5000"",
+      ""sslPort"": 44300
+    }
+  },
+  ""profiles"": {
+    """ + _config.ProjectName + @".WebSite"": {
+      ""commandName"": ""Project"",
+      ""dotnetRunMessages"": true,
+      ""launchBrowser"": true,
+      ""applicationUrl"": ""https://localhost:7000;http://localhost:5000"",
+      ""environmentVariables"": {
+        ""ASPNETCORE_ENVIRONMENT"": ""Development""
+      }
+    },
+    ""IIS Express"": {
+      ""commandName"": ""IISExpress"",
+      ""launchBrowser"": true,
+      ""environmentVariables"": {
+        ""ASPNETCORE_ENVIRONMENT"": ""Development""
+      }
+    }
+  }
+}";
+        
+        File.WriteAllText(Path.Combine(propertiesPath, "launchSettings.json"), launchSettings);
+        Console.WriteLine("✓ launchSettings.json created");
+    }
+
+    private void GenerateExtensions()
+    {
+        var extensionsPath = Path.Combine(_websitePath, "Extensions");
+        Directory.CreateDirectory(extensionsPath);
+
+        File.WriteAllText(
+            Path.Combine(extensionsPath, "PersianDateExtensions.cs"),
+            _templates.GetPersianDateExtensionsTemplate()
+        );
+    }
+
+    private void CopyWwwrootFiles()
+    {
+        try
+        {
+            // Resolve the generator's wwwroot folder in a way that works
+            // for console, WinForms UI, and test hosts.
+            var sourceWwwroot = FindGeneratorWwwroot();
+            var targetWwwroot = Path.Combine(_websitePath, "wwwroot");
+
+            if (sourceWwwroot is null || !Directory.Exists(sourceWwwroot))
+            {
+                Console.WriteLine("⚠ Warning: Source wwwroot could not be located for static assets (bootstrap, jquery, fonts).");
+                return;
+            }
+
+            Console.WriteLine($"Copying wwwroot files from template: {sourceWwwroot} ...");
+            CopyDirectory(sourceWwwroot, targetWwwroot, true);
+            var layoutCandidates = new[]
+            {
+                "_AdminLayout.cshtml",
+                "_SellerLayout.cshtml",
+                "_UserLayout.cshtml",
+                "_TeacherLayout.cshtml",
+                "_TeacherLayout.raw.cshtml",
+                "_AlertModal.cshtml"
+            };
+
+            foreach (var layoutFile in layoutCandidates)
+            {
+                var strayPath = Path.Combine(targetWwwroot, layoutFile);
+                if (File.Exists(strayPath))
+                {
+                    try
+                    {
+                        File.Delete(strayPath);
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"⚠ Warning: Could not remove stray layout file {strayPath} from wwwroot.");
+                    }
+                }
+            }
+
+            Console.WriteLine("✓ Wwwroot files copied successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠ Warning: Failed to copy wwwroot files: {ex.Message}");
+        }
+    }
+    
+    private void CopyDirectory(string sourceDir, string targetDir, bool recursive)
+    {
+        var dir = new DirectoryInfo(sourceDir);
+        
+        if (!dir.Exists)
+        {
+            return;
+        }
+        
+        DirectoryInfo[] dirs = dir.GetDirectories();
+        Directory.CreateDirectory(targetDir);
+        
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string targetFilePath = Path.Combine(targetDir, file.Name);
+            try
+            {
+                file.CopyTo(targetFilePath, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠ Warning: Failed to copy {file.Name}: {ex.Message}");
+            }
+        }
+        
+        if (recursive)
+        {
+            foreach (DirectoryInfo subDir in dirs)
+            {
+                string newDestinationDir = Path.Combine(targetDir, subDir.Name);
+                CopyDirectory(subDir.FullName, newDestinationDir, true);
+            }
+        }
+    }
+    
+    private void GenerateViewComponents()
+    {
+        var viewComponentsPath = Path.Combine(_websitePath, "ViewComponents");
+        Directory.CreateDirectory(viewComponentsPath);
+        
+        // Generate Admin Sidebar ViewComponent
+        File.WriteAllText(
+            Path.Combine(viewComponentsPath, "AdminSidebarViewComponent.cs"),
+            _templates.GetAdminSidebarViewComponentTemplate()
+        );
+        
+        // Generate Seller Sidebar ViewComponent (if enabled)
+        if (_config.Options.Features.SellerPanel)
+        {
+            File.WriteAllText(
+                Path.Combine(viewComponentsPath, "SellerSidebarViewComponent.cs"),
+                _templates.GetSellerSidebarViewComponentTemplate()
+            );
+        }
+        
+        // Generate User Sidebar ViewComponent
+        File.WriteAllText(
+            Path.Combine(viewComponentsPath, "UserSidebarViewComponent.cs"),
+            _templates.GetUserSidebarViewComponentTemplate()
+        );
+        
+        // Copy ViewComponent views into Views/Shared/Components
+        var targetComponentsPath = Path.Combine(_websitePath, "Views", "Shared", "Components");
+        Directory.CreateDirectory(targetComponentsPath);
+
+        // 1) Preferred: copy directly from generator's template Components folder
+        var templateComponentsRoot = FindComponentsTemplateRoot();
+        if (templateComponentsRoot is not null && Directory.Exists(templateComponentsRoot))
+        {
+            CopyDirectory(templateComponentsRoot, targetComponentsPath, recursive: true);
+        }
+        else
+        {
+            // 2) Fallback: copy from generated wwwroot/Components if it exists
+            var sourceComponentsPath = Path.Combine(_websitePath, "wwwroot", "Components");
+            if (Directory.Exists(sourceComponentsPath))
+            {
+                CopyDirectory(sourceComponentsPath, targetComponentsPath, recursive: true);
+
+                // Clean up the wwwroot/Components directory after copying
+                try
+                {
+                    Directory.Delete(sourceComponentsPath, true);
+                }
+                catch
+                {
+                    // Ignore if we can't delete
+                }
+            }
+            else
+            {
+                Console.WriteLine("⚠ Warning: Could not locate sidebar component views in either template or generated wwwroot.");
+            }
+        }
+
+        // Ensure component views use fully-qualified model types so they
+        // compile without relying on custom _ViewImports changes.
+        FixComponentViewModelNamespaces(targetComponentsPath);
+        
+        var oldComponentsDir = Path.Combine(_websitePath, "wwwroot", "Components");
+        if (Directory.Exists(oldComponentsDir))
+        {
+            try
+            {
+                Directory.Delete(oldComponentsDir, true);
+            }
+            catch
+            {
+                Console.WriteLine($"⚠ Warning: Could not delete temporary Components directory at {oldComponentsDir}.");
+            }
+        }
+
+        Console.WriteLine("✓ ViewComponents generated successfully");
+    }
+    
     private void GenerateMainSiteViews()
     {
         var viewsPath = Path.Combine(_websitePath, "Views");

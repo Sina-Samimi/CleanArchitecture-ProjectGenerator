@@ -1,0 +1,240 @@
+@using System
+@using System.Linq
+@using Arsis.Domain.Enums
+@using Arsis.SharedKernel.Extensions
+@model EndPoint.WebSite.Areas.Admin.Models.Tests.TestAttemptDetailViewModel
+
+@{
+    ViewData["Title"] ??= "جزئیات تلاش آزمون";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var attempt = Model.Attempt;
+
+    string FormatDate(DateTimeOffset? value) => value?.ToPersianDateTimeString() ?? "-";
+
+    var durationDisplay = attempt.CompletedAt.HasValue
+        ? TimeSpan.FromMinutes(Math.Max(0, (int)Math.Round((attempt.CompletedAt.Value - attempt.StartedAt).TotalMinutes)))
+        : (TimeSpan?)null;
+
+    string FormatDuration(TimeSpan? duration)
+    {
+        if (duration is null || duration.Value.TotalMinutes <= 0)
+        {
+            return "-";
+        }
+
+        var value = duration.Value;
+        if (value.TotalHours >= 1)
+        {
+            return $"{(int)value.TotalHours} ساعت و {value.Minutes} دقیقه";
+        }
+
+        return $"{value.Minutes} دقیقه";
+    }
+
+    var answers = attempt.Answers
+        .OrderBy(answer => answer.AnsweredAt)
+        .ToList();
+
+    var results = attempt.Results
+        .OrderBy(result => result.Rank ?? int.MaxValue)
+        .ThenByDescending(result => result.Score)
+        .ToList();
+}
+
+@section Head
+{
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/test-attempts.css" asp-append-version="true" />
+}
+
+@section Breadcrumb
+{
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">مدیریت</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Tests" asp-action="Index">مدیریت آزمون‌ها</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Tests" asp-action="Attempts">سوابق آزمون‌ها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+<div class="tests-attempts" data-attempt-details>
+    @await Html.PartialAsync("_StatusMessage")
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-transparent pb-0">
+            <h5 class="card-title mb-1">اطلاعات کلی تلاش</h5>
+            <p class="text-muted mb-0">@attempt.TestTitle (@Model.TestTypeTitle)</p>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">وضعیت</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary">@Model.StatusTitle</span>
+                            @if (attempt.IsPassed.HasValue)
+                            {
+                                <span class="badge @(attempt.IsPassed.Value ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">@(attempt.IsPassed.Value ? "قبول" : "رد")</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">کاربر</div>
+                        <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(Model.UserFullName) ? Model.UserFullName : "نامشخص")</div>
+                        <div class="text-muted small">@Model.UserEmail</div>
+                        <div class="text-muted small">@Model.UserPhoneNumber</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">زمان‌بندی</div>
+                        <div class="small">شروع: @FormatDate(attempt.StartedAt)</div>
+                        <div class="small">اتمام: @FormatDate(attempt.CompletedAt)</div>
+                        <div class="small">مدت زمان: @FormatDuration(durationDisplay)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">نمره</div>
+                        <div class="fw-semibold">
+                            @(attempt.ScorePercentage.HasValue ? $"{attempt.ScorePercentage:0.#}%" : "-")
+                        </div>
+                        <div class="text-muted small">
+                            @(attempt.TotalScore.HasValue && attempt.MaxScore.HasValue
+                                ? $"{attempt.TotalScore:0.##} از {attempt.MaxScore:0.##}"
+                                : "نمره خام ثبت نشده")
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">شماره تلاش</div>
+                        <div class="fw-semibold">@attempt.AttemptNumber</div>
+                        <div class="text-muted small">شناسه تلاش: @attempt.Id</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">زمان انقضا</div>
+                        <div class="fw-semibold">@FormatDate(attempt.ExpiresAt)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (results.Any())
+    {
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-transparent pb-0">
+                <h5 class="card-title mb-1">نتایج تحلیل</h5>
+                <p class="text-muted mb-0">خلاصه خروجی‌های تولید شده برای این تلاش</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var result in results)
+                    {
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-semibold">@result.Title</div>
+                                        <div class="text-muted small">@result.ResultType</div>
+                                    </div>
+                                    <span class="badge bg-info-subtle text-info">@result.Score.ToString("0.##")</span>
+                                </div>
+                                @if (result.Rank.HasValue)
+                                {
+                                    <div class="text-muted small mb-2">رتبه: @result.Rank</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(result.Description))
+                                {
+                                    <p class="text-muted small mb-0">@result.Description</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent pb-0">
+            <h5 class="card-title mb-1">پاسخ‌های کاربر</h5>
+            <p class="text-muted mb-0">لیست کامل سوالات و پاسخ‌های ثبت‌شده در این تلاش</p>
+        </div>
+        <div class="card-body p-0">
+            @if (answers.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">سوال</th>
+                                <th scope="col">پاسخ</th>
+                                <th scope="col">نمره</th>
+                                <th scope="col">زمان ثبت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var index = 0; index < answers.Count; index++)
+                            {
+                                var answer = answers[index];
+                                <tr>
+                                    <td>@(index + 1)</td>
+                                    <td>
+                                        <div class="fw-semibold">@answer.QuestionText</div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(answer.TextAnswer))
+                                        {
+                                            <span>@answer.TextAnswer</span>
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(answer.SelectedOptionText))
+                                        {
+                                            <span>@answer.SelectedOptionText</span>
+                                        }
+                                        else if (answer.LikertValue.HasValue)
+                                        {
+                                            <span>امتیاز لیکرت: @answer.LikertValue</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">بدون پاسخ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (answer.Score.HasValue)
+                                        {
+                                            <span>@answer.Score.Value.ToString("0.##")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>@FormatDate(answer.AnsweredAt)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-list-check display-5 d-block mb-3"></i>
+                    <h5 class="fw-semibold">پاسخی برای این تلاش ثبت نشده است</h5>
+                </div>
+            }
+        </div>
+        <div class="card-footer bg-body text-end">
+            <a asp-area="Admin" asp-controller="Tests" asp-action="Attempts" class="btn btn-outline-secondary">
+                بازگشت به سوابق
+            </a>
+        </div>
+    </div>
+</div>
