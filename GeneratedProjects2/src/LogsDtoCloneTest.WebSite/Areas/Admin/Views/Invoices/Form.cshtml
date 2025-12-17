@@ -1,0 +1,357 @@
+﻿@model InvoiceFormViewModel
+@{
+    var isEdit = ViewData["IsEdit"] as bool? ?? false;
+    var formAction = isEdit ? "Edit" : "Create";
+    ViewData["Title"] ??= isEdit ? "ویرایش فاکتور" : "ثبت فاکتور جدید";
+    ViewData["Subtitle"] ??= isEdit ? "به‌روزرسانی اطلاعات فاکتور" : "ایجاد فاکتور جدید برای سفارش یا خدمات";
+
+    var items = Model.Items ?? new List<InvoiceItemFormViewModel>();
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/invoices.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Invoices" asp-action="Index">فاکتورها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="invoice-form" data-invoice-form>
+    <div class="invoice-form__header">
+        <div>
+            <h1 class="invoice-form__title">@ViewData["Title"]</h1>
+            <p class="invoice-form__subtitle">@ViewData["Subtitle"]</p>
+        </div>
+        <div class="invoice-form__actions">
+            <a asp-area="Admin" asp-controller="Invoices" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right"></i>
+                بازگشت
+            </a>
+        </div>
+    </div>
+
+    <form asp-area="Admin" asp-controller="Invoices" asp-action="@formAction" method="post" novalidate>
+        @Html.AntiForgeryToken()
+        @if (Model.Id.HasValue)
+        {
+            @Html.HiddenFor(m => m.Id)
+        }
+        
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="InvoiceNumber" class="form-control" placeholder="شماره فاکتور" />
+                    <label asp-for="InvoiceNumber"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="InvoiceNumber"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="Title" class="form-control" placeholder="عنوان" />
+                    <label asp-for="Title"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="Title"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="Currency" class="form-control" placeholder="واحد پول" />
+                    <label asp-for="Currency"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="Currency"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="UserId"></label>
+                <select class="form-select"
+                        asp-for="UserId"
+                        asp-items="Model.UserOptions"
+                        data-control="select2"
+                        data-placeholder="انتخاب کاربر سیستم"
+                        data-allow-clear="true"
+                        data-dropdown-parent="[data-invoice-form]"
+                        data-invoice-user-select>
+                    <option value="">انتخاب کاربر سیستم</option>
+                </select>
+                <span class="text-danger" asp-validation-for="UserId"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="ExternalReference" class="form-control" placeholder="شماره ارجاع" />
+                    <label asp-for="ExternalReference"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="ExternalReference"></span>
+            </div>
+            <div class="col-md-4" data-invoice-date>
+                <label class="form-label" asp-for="IssueDatePersian"></label>
+                <div class="jalali-picker" data-jalali-picker>
+                    <div class="jalali-picker__controls">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="انتخاب تاریخ"
+                               value="@(Model.IssueDatePersian?.Replace("-", "/") ?? string.Empty)"
+                               data-jalali-input
+                               data-jdp
+                               data-jdp-only-date
+                               data-jdp-init-date="@(Model.IssueDatePersian?.Replace("-", "/") ?? string.Empty)"
+                               autocomplete="off"
+                               dir="ltr" />
+                    </div>
+                    <input asp-for="IssueDatePersian" type="hidden" data-jalali-target />
+                </div>
+                <span class="text-danger" asp-validation-for="IssueDatePersian"></span>
+            </div>
+            <div class="col-md-4" data-invoice-date data-optional="true">
+                <label class="form-label" asp-for="DueDatePersian"></label>
+                <div class="jalali-picker" data-jalali-picker>
+                    <div class="jalali-picker__controls">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="انتخاب تاریخ"
+                               value="@(Model.DueDatePersian?.Replace("-", "/") ?? string.Empty)"
+                               data-jalali-input
+                               data-jdp
+                               data-jdp-only-date
+                               data-jdp-init-date="@(Model.DueDatePersian?.Replace("-", "/") ?? string.Empty)"
+                               autocomplete="off"
+                               dir="ltr" />
+                    </div>
+                    <input asp-for="DueDatePersian" type="hidden" data-jalali-target />
+                </div>
+                <span class="text-danger" asp-validation-for="DueDatePersian"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="TaxRatePercent"
+                           class="form-control"
+                           type="number"
+                           min="0"
+                           data-invoice-tax-percent />
+                    <label asp-for="TaxRatePercent"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="TaxRatePercent"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input class="form-control"
+                           type="text"
+                           readonly
+                           value="@(Model.TaxAmount.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))"
+                           data-invoice-tax-amount-display />
+                    <label>مبلغ مالیات (محاسبه‌شده)</label>
+                </div>
+                <input asp-for="TaxAmount" type="hidden" data-invoice-tax-amount />
+                <span class="text-danger" asp-validation-for="TaxAmount"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <input asp-for="AdjustmentAmount" class="form-control" type="number" min="0" />
+                    <label asp-for="AdjustmentAmount"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="AdjustmentAmount"></span>
+            </div>
+            <div class="col-12">
+                <div class="form-floating">
+                    <textarea asp-for="Description" class="form-control" style="min-height: 120px" placeholder="توضیحات"></textarea>
+                    <label asp-for="Description"></label>
+                </div>
+                <span class="text-danger" asp-validation-for="Description"></span>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <div class="invoice-items" data-invoice-items>
+            <div class="invoice-items__header">
+                <h2 class="invoice-items__title">آیتم‌های فاکتور</h2>
+                <button type="button" class="btn btn-outline-primary" data-invoice-add-item>
+                    <i class="bi bi-plus-circle"></i>
+                    افزودن آیتم
+                </button>
+            </div>
+
+            <div class="invoice-items__list">
+                @for (var i = 0; i < items.Count; i++)
+                {
+                    <div class="invoice-item-card" data-invoice-item data-index="@i">
+                        @Html.HiddenFor(m => m.Items[i].Id)
+                        <div class="invoice-item-card__header">
+                            <h3 class="invoice-item-card__title">آیتم @(@i + 1)</h3>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-invoice-remove-item>
+                                <i class="bi bi-trash"></i>
+                                حذف آیتم
+                            </button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Items[i].Name" class="form-label"></label>
+                                <input asp-for="Items[i].Name" class="form-control" />
+                                <span class="text-danger" asp-validation-for="Items[i].Name"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Items[i].Description" class="form-label"></label>
+                                <input asp-for="Items[i].Description" class="form-control" />
+                                <span class="text-danger" asp-validation-for="Items[i].Description"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Items[i].ItemType" class="form-label"></label>
+                                <select asp-for="Items[i].ItemType" class="form-select" asp-items="Html.GetEnumSelectList<LogsDtoCloneTest.Domain.Enums.InvoiceItemType>()"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Items[i].Quantity" class="form-label"></label>
+                                <input asp-for="Items[i].Quantity" class="form-control" type="number" min="0" data-invoice-item-quantity />
+                                <span class="text-danger" asp-validation-for="Items[i].Quantity"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Items[i].UnitPrice" class="form-label"></label>
+                                <input asp-for="Items[i].UnitPrice" class="form-control" type="number" min="0" data-invoice-item-unitprice />
+                                <span class="text-danger" asp-validation-for="Items[i].UnitPrice"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Items[i].DiscountAmount" class="form-label"></label>
+                                <input asp-for="Items[i].DiscountAmount" class="form-control" type="number" min="0" data-invoice-item-discount />
+                                <span class="text-danger" asp-validation-for="Items[i].DiscountAmount"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Items[i].ReferenceId" class="form-label"></label>
+                                <input asp-for="Items[i].ReferenceId" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="invoice-attributes" data-invoice-attributes>
+                            <div class="invoice-attributes__header">
+                                <h4 class="invoice-attributes__title">ویژگی‌های سفارشی</h4>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-invoice-add-attribute>
+                                    <i class="bi bi-plus"></i>
+                                    افزودن ویژگی
+                                </button>
+                            </div>
+                            <div class="invoice-attributes__list">
+                                @for (var j = 0; j < (items[i].Attributes?.Count ?? 0); j++)
+                                {
+                                    <div class="invoice-attribute-row" data-invoice-attribute data-index="@j">
+                                        @Html.HiddenFor(m => m.Items[i].Attributes[j].Id)
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-5">
+                                                <label asp-for="Items[i].Attributes[j].Key" class="form-label"></label>
+                                                <input asp-for="Items[i].Attributes[j].Key" class="form-control" />
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label asp-for="Items[i].Attributes[j].Value" class="form-label"></label>
+                                                <input asp-for="Items[i].Attributes[j].Value" class="form-control" />
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-invoice-remove-attribute>
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="invoice-form__footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check"></i>
+                ذخیره فاکتور
+            </button>
+            <a asp-area="Admin" asp-controller="Invoices" asp-action="Index" class="btn btn-outline-secondary">انصراف</a>
+        </div>
+    </form>
+
+    <template id="invoice-item-template">
+        <div class="invoice-item-card" data-invoice-item data-index="__index__">
+            <input name="Items[__index__].Id" type="hidden" />
+            <div class="invoice-item-card__header">
+                <h3 class="invoice-item-card__title">آیتم __displayIndex__</h3>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-invoice-remove-item>
+                    <i class="bi bi-trash"></i>
+                    حذف آیتم
+                </button>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="Items___index___.Name">عنوان آیتم</label>
+                    <input class="form-control" name="Items[__index__].Name" id="Items___index___.Name" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Items___index___.Description">توضیحات</label>
+                    <input class="form-control" name="Items[__index__].Description" id="Items___index___.Description" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Items___index___.ItemType">نوع آیتم</label>
+                    <select class="form-select" name="Items[__index__].ItemType" id="Items___index___.ItemType">
+                        @foreach (var type in Enum.GetValues(typeof(LogsDtoCloneTest.Domain.Enums.InvoiceItemType)).Cast<LogsDtoCloneTest.Domain.Enums.InvoiceItemType>())
+                        {
+                            <option value="@((int)type)">@type.GetDisplayName()</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Items___index___.Quantity">تعداد</label>
+                    <input class="form-control" type="number" min="0" name="Items[__index__].Quantity" id="Items___index___.Quantity" value="1" data-invoice-item-quantity />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Items___index___.UnitPrice">قیمت واحد</label>
+                    <input class="form-control" type="number" min="0" name="Items[__index__].UnitPrice" id="Items___index___.UnitPrice" value="0" data-invoice-item-unitprice />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Items___index___.DiscountAmount">تخفیف</label>
+                    <input class="form-control" type="number" min="0" name="Items[__index__].DiscountAmount" id="Items___index___.DiscountAmount" data-invoice-item-discount />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Items___index___.ReferenceId">شناسه مرجع</label>
+                    <input class="form-control" name="Items[__index__].ReferenceId" id="Items___index___.ReferenceId" />
+                </div>
+            </div>
+            <div class="invoice-attributes" data-invoice-attributes>
+                <div class="invoice-attributes__header">
+                    <h4 class="invoice-attributes__title">ویژگی‌های سفارشی</h4>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-invoice-add-attribute>
+                        <i class="bi bi-plus"></i>
+                        افزودن ویژگی
+                    </button>
+                </div>
+                <div class="invoice-attributes__list">
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="invoice-attribute-template">
+        <div class="invoice-attribute-row" data-invoice-attribute data-index="__attrIndex__">
+            <input name="Items[__index__].Attributes[__attrIndex__].Id" type="hidden" />
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label" for="Items___index___.Attributes___attrIndex___Key">عنوان ویژگی</label>
+                    <input class="form-control" name="Items[__index__].Attributes[__attrIndex__].Key" id="Items___index___.Attributes___attrIndex___Key" />
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="Items___index___.Attributes___attrIndex___Value">مقدار</label>
+                    <input class="form-control" name="Items[__index__].Attributes[__attrIndex__].Value" id="Items___index___.Attributes___attrIndex___Value" />
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-invoice-remove-attribute>
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/invoices.js" asp-append-version="true"></script>
+}

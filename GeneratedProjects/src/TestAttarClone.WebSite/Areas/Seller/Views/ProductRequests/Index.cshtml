@@ -1,0 +1,238 @@
+﻿@using System.Globalization
+@using TestAttarClone.Domain.Enums
+@using TestAttarClone.SharedKernel.Extensions
+@using TestAttarClone.WebSite.Areas.Seller.Models
+@model SellerProductRequestListViewModel
+@{
+    ViewData["Sidebar:ActiveTab"] = "product-requests";
+    ViewData["Title"] = "درخواست‌های محصول";
+    ViewData["Subtitle"] = "مدیریت درخواست‌های محصول من";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string StatusLabel(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "در انتظار بررسی",
+        ProductRequestStatus.Approved => "تایید شده",
+        ProductRequestStatus.Rejected => "رد شده",
+        _ => "نامشخص"
+    };
+    string StatusBadgeClass(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "badge bg-warning-subtle text-warning-emphasis",
+        ProductRequestStatus.Approved => "badge bg-success-subtle text-success-emphasis",
+        ProductRequestStatus.Rejected => "badge bg-danger-subtle text-danger-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+    string TypeLabel(ProductType type) => type switch
+    {
+        ProductType.Physical => "فیزیکی",
+        ProductType.Digital => "دانلودی",
+        _ => "نامشخص"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/seller/product-index.css" asp-append-version="true" />
+}
+
+<div class="row g-4" data-seller-product-requests>
+    <div class="col-12">
+        <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-center justify-content-between">
+            <div>
+                <h1 class="h3 mb-1">درخواست‌های محصول</h1>
+                <p class="text-muted mb-0">در این بخش وضعیت درخواست‌های محصول خود را مشاهده می‌کنید.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" asp-area="Seller" asp-controller="Products" asp-action="Create">
+                    <i class="bi bi-plus-lg"></i>
+                    درخواست محصول جدید
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="col-12">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" asp-action="Index" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">وضعیت</label>
+                        <select name="status" class="form-select" asp-items="@(new SelectList(new[] {
+                            new SelectListItem { Text = "همه", Value = "" },
+                            new SelectListItem { Text = "در انتظار بررسی", Value = "1" },
+                            new SelectListItem { Text = "تایید شده", Value = "2" },
+                            new SelectListItem { Text = "رد شده", Value = "3" }
+                        }, "Value", "Text", ((int?)Model.SelectedStatus)?.ToString()))">
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-funnel"></i>
+                            فیلتر
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            پاک کردن
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Requests.Any())
+    {
+        <div class="col-12">
+            <div class="alert alert-info-subtle border-0 text-center py-5" role="alert">
+                <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
+                <h2 class="h5 mb-2">هنوز درخواست محصولی ثبت نشده است.</h2>
+                <p class="mb-3">می‌توانید از طریق دکمه بالا درخواست محصول جدید ثبت کنید.</p>
+                <a class="btn btn-primary" asp-area="Seller" asp-controller="Products" asp-action="Create">
+                    <i class="bi bi-plus-lg"></i>
+                    درخواست محصول جدید
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">نام محصول</th>
+                                    <th scope="col">نوع</th>
+                                    <th scope="col">قیمت</th>
+                                    <th scope="col">دسته‌بندی</th>
+                                    <th scope="col">وضعیت</th>
+                                    <th scope="col">تاریخ ثبت</th>
+                                    <th scope="col" class="text-end">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var request in Model.Requests)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @if (!string.IsNullOrWhiteSpace(request.FeaturedImagePath))
+                                                {
+                                                    <img src="@request.FeaturedImagePath" alt="@request.Name" class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                                }
+                                                <div>
+                                                    <div class="fw-semibold">@request.Name</div>
+                                                    @if (!string.IsNullOrWhiteSpace(request.Summary))
+                                                    {
+                                                        <small class="text-muted">@(request.Summary.Length > 50 ? request.Summary.Substring(0, 50) + "..." : request.Summary)</small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info-emphasis">@TypeLabel(request.Type)</span>
+                                            @if (request.IsCustomOrder)
+                                            {
+                                                <br />
+                                                <small class="text-muted">سفارشی</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (request.IsCustomOrder)
+                                            {
+                                                <span class="text-muted">سفارشی</span>
+                                            }
+                                            else if (request.Price.HasValue)
+                                            {
+                                                <span>@request.Price.Value.ToString("N0") تومان</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>@request.CategoryName</td>
+                                        <td>
+                                            <span class="@StatusBadgeClass(request.Status)">@StatusLabel(request.Status)</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <i class="bi bi-calendar-event me-1"></i>
+                                                <span>@FormatDateTime(request.CreatedAt)</span>
+                                            </div>
+                                            @if (request.ReviewedAt.HasValue)
+                                            {
+                                                <small class="text-muted">
+                                                    بررسی: @FormatDateTime(request.ReviewedAt.Value)
+                                                </small>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                                جزئیات
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.TotalCount > Model.PageSize)
+                    {
+                        <nav aria-label="صفحه‌بندی درخواست‌ها" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                @{
+                                    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                                    var currentPage = Model.PageNumber;
+                                }
+                                @if (currentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-status="@Model.SelectedStatus">قبلی</a>
+                                    </li>
+                                }
+                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-status="@Model.SelectedStatus">@i</a>
+                                    </li>
+                                }
+                                @if (currentPage < totalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-status="@Model.SelectedStatus">بعدی</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

@@ -1,0 +1,27 @@
+@model IReadOnlyCollection<Attar.Application.DTOs.Navigation.NavigationMenuItemDto>
+@using System.Linq
+
+@if (Model is not null && Model.Any())
+{
+    @foreach (var item in Model.Where(i => i.ParentId == null).OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+    {
+        <a href="@item.Url" class="bottom-nav-item" @(item.OpenInNewTab ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+            {
+                <span class="bottom-nav-icon bottom-nav-icon--image">
+                    <img src="@item.ImageUrl" alt="@item.Title" />
+                </span>
+            }
+            else if (!string.IsNullOrWhiteSpace(item.Icon))
+            {
+                <i class="bottom-nav-icon">@Html.Raw(item.Icon)</i>
+            }
+            else
+            {
+                <i class="bottom-nav-icon"></i>
+            }
+            <span class="bottom-nav-label">@item.Title</span>
+        </a>
+    }
+}
+

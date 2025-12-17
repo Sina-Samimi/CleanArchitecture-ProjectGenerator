@@ -1,0 +1,330 @@
+﻿:root {
+    --app-user-primary: #10b981;
+    --app-user-primary-strong: #059669;
+    --app-user-secondary: #14b8a6;
+    --app-user-accent: rgba(16, 185, 129, 0.12);
+    --app-user-gradient: linear-gradient(135deg, #10b981, #14b8a6);
+}
+
+body.app-body--user {
+    background:
+        radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 55%),
+        radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.15), transparent 60%),
+        var(--app-body-bg);
+}
+
+.app-body--user .app-aside {
+    background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%);
+    border-inline-end-color: rgba(16, 185, 129, 0.12);
+}
+
+.app-body--user .app-brand__logo {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: var(--app-user-primary-strong);
+    overflow: hidden;
+}
+
+.app-body--user .app-brand__logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.25rem;
+}
+
+.app-body--user .app-user--profile {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(20, 184, 166, 0.06));
+}
+
+.app-body--user .app-user__avatar .avatar {
+    box-shadow: 0 16px 35px rgba(16, 185, 129, 0.25);
+}
+
+.app-body--user .app-user__meta i {
+    color: var(--app-user-primary);
+}
+
+.app-body--user .app-progress__value {
+    background: var(--app-user-gradient);
+}
+
+.app-body--user .app-menu__link:hover,
+.app-body--user .app-menu__link:focus {
+    color: var(--app-user-primary);
+    background: var(--app-user-accent);
+}
+
+.app-body--user .app-menu__link:hover::before,
+.app-body--user .app-menu__link.is-active::before {
+    background: var(--app-user-gradient);
+}
+
+.app-body--user .app-menu__link.is-active {
+    color: var(--app-user-primary);
+    background: rgba(16, 185, 129, 0.16);
+    box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.15);
+}
+
+.app-body--user .app-quick-link:hover,
+.app-body--user .app-quick-link:focus {
+    background: var(--app-user-accent);
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .app-quick-link__icon {
+    background: var(--app-user-accent);
+}
+
+.app-body--user .avatar.text-bg-primary {
+    background: var(--app-user-accent) !important;
+    color: var(--app-user-primary-strong) !important;
+}
+
+.app-body--user .btn-primary {
+    background: var(--app-user-gradient);
+    border: none;
+    box-shadow: 0 18px 36px rgba(16, 185, 129, 0.3);
+}
+
+.app-body--user .btn-primary:hover,
+.app-body--user .btn-primary:focus {
+    background: linear-gradient(135deg, #059669, #0d9488);
+    box-shadow: 0 22px 44px rgba(5, 150, 105, 0.4);
+}
+
+.app-body--user .btn-outline-primary {
+    border-color: var(--app-user-primary);
+    color: var(--app-user-primary);
+}
+
+.app-body--user .btn-outline-primary:hover,
+.app-body--user .btn-outline-primary:focus {
+    background: var(--app-user-primary);
+    border-color: var(--app-user-primary);
+    color: #ffffff;
+}
+
+.app-body--user .notification-dot {
+    background: #10b981;
+}
+
+.app-body--user .app-header {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+}
+
+.app-body--user .app-greeting__title {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .profile-hero__eyebrow {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .profile-hero__meta-item i {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .profile-stat__note {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .profile-progress__bar .progress-bar {
+    background: var(--app-user-primary);
+}
+
+.app-body--user .profile-tips i {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .profile-support i {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .metric-card--primary .metric-card__icon {
+    background: var(--app-user-gradient);
+}
+
+.app-body--user .badge-solid--primary {
+    background: var(--app-user-primary);
+}
+
+.app-body--user .app-alert--info {
+    --app-alert-ring: #10b981;
+    --app-alert-confirm-bg: #059669;
+    --app-alert-confirm-hover: #047857;
+}
+
+.app-body--user a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link) {
+    color: var(--app-user-primary);
+}
+
+.app-body--user a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link):hover,
+.app-body--user a:not(.btn):not(.dropdown-item):not(.nav-link):not(.app-menu__link):focus {
+    color: var(--app-user-primary-strong);
+}
+
+.app-body--user .form-control:focus,
+.app-body--user .form-select:focus {
+    border-color: var(--app-user-primary);
+    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+}
+
+.app-body--user .text-primary {
+    color: var(--app-user-primary) !important;
+}
+
+.app-body--user .bg-primary {
+    background-color: var(--app-user-primary) !important;
+}
+
+.app-body--user .border-primary {
+    border-color: var(--app-user-primary) !important;
+}
+
+/* Avatar size controls for User Panel */
+.app-body--user .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--app-user-primary-strong);
+    background: var(--app-user-accent);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.app-body--user .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.app-body--user .avatar-lg {
+    width: 52px;
+    height: 52px;
+    border-radius: 1.1rem;
+    font-size: 1.2rem;
+}
+
+.app-body--user .avatar-md {
+    width: 44px;
+    height: 44px;
+    border-radius: 1rem;
+    font-size: 1rem;
+}
+
+.app-body--user .avatar-sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.9rem;
+    font-size: 0.85rem;
+}
+
+/* User profile specific avatar */
+.app-body--user .app-user__avatar .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 1.5rem;
+    font-size: 1.5rem;
+}
+
+/* Profile hero avatar */
+.app-body--user .profile-hero__avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 1.75rem;
+    font-size: 1.75rem;
+}
+
+.app-body--user .profile-hero__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Profile avatar upload preview */
+.app-body--user .profile-avatar-upload__preview {
+    max-width: 200px;
+    aspect-ratio: 1 / 1;
+}
+
+.app-body--user .profile-avatar-upload__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Invoice detail mobile styles */
+@media (max-width: 979px) {
+    .invoice-detail .d-flex.align-items-center.gap-2.w-100.w-lg-auto {
+        display: block !important;
+    }
+    
+    .invoice-detail .d-flex.align-items-center.gap-2.w-100.w-lg-auto > * {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .invoice-detail .d-flex.align-items-center.gap-2.w-100.w-lg-auto > *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Mobile header spacing fix */
+@media (max-width: 991.98px) {
+    .app-body--user .app-header__start {
+        flex: auto;
+        min-width: 0;
+        gap: 0;
+        order: 1;
+        display: flex !important;
+    }
+
+    .app-body--user .app-header__start #appAsideToggle {
+        display: inline-flex !important;
+    }
+
+    .app-body--user .app-header__inner {
+        flex-direction: row-reverse;
+    }
+
+    .app-body--user .app-header__end {
+        order: -1;
+        margin-inline-end: auto;
+    }
+
+    .app-body--user .app-header__end .dropdown-menu {
+        left: 0 !important;
+        right: auto !important;
+    }
+}
+
+/* Remove border from dropdown menus in sidebar */
+.app-body--user .app-menu__group,
+.app-body--user .app-menu__group.is-open,
+.app-body--user .app-menu__group:hover,
+.app-body--user .app-menu__group:focus,
+.app-body--user .app-submenu,
+.app-body--user .app-submenu:hover,
+.app-body--user .app-submenu:focus,
+.app-body--user .app-submenu__link,
+.app-body--user .app-submenu__link:hover,
+.app-body--user .app-submenu__link:focus,
+.app-body--user .app-submenu__link.is-active,
+.app-body--user .app-menu__link--parent,
+.app-body--user .app-menu__link.app-menu__link--parent,
+.app-body--user .app-menu__link.app-menu__link--parent:hover,
+.app-body--user .app-menu__link.app-menu__link--parent:focus,
+.app-body--user .app-menu__link.app-menu__link--parent.is-active {
+    border: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}

@@ -1,0 +1,406 @@
+@using System.Globalization
+@model SellerDashboardViewModel
+@{
+    ViewData["Title"] ??= "داشبورد";
+    ViewData["Subtitle"] ??= "خلاصه گزارش عملکرد شما";
+    ViewData["Sidebar:ActiveTab"] = "dashboard";
+
+    var culture = new CultureInfo("fa-IR");
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatNumber(int value) => value.ToString("N0", culture);
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="seller-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">داشبورد</h1>
+            <p class="text-muted mb-0">خلاصه گزارش عملکرد شما</p>
+        </div>
+        <div class="text-muted small">
+            آخرین به‌روزرسانی: @Model.GeneratedAt.ToPersianDateTimeString()
+        </div>
+    </div>
+
+    
+
+    <div class="row g-4 mb-4">
+        <!-- آمار محصولات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-primary-subtle text-primary-emphasis">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalProducts)</div>
+                            <div class="seller-stat-card__label">کل محصولات</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> منتشر شده: @FormatNumber(Model.PublishedProducts)
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-warning">
+                                <i class="bi bi-clock"></i> در انتظار: @FormatNumber(Model.PendingProducts)
+                            </span>
+                        </div>
+                        @if (Model.DraftProducts > 0)
+                        {
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="text-muted">
+                                    <i class="bi bi-file-earmark"></i> پیش‌نویس: @FormatNumber(Model.DraftProducts)
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار سفارشات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-success-subtle text-success-emphasis">
+                            <i class="bi bi-cart-check"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalOrders)</div>
+                            <div class="seller-stat-card__label">کل سفارشات</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        @if (Model.NewOrdersCount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-bell"></i> جدید: @FormatNumber(Model.NewOrdersCount)
+                                </span>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> پرداخت شده: @FormatNumber(Model.PaidOrders)
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-warning">
+                                <i class="bi bi-hourglass-split"></i> در انتظار: @FormatNumber(Model.PendingOrders)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- درآمد کل -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-info-subtle text-info-emphasis">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatMoney(Model.TotalRevenue)</div>
+                            <div class="seller-stat-card__label">درآمد کل</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <p class="text-muted small mb-0">
+                            از سفارشات پرداخت شده
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار نظرات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalComments)</div>
+                            <div class="seller-stat-card__label">کل نظرات</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        @if (Model.PendingReplyComments > 0)
+                        {
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-exclamation-circle"></i> نیاز به پاسخ: @FormatNumber(Model.PendingReplyComments)
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">
+                                همه نظرات پاسخ داده شده
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بخش کارتهای سریع برای نظرات -->
+    <div class="row g-4 mb-4">
+        <!-- نظرات جدید -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <a href="@Url.Action("AllComments", "ProductComments", new { area = "Seller" })" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 quick-action-card">
+                    <div class="card-body text-center">
+                        <div class="quick-card-icon bg-info-subtle text-info-emphasis mb-3">
+                            <i class="bi bi-chat-left-dots"></i>
+                        </div>
+                        <h3 class="h2 mb-2 text-dark">@FormatNumber(Model.NewProductCommentsCount)</h3>
+                        <p class="text-muted mb-0">نظرات جدید</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- نظرات تایید شده -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <a href="@Url.Action("AllComments", "ProductComments", new { area = "Seller" })" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 quick-action-card">
+                    <div class="card-body text-center">
+                        <div class="quick-card-icon bg-success-subtle text-success-emphasis mb-3">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <h3 class="h2 mb-2 text-dark">@FormatNumber(Model.ApprovedProductCommentsCount)</h3>
+                        <p class="text-muted mb-0">نظرات تایید شده</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- درخواست‌های سفارشی -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clipboard-check text-primary"></i>
+                        درخواست‌های سفارشی
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <div class="h4 mb-0">@FormatNumber(Model.TotalCustomRequests)</div>
+                            <small class="text-muted">کل درخواست‌ها</small>
+                        </div>
+                        @if (Model.PendingCustomRequests > 0)
+                        {
+                            <span class="badge bg-warning fs-6">
+                                @FormatNumber(Model.PendingCustomRequests) در انتظار
+                            </span>
+                        }
+                    </div>
+                    <a asp-area="Seller" asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-left ms-2"></i>
+                        مشاهده محصولات
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار پیگیری ارسال -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-truck text-success"></i>
+                        پیگیری ارسال
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">کل ارسال‌ها:</span>
+                            <strong>@FormatNumber(Model.TotalShipments)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-info">
+                                <i class="bi bi-hourglass-split"></i> در حال آماده‌سازی:
+                            </span>
+                            <strong>@FormatNumber(Model.PreparingShipments)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-primary">
+                                <i class="bi bi-truck"></i> ارسال شده:
+                            </span>
+                            <strong>@FormatNumber(Model.ShippedShipments)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> تحویل داده شده:
+                            </span>
+                            <strong>@FormatNumber(Model.DeliveredShipments)</strong>
+                        </div>
+                    </div>
+                    <a asp-area="Seller" asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-left ms-2"></i>
+                        مشاهده سفارشات
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- لینک‌های سریع -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning-charge text-warning"></i>
+                        دسترسی سریع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-area="Seller" asp-controller="Products" asp-action="Create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle ms-2"></i>
+                            افزودن محصول جدید
+                        </a>
+                        <a asp-area="Seller" asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">
+                            <i class="bi bi-box-seam ms-2"></i>
+                            مدیریت محصولات
+                        </a>
+                        <a asp-area="Seller" asp-controller="Orders" asp-action="Index" class="btn btn-outline-success">
+                            <i class="bi bi-cart-check ms-2"></i>
+                            مشاهده سفارشات
+                        </a>
+                        @if (Model.PendingReplyComments > 0)
+                        {
+                            <a asp-area="Seller" asp-controller="ProductComments" asp-action="Index" class="btn btn-outline-warning">
+                                <i class="bi bi-chat-dots ms-2"></i>
+                                پاسخ به نظرات (@FormatNumber(Model.PendingReplyComments))
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.LowStockProducts.Count > 0)
+    {
+        <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-3 mt-4 shadow-sm">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle fs-4"></i>
+                <div>
+                    <div class="fw-semibold">موجودی برخی محصولات رو به اتمام است.</div>
+                    <div class="text-muted small">برای جلوگیری از اتمام موجودی، مقدار آنها را به‌روزرسانی کنید.</div>
+                </div>
+            </div>
+            <div class="d-flex flex-column flex-md-row gap-2">
+                <a asp-area="Seller" asp-controller="Products" asp-action="Create" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle ms-1"></i>
+                    افزودن محصول جدید
+                </a>
+                <a asp-area="Seller" asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                    مدیریت محصولات
+                </a>
+            </div>
+            <div class="w-100">
+                <div class="mt-2">
+                    <ul class="list-unstyled mb-0 small">
+                        @foreach (var product in Model.LowStockProducts)
+                        {
+                            <li class="d-flex justify-content-between align-items-center py-1 border-top">
+                                <span class="text-dark">@product.Name</span>
+                                <span class="badge bg-danger-subtle text-danger">
+                                    موجودی: @FormatNumber(product.StockQuantity)
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Head {
+    <style>
+        .seller-dashboard {
+            padding: 1rem 0;
+        }
+
+        .seller-stat-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .seller-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .seller-stat-card__icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .seller-stat-card__value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .seller-stat-card__label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .seller-stat-card__details {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.875rem;
+        }
+
+        .quick-action-card {
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+            background-color: #f8f9fa;
+        }
+
+        .quick-card-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: auto;
+        }
+    </style>
+}
+

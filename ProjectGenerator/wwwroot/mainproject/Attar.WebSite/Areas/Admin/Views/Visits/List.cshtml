@@ -1,0 +1,549 @@
+@using Attar.SharedKernel.Extensions
+@model VisitListViewModel
+@{
+    ViewData["Title"] = "لیست بازدیدها";
+    ViewData["Subtitle"] = "نمایش و مدیریت لیست بازدیدهای سایت";
+    
+    string FormatDate(DateOnly value) => value.ToDateTime(TimeOnly.MinValue).ToPersianDateString();
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.FilterFromDate) || 
+                          !string.IsNullOrWhiteSpace(Model.FilterToDate) || 
+                          !string.IsNullOrWhiteSpace(Model.FilterIpAddress) ||
+                          !string.IsNullOrWhiteSpace(Model.FilterDeviceType) ||
+                          !string.IsNullOrWhiteSpace(Model.FilterBrowser) ||
+                          !string.IsNullOrWhiteSpace(Model.FilterOperatingSystem);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Visits" asp-action="Index">گزارشات بازدید</a></li>
+    <li class="breadcrumb-item active" aria-current="page">لیست بازدیدها</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<!-- Statistics Summary Section -->
+@if (Model.StatisticsSummary.DeviceTypeStats.Count > 0 || Model.StatisticsSummary.OperatingSystemStats.Count > 0)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-2">
+                    <h6 class="mb-0 small">
+                        <i class="bi bi-pie-chart me-1"></i>خلاصه گزارش بازدیدها
+                    </h6>
+                </div>
+                <div class="card-body py-3">
+                    <div class="row g-3">
+                        <!-- Device Type Chart -->
+                        @if (Model.StatisticsSummary.DeviceTypeStats.Count > 0)
+                        {
+                            <div class="col-md-6">
+                                <div class="text-center mb-2">
+                                    <small class="text-muted fw-semibold">نوع دستگاه</small>
+                                </div>
+                                <div style="height: 180px; position: relative;">
+                                    <canvas id="deviceTypeChart"></canvas>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Operating System Chart -->
+                        @if (Model.StatisticsSummary.OperatingSystemStats.Count > 0)
+                        {
+                            <div class="col-md-6">
+                                <div class="text-center mb-2">
+                                    <small class="text-muted fw-semibold">سیستم عامل</small>
+                                </div>
+                                <div style="height: 180px; position: relative;">
+                                    <canvas id="operatingSystemChart"></canvas>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h5 mb-1">لیست بازدیدها</h2>
+                    <p class="text-muted small mb-0">تمام بازدیدهای ثبت شده در سایت</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#visit-filter-modal">
+                        <i class="bi bi-funnel"></i>
+                        فیلترها
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-right-short"></i>
+                        بازگشت به خلاصه گزارش
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (hasActiveFilters)
+                {
+                    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>فیلترهای فعال:</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterFromDate))
+                            {
+                                <span class="badge bg-primary ms-2">از تاریخ: @Model.FilterFromDate</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterToDate))
+                            {
+                                <span class="badge bg-primary ms-2">تا تاریخ: @Model.FilterToDate</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterIpAddress))
+                            {
+                                <span class="badge bg-primary ms-2">IP: @Model.FilterIpAddress</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterDeviceType))
+                            {
+                                <span class="badge bg-primary ms-2">دستگاه: @Model.FilterDeviceType</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterBrowser))
+                            {
+                                <span class="badge bg-primary ms-2">مرورگر: @Model.FilterBrowser</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.FilterOperatingSystem))
+                            {
+                                <span class="badge bg-primary ms-2">سیستم عامل: @Model.FilterOperatingSystem</span>
+                            }
+                        </div>
+                        <a asp-action="List" asp-route-page="1" asp-route-pageSize="@Model.PageSize" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            حذف فیلترها
+                        </a>
+                    </div>
+                }
+
+                @if (Model.Visits.Count == 0)
+                {
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        هیچ بازدیدی یافت نشد.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 120px;">IP Address</th>
+                                    <th scope="col" style="width: 120px;">تاریخ بازدید</th>
+                                    <th scope="col" style="width: 100px;">دستگاه</th>
+                                    <th scope="col" style="width: 150px;">سیستم عامل</th>
+                                    <th scope="col" style="width: 120px;">مرورگر</th>
+                                    <th scope="col" style="width: 100px;">موتور</th>
+                                    <th scope="col">Referrer</th>
+                                    <th scope="col" style="width: 150px;">آخرین بروزرسانی</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var visit in Model.Visits)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code class="small">@visit.IpAddress</code>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@FormatDate(visit.VisitDate)</small>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(visit.DeviceType))
+                                            {
+                                                <span class="badge bg-info">@visit.DeviceType</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(visit.OperatingSystem))
+                                            {
+                                                <div>
+                                                    <strong>@visit.OperatingSystem</strong>
+                                                    @if (!string.IsNullOrWhiteSpace(visit.OsVersion))
+                                                    {
+                                                        <br />
+                                                        <small class="text-muted">@visit.OsVersion</small>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(visit.Browser))
+                                            {
+                                                <div>
+                                                    <strong>@visit.Browser</strong>
+                                                    @if (!string.IsNullOrWhiteSpace(visit.BrowserVersion))
+                                                    {
+                                                        <br />
+                                                        <small class="text-muted">@visit.BrowserVersion</small>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(visit.Engine))
+                                            {
+                                                <span class="badge bg-secondary">@visit.Engine</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(visit.Referrer))
+                                            {
+                                                <a href="@visit.Referrer" target="_blank" class="text-truncate d-inline-block" style="max-width: 200px;" title="@visit.Referrer">
+                                                    @visit.Referrer
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@FormatDateTime(visit.UpdateDate)</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (Model.TotalPages > 1)
+                    {
+                        var previousPage = Math.Max(1, Model.PageNumber - 1);
+                        var nextPage = Math.Min(Model.TotalPages, Model.PageNumber + 1);
+                        var startPage = Math.Max(1, Model.PageNumber - 2);
+                        var endPage = Math.Min(Model.TotalPages, Model.PageNumber + 2);
+
+                        <nav aria-label="صفحه‌بندی بازدیدها" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : string.Empty)">
+                                    <a class="page-link" 
+                                       asp-action="List" 
+                                       asp-route-page="@previousPage" 
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-fromDate="@Model.FilterFromDate"
+                                       asp-route-toDate="@Model.FilterToDate"
+                                       asp-route-ipAddress="@Model.FilterIpAddress"
+                                       asp-route-deviceType="@Model.FilterDeviceType"
+                                       asp-route-browser="@Model.FilterBrowser"
+                                       asp-route-operatingSystem="@Model.FilterOperatingSystem"
+                                       aria-label="قبلی">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+
+                                @for (var i = startPage; i <= endPage; i++)
+                                {
+                                    <li class="page-item @(i == Model.PageNumber ? "active" : string.Empty)">
+                                        <a class="page-link" 
+                                           asp-action="List" 
+                                           asp-route-page="@i" 
+                                           asp-route-pageSize="@Model.PageSize"
+                                           asp-route-fromDate="@Model.FilterFromDate"
+                                           asp-route-toDate="@Model.FilterToDate"
+                                           asp-route-ipAddress="@Model.FilterIpAddress">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : string.Empty)">
+                                    <a class="page-link" 
+                                       asp-action="List" 
+                                       asp-route-page="@nextPage" 
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-fromDate="@Model.FilterFromDate"
+                                       asp-route-toDate="@Model.FilterToDate"
+                                       asp-route-ipAddress="@Model.FilterIpAddress"
+                                       asp-route-deviceType="@Model.FilterDeviceType"
+                                       asp-route-browser="@Model.FilterBrowser"
+                                       asp-route-operatingSystem="@Model.FilterOperatingSystem"
+                                       aria-label="بعدی">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <div class="text-center text-muted small mt-2">
+                            نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) از @Model.TotalCount بازدید
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="visit-filter-modal" tabindex="-1" aria-labelledby="visit-filter-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="visit-filter-modal-label">فیلتر بازدیدها</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="List">
+                <div class="modal-body">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="fromDate" class="form-label">از تاریخ</label>
+                            <input type="text" 
+                                   class="form-control persian-datepicker" 
+                                   id="fromDate" 
+                                   name="fromDate" 
+                                   value="@Model.FilterFromDate"
+                                   placeholder="مثال: 1404/01/01" 
+                                   data-jdp />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="toDate" class="form-label">تا تاریخ</label>
+                            <input type="text" 
+                                   class="form-control persian-datepicker" 
+                                   id="toDate" 
+                                   name="toDate" 
+                                   value="@Model.FilterToDate"
+                                   placeholder="مثال: 1404/12/29" 
+                                   data-jdp />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ipAddress" class="form-label">IP Address</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="ipAddress" 
+                                   name="ipAddress" 
+                                   value="@Model.FilterIpAddress"
+                                   placeholder="مثال: 192.168.1.1" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="deviceType" class="form-label">نوع دستگاه</label>
+                            <select class="form-select" id="deviceType" name="deviceType">
+                                <option value="">همه</option>
+                                @if (Model.FilterDeviceType == "Desktop")
+                                {
+                                    <option value="Desktop" selected>Desktop</option>
+                                }
+                                else
+                                {
+                                    <option value="Desktop">Desktop</option>
+                                }
+                                @if (Model.FilterDeviceType == "Mobile")
+                                {
+                                    <option value="Mobile" selected>Mobile</option>
+                                }
+                                else
+                                {
+                                    <option value="Mobile">Mobile</option>
+                                }
+                                @if (Model.FilterDeviceType == "Tablet")
+                                {
+                                    <option value="Tablet" selected>Tablet</option>
+                                }
+                                else
+                                {
+                                    <option value="Tablet">Tablet</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="browser" class="form-label">مرورگر</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="browser" 
+                                   name="browser" 
+                                   value="@Model.FilterBrowser"
+                                   placeholder="مثال: Chrome, Firefox" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="operatingSystem" class="form-label">سیستم عامل</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="operatingSystem" 
+                                   name="operatingSystem" 
+                                   value="@Model.FilterOperatingSystem"
+                                   placeholder="مثال: Windows, Android" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-light" asp-action="List" asp-route-page="1" asp-route-pageSize="@Model.PageSize">پاکسازی</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            jalaliDatepicker.startWatch({
+                minDate: "attr",
+                maxDate: "attr"
+            });
+
+            // Initialize charts if Chart.js is available
+            if (typeof Chart !== 'undefined') {
+                initializeCharts();
+            }
+        });
+
+        function initializeCharts() {
+            try {
+                // Device Type Chart
+                @if (Model.StatisticsSummary.DeviceTypeStats.Count > 0)
+                {
+                    <text>
+                    const deviceTypeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatisticsSummary.DeviceTypeStats.Select(d => new { Label = d.DeviceType, Count = d.Count, Percentage = d.Percentage })));
+                    const deviceTypeCtx = document.getElementById('deviceTypeChart');
+                    if (deviceTypeCtx && typeof Chart !== 'undefined') {
+                        new Chart(deviceTypeCtx, {
+                            type: 'pie',
+                            data: {
+                                labels: deviceTypeData.map(d => d.Label),
+                                datasets: [{
+                                    data: deviceTypeData.map(d => d.Count),
+                                    backgroundColor: [
+                                        'rgba(54, 162, 235, 0.8)',
+                                        'rgba(255, 99, 132, 0.8)',
+                                        'rgba(255, 206, 86, 0.8)',
+                                        'rgba(75, 192, 192, 0.8)',
+                                        'rgba(153, 102, 255, 0.8)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            boxWidth: 10,
+                                            padding: 8,
+                                            font: {
+                                                size: 10
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return label + ': ' + value.toLocaleString('fa-IR') + ' (' + percentage + '%)';
+                                            }
+                                        },
+                                        bodyFont: {
+                                            size: 11
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    </text>
+                }
+
+                // Operating System Chart
+                @if (Model.StatisticsSummary.OperatingSystemStats.Count > 0)
+                {
+                    <text>
+                    const osData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatisticsSummary.OperatingSystemStats.Select(o => new { Label = o.OperatingSystem, Count = o.Count, Percentage = o.Percentage })));
+                    const osCtx = document.getElementById('operatingSystemChart');
+                    if (osCtx && typeof Chart !== 'undefined') {
+                        new Chart(osCtx, {
+                            type: 'pie',
+                            data: {
+                                labels: osData.map(o => o.Label),
+                                datasets: [{
+                                    data: osData.map(o => o.Count),
+                                    backgroundColor: [
+                                        'rgba(75, 192, 192, 0.8)',
+                                        'rgba(54, 162, 235, 0.8)',
+                                        'rgba(255, 99, 132, 0.8)',
+                                        'rgba(255, 206, 86, 0.8)',
+                                        'rgba(153, 102, 255, 0.8)',
+                                        'rgba(255, 159, 64, 0.8)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            boxWidth: 10,
+                                            padding: 8,
+                                            font: {
+                                                size: 10
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return label + ': ' + value.toLocaleString('fa-IR') + ' (' + percentage + '%)';
+                                            }
+                                        },
+                                        bodyFont: {
+                                            size: 11
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    </text>
+                }
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+            }
+        }
+    </script>
+}
+

@@ -1,0 +1,202 @@
+﻿@model DeploymentProfileIndexViewModel
+@{
+    ViewData["Title"] ??= "پروفایل‌های پابلیش";
+    ViewData["Subtitle"] ??= "هر زمان روی برنچ demo پوش می‌کنید، اطلاعات اینجا برای استقرار استفاده می‌شود";
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h2 class="h5 mb-1">@Model.TotalCount پروفایل ثبت شده</h2>
+            <p class="text-muted mb-0">@Model.ActiveCount پروفایل فعال برای استقرار خودکار موجود است.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" type="button" data-modal-url="@Url.Action("Create", "DeploymentProfiles", new { area = "Admin" })" data-modal-title="پروفایل پابلیش جدید">
+                <i class="bi bi-plus-circle"></i>
+                افزودن پروفایل جدید
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Profiles.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-hdd-network text-muted" style="font-size: 3rem;"></i>
+            <h3 class="h5 mt-3">هنوز هیچ پروفایل پابلیشی ثبت نشده است.</h3>
+            <p class="text-muted">برای راه‌اندازی استقرار خودکار، یک پروفایل جدید بسازید و اطلاعات سرور را وارد کنید.</p>
+            <button class="btn btn-primary" type="button" data-modal-url="@Url.Action("Create", "DeploymentProfiles", new { area = "Admin" })" data-modal-title="پروفایل پابلیش جدید">
+                ساخت اولین پروفایل
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>عنوان</th>
+                        <th>برنچ</th>
+                        <th>سرور</th>
+                        <th>مسیر استقرار</th>
+                        <th>آخرین به‌روزرسانی</th>
+                        <th class="text-center">وضعیت</th>
+                        <th class="text-end">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var profile in Model.Profiles)
+                {
+                    <tr>
+                        <td class="fw-semibold">@profile.Name</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">@profile.Branch</span></td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">@profile.ServerHost:@profile.ServerPort</span>
+                                <small class="text-muted">کاربر: @profile.ServerUser</small>
+                            </div>
+                        </td>
+                        <td class="text-break">@profile.DestinationPath</td>
+                        <td>
+                            <span class="text-muted" data-bs-toggle="tooltip" title="@profile.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")">
+                                @profile.UpdatedAt.ToLocalTime().ToString("yyyy/MM/dd")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            @if (profile.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success">فعال</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning">غیرفعال</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-modal-url="@Url.Action("Edit", "DeploymentProfiles", new { area = "Admin", id = profile.Id })" data-modal-title="ویرایش @profile.Name">
+                                    <i class="bi bi-pencil"></i>
+                                    ویرایش
+                                </button>
+                                <form asp-area="Admin" asp-controller="DeploymentProfiles" asp-action="Delete" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@profile.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('آیا از حذف این پروفایل اطمینان دارید؟');">
+                                        <i class="bi bi-trash"></i>
+                                        حذف
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="deploymentProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="deploymentProfileModalContent">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        (function () {
+            const modalElement = document.getElementById('deploymentProfileModal');
+            if (!modalElement) {
+                return;
+            }
+
+            const modal = new bootstrap.Modal(modalElement);
+            const modalContent = document.getElementById('deploymentProfileModalContent');
+
+            async function loadModalContent(url) {
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const html = await response.text();
+                    modalContent.innerHTML = html;
+                    modal.show();
+                    bindModalForm();
+                } catch (error) {
+                    console.error('Failed to load modal content', error);
+                }
+            }
+
+            function bindModalForm() {
+                const form = modalContent.querySelector('form');
+                if (!form) {
+                    return;
+                }
+
+                form.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    const formData = new FormData(form);
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.indexOf('application/json') !== -1) {
+                            const result = await response.json();
+                            if (result.success) {
+                                window.location.href = result.redirectUrl;
+                                return;
+                            }
+                        }
+
+                        const html = await response.text();
+                        modalContent.innerHTML = html;
+                        bindModalForm();
+                    } catch (error) {
+                        console.error('Failed to submit modal form', error);
+                    }
+                }, { once: true });
+            }
+
+            function wireModalButtons() {
+                document.querySelectorAll('[data-modal-url]').forEach(button => {
+                    button.addEventListener('click', event => {
+                        event.preventDefault();
+                        const url = button.getAttribute('data-modal-url');
+                        if (url) {
+                            loadModalContent(url);
+                        }
+                    });
+                });
+            }
+
+            modalElement.addEventListener('hidden.bs.modal', () => {
+                modalContent.innerHTML = '';
+            });
+
+            wireModalButtons();
+        })();
+    </script>
+}

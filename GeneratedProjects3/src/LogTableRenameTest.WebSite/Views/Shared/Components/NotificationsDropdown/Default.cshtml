@@ -1,0 +1,122 @@
+﻿@model NotificationsDropdownViewModel
+@using LogTableRenameTest.Domain.Enums
+@using LogTableRenameTest.SharedKernel.Extensions
+@{
+    var hasNotifications = Model.RecentNotifications.Count > 0;
+    var area = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var notificationsUrl = area.Equals("Seller", StringComparison.OrdinalIgnoreCase)
+        ? Url.Action("Index", "Notifications", new { area = "Seller" })
+        : area.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+        ? Url.Action("Index", "Notifications", new { area = "Admin" })
+        : Url.Action("Index", "Notifications", new { area = "User" });
+}
+
+<div class="dropdown">
+    <button class="btn btn-icon btn-ghost position-relative" 
+            type="button" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false" 
+            aria-label="اعلان‌ها"
+            id="notificationsDropdownBtn">
+        <i class="bi bi-bell"></i>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                @(Model.UnreadCount > 99 ? "99+" : Model.UnreadCount.ToString())
+            </span>
+        }
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end notification-dropdown" style="min-width: 320px; max-width: 400px;" aria-labelledby="notificationsDropdownBtn">
+        <li>
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <h6 class="mb-0">اعلان‌ها</h6>
+                @if (Model.UnreadCount > 0)
+                {
+                    <span class="badge bg-danger">@Model.UnreadCount خوانده نشده</span>
+                }
+            </div>
+        </li>
+        @if (!hasNotifications)
+        {
+            <li>
+                <div class="px-3 py-4 text-center text-muted">
+                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                    <small>هیچ اعلان جدیدی وجود ندارد</small>
+                </div>
+            </li>
+        }
+        else
+        {
+            @foreach (var notification in Model.RecentNotifications)
+            {
+                var priorityClass = notification.Priority switch
+                {
+                    NotificationPriority.Low => "text-secondary",
+                    NotificationPriority.Normal => "text-info",
+                    NotificationPriority.High => "text-warning",
+                    NotificationPriority.Urgent => "text-danger",
+                    _ => "text-secondary"
+                };
+
+                var typeIcon = notification.Type switch
+                {
+                    NotificationType.General => "bi-info-circle",
+                    NotificationType.Important => "bi-exclamation-triangle",
+                    NotificationType.Warning => "bi-exclamation-circle",
+                    NotificationType.Promotion => "bi-tag",
+                    NotificationType.System => "bi-gear",
+                    _ => "bi-bell"
+                };
+
+                // Determine URL based on notification title
+                var notificationLink = notificationsUrl;
+                var isTicketNotification = notification.Title.Contains("تیکت") || notification.Title.Contains("پاسخ");
+                if (isTicketNotification)
+                {
+                    if (area.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        notificationLink = Url.Action("Index", "Tickets", new { area = "Admin" });
+                    }
+                    else if (area.Equals("User", StringComparison.OrdinalIgnoreCase))
+                    {
+                        notificationLink = Url.Action("Index", "Tickets", new { area = "User" });
+                    }
+                }
+
+                <li>
+                    <a class="dropdown-item notification-item @(!notification.IsRead ? "notification-item--unread" : "")" 
+                       href="@notificationLink"
+                       data-notification-id="@notification.Id">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi @typeIcon @priorityClass mt-1 flex-shrink-0"></i>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                                    <strong class="small text-truncate" style="max-width: 200px;" title="@notification.Title">@notification.Title</strong>
+                                    @if (!notification.IsRead)
+                                    {
+                                        <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size: 0.5rem;">جدید</span>
+                                    }
+                                </div>
+                                <p class="mb-1 small text-muted notification-message" style="line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">
+                                    @(notification.Message.Length > 80 ? notification.Message.Substring(0, 80) + "..." : notification.Message)
+                                </p>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-clock"></i>
+                                    @notification.SentAt.ToPersianDateTimeString()
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            }
+        }
+        <li><hr class="dropdown-divider" /></li>
+        <li>
+            <a class="dropdown-item text-center fw-semibold" href="@notificationsUrl">
+                <i class="bi bi-list-ul"></i>
+                مشاهده همه اعلان‌ها
+            </a>
+        </li>
+    </ul>
+</div>
+

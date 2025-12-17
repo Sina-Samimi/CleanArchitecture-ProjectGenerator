@@ -1,0 +1,164 @@
+@model ProductAttributesViewModel
+@{
+    var isEditing = Model.Form.Id.HasValue;
+    var pageTitle = isEditing ? "ویرایش ویژگی" : "افزودن ویژگی";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Catalog" asp-action="Index">مدیریت محصولات</a></li>
+    <li class="breadcrumb-item active" aria-current="page">ویژگی‌های محصول</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="product-faqs-page" data-product-attributes>
+    <div class="product-faqs-page__hero">
+        <div>
+            <h1 class="product-faqs-page__title">@ViewData["Title"]</h1>
+            <p class="product-faqs-page__subtitle">ویژگی‌های محصول را به صورت کلید-مقدار تنظیم و بروزرسانی کنید.</p>
+        </div>
+        <div class="product-faqs-page__actions">
+            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Catalog" asp-action="Index">
+                <i class="bi bi-arrow-right"></i>
+                بازگشت به محصولات
+            </a>
+        </div>
+    </div>
+
+    <section class="product-faqs-form card">
+        <div class="card-body">
+            <div class="product-faqs-form__header">
+                <div>
+                    <h2 class="product-faqs-form__title">@pageTitle</h2>
+                    <p class="product-faqs-form__subtitle">@("محصول: " + Model.ProductName)</p>
+                </div>
+                <span class="product-faqs-form__hint">ویژگی‌ها بر اساس مقدار «ترتیب نمایش» از کم به زیاد نمایش داده می‌شوند.</span>
+            </div>
+            <form class="product-faqs-form__form"
+                  asp-area="Admin"
+                  asp-controller="Catalog"
+                  asp-action="@(isEditing ? "UpdateAttribute" : "CreateAttribute")"
+                  asp-route-id="@Model.ProductId"
+                  method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="Form.Id" />
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" asp-for="Form.Key"></label>
+                        <input class="form-control" asp-for="Form.Key" placeholder="مثال: رنگ" />
+                        <span class="text-danger" asp-validation-for="Form.Key"></span>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" asp-for="Form.Value"></label>
+                        <input class="form-control" asp-for="Form.Value" placeholder="مثال: قرمز" />
+                        <span class="text-danger" asp-validation-for="Form.Value"></span>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label" asp-for="Form.DisplayOrder"></label>
+                        <input class="form-control" asp-for="Form.DisplayOrder" type="number" min="0" />
+                        <span class="text-danger" asp-validation-for="Form.DisplayOrder"></span>
+                    </div>
+                </div>
+                <div class="product-faqs-form__actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi @(isEditing ? "bi-arrow-repeat" : "bi-plus-lg")"></i>
+                        @(isEditing ? "ذخیره تغییرات" : "افزودن ویژگی")
+                    </button>
+                    @if (isEditing)
+                    {
+                        <a class="btn btn-link" asp-area="Admin" asp-controller="Catalog" asp-action="Attributes" asp-route-id="@Model.ProductId">
+                            انصراف از ویرایش
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="product-faqs-list card">
+        <div class="card-body">
+            <div class="product-faqs-list__header">
+                <div>
+                    <h2 class="product-faqs-list__title">ویژگی‌های محصول</h2>
+                    <p class="product-faqs-list__subtitle">ویژگی‌های محصول را برای نمایش بهتر در صفحه جزئیات مدیریت کنید.</p>
+                </div>
+                <span class="product-faqs-list__count">@Model.Attributes.Count ویژگی ثبت شده</span>
+            </div>
+
+            @if (!Model.Attributes.Any())
+            {
+                <div class="product-faqs-empty">
+                    <div class="product-faqs-empty__icon" aria-hidden="true">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <h3 class="product-faqs-empty__title">ویژگی‌ای برای این محصول ثبت نشده است</h3>
+                    <p class="product-faqs-empty__description">برای افزودن ویژگی جدید، فرم بالا را تکمیل کنید.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover product-faqs-table">
+                        <thead>
+                            <tr>
+                                <th>کلید</th>
+                                <th>مقدار</th>
+                                <th>ترتیب نمایش</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var attr in Model.Attributes)
+                            {
+                                var isHighlighted = Model.HighlightedAttributeId == attr.Id;
+                                <tr class="@(isHighlighted ? "table-warning" : "")" data-attribute-id="@attr.Id">
+                                    <td>
+                                        <strong>@attr.Key</strong>
+                                    </td>
+                                    <td>@attr.Value</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@attr.DisplayOrder</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a class="btn btn-outline-primary"
+                                               asp-area="Admin"
+                                               asp-controller="Catalog"
+                                               asp-action="Attributes"
+                                               asp-route-id="@Model.ProductId"
+                                               asp-route-attributeId="@attr.Id">
+                                                <i class="bi bi-pencil"></i>
+                                                ویرایش
+                                            </a>
+                                            <form asp-area="Admin"
+                                                  asp-controller="Catalog"
+                                                  asp-action="DeleteAttribute"
+                                                  asp-route-id="@Model.ProductId"
+                                                  asp-route-attributeId="@attr.Id"
+                                                  method="post"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('آیا از حذف این ویژگی اطمینان دارید؟');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+

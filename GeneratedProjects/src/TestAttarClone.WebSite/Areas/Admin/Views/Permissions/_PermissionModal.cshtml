@@ -1,0 +1,120 @@
+﻿@using System
+@using System.Linq
+@using TestAttarClone.WebSite.Areas.Admin.Models
+@model EditPermissionViewModel
+
+@{
+    PermissionGroupOptionViewModel? matchedGroup = null;
+
+    foreach (var option in Model.GroupOptions)
+    {
+        if (string.Equals(option.Key, Model.GroupKey, StringComparison.OrdinalIgnoreCase))
+        {
+            matchedGroup = option;
+            break;
+        }
+    }
+
+    var isGroupDisplayReadOnly = matchedGroup is not null && !matchedGroup.IsCustom;
+    var isCustomGroup = matchedGroup is null || matchedGroup.IsCustom;
+    var isNewGroupSelected = string.IsNullOrWhiteSpace(Model.GroupKey) || (isCustomGroup && matchedGroup is null);
+}
+
+<div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">@(Model.Id.HasValue ? "ویرایش مجوز" : "افزودن مجوز جدید")</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <div class="modal-body">
+            <form asp-area="Admin"
+                  asp-controller="Permissions"
+                  asp-action="Save"
+                  method="post"
+                  data-permission-form>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Key" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <input type="hidden" asp-for="GroupKey" id="PermissionGroupKey" data-permission-group-key-field />
+
+                <div class="mb-4">
+                    <label class="form-label" for="permission-group-select">@Html.DisplayNameFor(m => m.GroupKey)</label>
+                    <select id="permission-group-select"
+                            class="form-select"
+                            data-permission-group-select>
+                        <option value="" selected="@(isNewGroupSelected ? "selected" : null)">ایجاد گروه جدید</option>
+                        @foreach (var option in Model.GroupOptions)
+                        {
+                            var isSelected = string.Equals(option.Key, Model.GroupKey, StringComparison.OrdinalIgnoreCase);
+
+                            <option value="@option.Key"
+                                    data-display-name="@option.DisplayName"
+                                    data-is-custom="@(option.IsCustom ? "true" : "false")"
+                                    selected="@(isSelected ? "selected" : null)">@option.DisplayName (@option.Key)</option>
+                        }
+                    </select>
+                    <span class="text-danger" asp-validation-for="GroupKey"></span>
+                    <div class="form-text text-muted">گروه مورد نظر را انتخاب کنید یا گزینه «ایجاد گروه جدید» را برگزینید.</div>
+                </div>
+
+                <div class="mb-4 @(isCustomGroup ? string.Empty : "d-none")" data-permission-group-custom-key-container>
+                    <label class="form-label" for="permission-group-custom-key">نام گروه جدید</label>
+                    <input id="permission-group-custom-key"
+                           type="text"
+                           class="form-control"
+                           value="@(isCustomGroup ? Model.GroupKey : string.Empty)"
+                           placeholder="مثال: identity یا نام دلخواه"
+                           data-permission-group-custom-key
+                           autocomplete="off" />
+                    <div class="form-text text-muted">برای گروه‌های جدید، یک نام یکتا وارد کنید.</div>
+                </div>
+
+                <div class="mb-4" data-permission-group-label-container>
+                    <label asp-for="GroupDisplayName" class="form-label"></label>
+                    <input asp-for="GroupDisplayName"
+                           class="form-control"
+                           placeholder="عنوان زیرمجموعه گروه را وارد کنید"
+                           data-permission-group-label
+                           readonly="@((!isCustomGroup && isGroupDisplayReadOnly) ? "readonly" : null)" />
+                    <span class="text-danger" asp-validation-for="GroupDisplayName"></span>
+                    <div class="form-text text-muted">عنوان زیرمجموعه‌ی انتخاب‌شده در لیست مجوزها نمایش داده می‌شود.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="DisplayName" class="form-label"></label>
+                    <input asp-for="DisplayName" class="form-control" placeholder="نام مجوز را وارد کنید" />
+                    <span class="text-danger" asp-validation-for="DisplayName"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="توضیح کوتاهی درباره این مجوز"></textarea>
+                    <span class="text-danger" asp-validation-for="Description"></span>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input asp-for="IsCore" class="form-check-input" type="checkbox" role="switch" id="permission-core-switch">
+                    <label class="form-check-label" for="permission-core-switch">@Html.DisplayNameFor(m => m.IsCore)</label>
+                </div>
+
+                <div class="alert alert-info d-flex align-items-start gap-2">
+                    <i class="bi bi-info-circle-fill fs-5"></i>
+                    <div>
+                        <p class="mb-1">مجوزهای Core قابل حذف نیستند و همواره در اختیار سیستم باقی می‌مانند.</p>
+                        <p class="mb-0">مجوزهای سفارشی را می‌توانید هر زمان حذف یا ویرایش کنید.</p>
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">لغو</button>
+                    <button type="submit" class="btn btn-primary">
+                        @(Model.Id.HasValue ? "ذخیره تغییرات" : "ثبت مجوز")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

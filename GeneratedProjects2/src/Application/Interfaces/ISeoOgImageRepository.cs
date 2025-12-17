@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using LogsDtoCloneTest.Domain.Entities.Seo;
+
+namespace LogsDtoCloneTest.Application.Interfaces;
+
+public interface ISeoOgImageRepository
+{
+    Task<SeoOgImage?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<SeoOgImage>> GetBySeoMetadataIdAsync(Guid seoMetadataId, CancellationToken cancellationToken);
+
+    Task AddAsync(SeoOgImage image, CancellationToken cancellationToken);
+
+    Task UpdateAsync(SeoOgImage image, CancellationToken cancellationToken);
+
+    Task DeleteAsync(SeoOgImage image, CancellationToken cancellationToken);
+
+    Task DeleteBySeoMetadataIdAsync(Guid seoMetadataId, CancellationToken cancellationToken);
+}
+

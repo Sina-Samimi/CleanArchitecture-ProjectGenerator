@@ -1,0 +1,11 @@
+﻿@model IReadOnlyCollection<LogTableRenameTest.Application.DTOs.Navigation.NavigationMenuItemDto>
+@using System.Linq
+
+@if (Model is not null && Model.Any())
+{
+    @foreach (var item in Model.Where(i => i.ParentId == null).OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+    {
+        @await Html.PartialAsync("~/Views/Shared/Components/NavigationMenu/_MobileNavMenuItem.cshtml", item)
+    }
+}
+

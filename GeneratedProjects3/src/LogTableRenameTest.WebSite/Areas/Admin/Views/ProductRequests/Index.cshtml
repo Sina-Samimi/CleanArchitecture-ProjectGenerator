@@ -1,0 +1,305 @@
+﻿@using System.Globalization
+@using LogTableRenameTest.Domain.Enums
+@using LogTableRenameTest.SharedKernel.Extensions
+@using LogTableRenameTest.WebSite.Areas.Admin.Models
+@model ProductRequestListViewModel
+@{
+    ViewData["Title"] = "درخواست‌های محصول";
+    ViewData["Subtitle"] = "مدیریت و تایید درخواست‌های محصول فروشندگان";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string StatusLabel(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "در انتظار بررسی",
+        ProductRequestStatus.Approved => "تایید شده",
+        ProductRequestStatus.Rejected => "رد شده",
+        _ => "نامشخص"
+    };
+    string StatusBadgeClass(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "badge bg-warning-subtle text-warning-emphasis",
+        ProductRequestStatus.Approved => "badge bg-success-subtle text-success-emphasis",
+        ProductRequestStatus.Rejected => "badge bg-danger-subtle text-danger-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+    string TypeLabel(ProductType type) => type switch
+    {
+        ProductType.Physical => "فیزیکی",
+        ProductType.Digital => "دانلودی",
+        _ => "نامشخص"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">درخواست‌های محصول</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="product-requests-page">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">درخواست‌های محصول فروشندگان</h1>
+                    <p class="text-muted mb-0">مدیریت و تایید درخواست‌های محصول</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtersModal">
+                    <i class="bi bi-funnel"></i>
+                    فیلتر
+                </button>
+                <a asp-action="Index" class="btn btn-link text-decoration-none">
+                    پاک کردن فیلترها
+                </a>
+            </div>
+
+            @if (!Model.Requests.Any())
+            {
+                <div class="alert alert-info-subtle border-0 text-center py-4 mb-0" role="alert">
+                    <i class="bi bi-inbox fs-3 mb-2 d-block"></i>
+                    <h2 class="h5 mb-1">هنوز درخواست محصولی ثبت نشده است.</h2>
+                    <p class="mb-0">به محض ثبت درخواست جدید از طرف فروشندگان، در این بخش نمایش داده خواهد شد.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive" style="min-height:500px;">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">نام محصول</th>
+                                <th scope="col">نوع</th>
+                                <th scope="col">قیمت</th>
+                                <th scope="col">دسته‌بندی</th>
+                                <th scope="col">فروشنده</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">تاریخ ثبت</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.Requests)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@request.Name</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info-emphasis">@TypeLabel(request.Type)</span>
+                                        @if (request.IsCustomOrder)
+                                        {
+                                            <br />
+                                            <small class="text-muted">سفارشی</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (request.IsCustomOrder)
+                                        {
+                                            <span class="text-muted">سفارشی</span>
+                                        }
+                                        else if (request.Price.HasValue)
+                                        {
+                                            <span>@request.Price.Value.ToString("N0") تومان</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>@request.CategoryName</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(request.SellerName))
+                                        {
+                                            <div>@request.SellerName</div>
+                                            <small class="text-muted">@(string.IsNullOrWhiteSpace(request.SellerPhone) ? "-" : request.SellerPhone)</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="@StatusBadgeClass(request.Status)">@StatusLabel(request.Status)</span>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <span>@FormatDateTime(request.CreatedAt)</span>
+                                        </div>
+                                        @if (request.ReviewedAt.HasValue)
+                                        {
+                                            <small class="text-muted">
+                                                بررسی: @FormatDateTime(request.ReviewedAt.Value)
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="requestActionsDropdown-@request.Id" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots"></i>
+                                                عملیات
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="requestActionsDropdown-@request.Id">
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="Details" asp-route-id="@request.Id">
+                                                        <i class="bi bi-eye"></i>
+                                                        جزئیات
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.TotalCount > Model.PageSize)
+                {
+                    <nav aria-label="صفحه‌بندی درخواست‌ها" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @{
+                                var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                                var currentPage = Model.PageNumber;
+                            }
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-status="@Model.SelectedStatus" asp-route-sellerId="@Model.SelectedSellerId">قبلی</a>
+                                </li>
+                            }
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-status="@Model.SelectedStatus" asp-route-sellerId="@Model.SelectedSellerId">@i</a>
+                                </li>
+                            }
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-status="@Model.SelectedStatus" asp-route-sellerId="@Model.SelectedSellerId">بعدی</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Filters Modal -->
+<div class="modal fade" id="filtersModal" tabindex="-1" aria-labelledby="filtersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filtersModalLabel">فیلتر درخواست‌ها</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" asp-action="Index" class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" for="productName">نام محصول</label>
+                    <input type="text" class="form-control" id="productName" name="productName" value="@Context.Request.Query["productName"]" placeholder="مانند: موبایل">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="statusSelect">وضعیت</label>
+                    <select name="status" id="statusSelect" class="form-select">
+                        <option value="">همه</option>
+                        <option value="1" selected="@(Model.SelectedStatus == ProductRequestStatus.Pending ? "selected" : null)">در انتظار بررسی</option>
+                        <option value="2" selected="@(Model.SelectedStatus == ProductRequestStatus.Approved ? "selected" : null)">تایید شده</option>
+                        <option value="3" selected="@(Model.SelectedStatus == ProductRequestStatus.Rejected ? "selected" : null)">رد شده</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="sellerSelect">فروشنده</label>
+                    <select class="form-select" id="sellerSelect" name="sellerId" data-seller-select>
+                        @if (!string.IsNullOrWhiteSpace(Model.SelectedSellerId))
+                        {
+                            <option value="@Model.SelectedSellerId" selected>@Model.SelectedSellerId</option>
+                        }
+                    </select>
+                    <small class="text-muted">جستجو بر اساس نام یا شماره تماس فروشنده</small>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">بستن</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i>
+                        اعمال فیلتر
+                    </button>
+                </div>
+                <input type="hidden" name="page" value="1" />
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const sellerSelect = document.querySelector('[data-seller-select]');
+            const modal = document.getElementById('filtersModal');
+            if (!sellerSelect || !modal) return;
+
+            const fetchSellers = async (term) => {
+                const url = new URL('@Url.Action("SearchSellers", "ProductRequests", new { area = "Admin" })', window.location.origin);
+                if (term) url.searchParams.set('term', term);
+                const response = await fetch(url);
+                if (!response.ok) return [];
+                return await response.json();
+            };
+
+            const renderOptions = (items) => {
+                const current = '@Model.SelectedSellerId';
+                sellerSelect.innerHTML = '<option value="">همه فروشندگان</option>';
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.phone ? `${item.name} - ${item.phone}` : item.name;
+                    if (current && option.value === current) {
+                        option.selected = true;
+                    }
+                    sellerSelect.appendChild(option);
+                });
+            };
+
+            const debounce = (fn, delay = 300) => {
+                let t;
+                return (...args) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn(...args), delay);
+                };
+            };
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'search';
+            searchInput.className = 'form-control mt-2';
+            searchInput.placeholder = 'جستجو فروشنده...';
+            sellerSelect.parentElement.appendChild(searchInput);
+
+            const performSearch = debounce(async (term) => {
+                const sellers = await fetchSellers(term);
+                renderOptions(sellers);
+            }, 300);
+
+            searchInput.addEventListener('input', (e) => performSearch(e.target.value));
+
+            modal.addEventListener('shown.bs.modal', async () => {
+                if (sellerSelect.options.length <= 1) {
+                    const sellers = await fetchSellers(searchInput.value);
+                    renderOptions(sellers);
+                }
+                searchInput.focus();
+            });
+        })();
+    </script>
+}

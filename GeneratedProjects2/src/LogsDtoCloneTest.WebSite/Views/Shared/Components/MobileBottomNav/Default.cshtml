@@ -1,0 +1,57 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc.Routing
+@{
+    var currentPath = Context?.Request?.Path.Value?.ToLower() ?? "";
+    var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    
+    bool IsActive(string[] paths)
+    {
+        if (paths == null || paths.Length == 0) return false;
+        foreach (var path in paths)
+        {
+            var normalizedPath = path.ToLower().Trim('/');
+            if (string.IsNullOrEmpty(normalizedPath) && (currentPath == "/" || string.IsNullOrEmpty(currentPath)))
+            {
+                return true;
+            }
+            if (currentPath == $"/{normalizedPath}" || currentPath.StartsWith($"/{normalizedPath}/"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+<nav class="mobile-bottom-nav">
+    <a asp-controller="Home" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/", "/home" }) ? "active" : "")">
+        <i class="bi @(IsActive(new[] { "/", "/home" }) ? "bi-house-fill" : "bi-house") mobile-bottom-nav-icon"></i>
+        <span class="mobile-bottom-nav-label">خانه</span>
+    </a>
+    
+    <a asp-controller="Product" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/product" }) ? "active" : "")">
+        <i class="bi @(IsActive(new[] { "/product" }) ? "bi-grid-fill" : "bi-grid") mobile-bottom-nav-icon"></i>
+        <span class="mobile-bottom-nav-label">محصولات</span>
+    </a>
+    
+    <a asp-controller="Cart" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/cart" }) ? "active" : "")">
+        <i class="bi @(IsActive(new[] { "/cart" }) ? "bi-cart3-fill" : "bi-cart3") mobile-bottom-nav-icon"></i>
+        <span class="mobile-bottom-nav-label">سبد خرید</span>
+    </a>
+    
+    @if (isAuthenticated)
+    {
+        <a asp-area="User" asp-controller="Profile" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/user" }) ? "active" : "")">
+            <i class="bi @(IsActive(new[] { "/user" }) ? "bi-person-fill" : "bi-person") mobile-bottom-nav-icon"></i>
+            <span class="mobile-bottom-nav-label">حساب من</span>
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Account" asp-action="PhoneLogin" class="mobile-bottom-nav-item @(IsActive(new[] { "/account/phonelogin", "/account" }) ? "active" : "")">
+            <i class="bi @(IsActive(new[] { "/account/phonelogin", "/account" }) ? "bi-person-fill" : "bi-person") mobile-bottom-nav-icon"></i>
+            <span class="mobile-bottom-nav-label">ورود / ثبت نام</span>
+        </a>
+    }
+</nav>
+

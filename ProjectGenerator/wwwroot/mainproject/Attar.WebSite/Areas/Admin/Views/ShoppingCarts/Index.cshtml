@@ -1,0 +1,294 @@
+@using System.Globalization
+@using Attar.WebSite.Areas.Admin.Models
+@model ActiveCartIndexViewModel
+@{
+    ViewData["Title"] ??= "سبدخرید فعلی";
+    ViewData["Subtitle"] ??= "لیست سبدهای خریدی که هنوز پرداخت نشده‌اند";
+
+    var culture = new CultureInfo("fa-IR");
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatDate(DateTimeOffset value) => value.ToPersianDateString();
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">سبدخرید فعلی</h1>
+        <p class="text-muted mb-0">لیست سبدهای خریدی که هنوز پرداخت نشده‌اند و فعال هستند</p>
+    </div>
+    <div>
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#cart-filter-modal">
+            <i class="bi bi-funnel"></i>
+            فیلترها
+        </button>
+    </div>
+</div>
+
+@{
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Filter.UserId)
+        || !string.IsNullOrWhiteSpace(Model.Filter.FromDate)
+        || !string.IsNullOrWhiteSpace(Model.Filter.ToDate);
+}
+
+@if (hasActiveFilters)
+{
+    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <i class="bi bi-funnel"></i>
+            <strong>فیلترهای فعال:</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.UserId))
+            {
+                <span class="badge bg-light text-dark ms-2">کاربر: @Model.Filter.UserId</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.FromDate))
+            {
+                <span class="badge bg-light text-dark ms-2">از تاریخ: @Model.Filter.FromDate</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.ToDate))
+            {
+                <span class="badge bg-light text-dark ms-2">تا تاریخ: @Model.Filter.ToDate</span>
+            }
+        </div>
+        <a class="btn btn-sm btn-link text-danger" asp-action="Index">
+            <i class="bi bi-x-circle"></i> حذف فیلترها
+        </a>
+    </div>
+}
+
+@if (Model.Carts.Count == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        سبد خریدی ثبت نشده است.
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>شناسه سبد</th>
+                            <th>کاربر</th>
+                            <th>تعداد آیتم</th>
+                            <th>مبلغ کل</th>
+                            <th>تخفیف</th>
+                            <th>جمع کل</th>
+                            <th>آخرین بروزرسانی</th>
+                            <th>تاریخ ایجاد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cart in Model.Carts)
+                        {
+                            <tr>
+                                <td>
+                                    <code>@cart.Id.ToString("N")[..8]...</code>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(cart.UserId))
+                                    {
+                                        <div class="fw-semibold">@(cart.UserFullName ?? "نامشخص")</div>
+                                        @if (!string.IsNullOrWhiteSpace(cart.UserPhoneNumber))
+                                        {
+                                            <small class="text-muted">@cart.UserPhoneNumber</small>
+                                        }
+                                        <div>
+                                            <small class="text-muted">ID: @cart.UserId[..8]...</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">کاربر ناشناس</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">@cart.ItemCount</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@FormatMoney(cart.Subtotal)</div>
+                                </td>
+                                <td>
+                                    @if (cart.DiscountTotal > 0)
+                                    {
+                                        <span class="text-success">-@FormatMoney(cart.DiscountTotal)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary">@FormatMoney(cart.GrandTotal)</div>
+                                </td>
+                                <td>@FormatDateTime(cart.UpdateDate)</td>
+                                <td>@FormatDate(cart.CreateDate)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="صفحه‌بندی">
+                    <ul class="pagination justify-content-center mt-4">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.PageNumber - 1)" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    <i class="bi bi-chevron-right"></i> قبلی
+                                </a>
+                            </li>
+                        }
+                        @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@i" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.PageNumber + 1)" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    بعدی <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+                <div class="text-center text-muted small mt-2">
+                    نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) از @Model.TotalCount سبد خرید
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Filter Modal -->
+<div class="modal fade" id="cart-filter-modal" tabindex="-1" aria-labelledby="cart-filter-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cart-filter-modal-label">فیلتر سبدهای خرید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label" for="CartFilter_UserId">شناسه کاربر</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="CartFilter_UserId"
+                                   name="userId"
+                                   value="@Model.Filter.UserId"
+                                   placeholder="شناسه کاربر" />
+                        </div>
+                        <div class="col-md-6" data-order-date>
+                            <label class="form-label" for="CartFilter_FromDateDisplay">از تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="CartFilter_FromDateDisplay"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.Filter.FromDate?.Replace("-", "/") ?? string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.Filter.FromDate?.Replace("-", "/") ?? string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden"
+                                       id="CartFilter_FromDate"
+                                       name="fromDate"
+                                       value="@Model.Filter.FromDate"
+                                       data-jalali-target />
+                            </div>
+                        </div>
+                        <div class="col-md-6" data-order-date>
+                            <label class="form-label" for="CartFilter_ToDateDisplay">تا تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="CartFilter_ToDateDisplay"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.Filter.ToDate?.Replace("-", "/") ?? string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.Filter.ToDate?.Replace("-", "/") ?? string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden"
+                                       id="CartFilter_ToDate"
+                                       name="toDate"
+                                       value="@Model.Filter.ToDate"
+                                       data-jalali-target />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel-fill"></i>
+                        اعمال فیلترها
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <a class="btn btn-link text-danger ms-auto" asp-action="Index">
+                        <i class="bi bi-x-circle"></i> حذف فیلترها
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize jalali date picker
+            if (typeof jalaliDatepicker !== 'undefined') {
+                jalaliDatepicker.startWatch();
+            }
+        });
+    </script>
+}
+

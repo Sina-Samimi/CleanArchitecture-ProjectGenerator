@@ -1,0 +1,604 @@
+﻿@using Attar.Application.Queries.Identity.GetUsers
+@model UserListViewModel
+@{ 
+    ViewData["Title"] = "کاربران لیست";
+    ViewData["Subtitle"] = "نمای کلی از وضعیت کاربران، نقش‌ها و تغییرات اخیر";
+
+    var totalUsers = Model.Users.Count;
+    var activeUsers = Model.Users.Count(u => u.IsActive && !u.IsDeleted);
+    var inactiveUsers = Model.Users.Count(u => !u.IsActive && !u.IsDeleted);
+    var deletedUsers = Model.Users.Count(u => u.IsDeleted);
+
+    decimal ToPercent(int part, int total)
+    {
+        if (total == 0)
+        {
+            return 0;
+        }
+
+        return Math.Round((decimal)part / total * 100, 1, MidpointRounding.AwayFromZero);
+    }
+
+    string FormatPercent(decimal value)
+    {
+        return value % 1m == 0 ? value.ToString("0") + "%" : value.ToString("0.#") + "%";
+    }
+
+    var activePercent = ToPercent(activeUsers, totalUsers);
+    var inactivePercent = ToPercent(inactiveUsers, totalUsers);
+    var deletedPercent = ToPercent(deletedUsers, totalUsers);
+    var retainedPercent = ToPercent(totalUsers - deletedUsers, totalUsers);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/users-index.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Users" asp-action="Index">مدیریت</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@section Toolbar { }
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="users-page">
+    <div class="users-page__legend users-page__legend--standalone">
+        <span><span class="badge-status badge-status--active"></span> فعال</span>
+        <span><span class="badge-status badge-status--pending"></span> غیرفعال</span>
+        <span><span class="badge-status badge-status--danger"></span> حذف‌شده</span>
+    </div>
+
+    <div class="metric-grid users-metrics">
+        <article class="metric-card metric-card--primary">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">کل کاربران</span>
+                    <span class="metric-card__subtitle">نمای کلی از وضعیت جامعه کاربری</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--positive">@FormatPercent(activePercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-people-fill"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@totalUsers</div>
+            <div class="metric-card__hint">کاربران ثبت‌نام‌شده در سیستم</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-person-check"></i>
+                    @activeUsers نفر فعال
+                </span>
+                <span class="metric-card__chip metric-card__chip--warning">
+                    <i class="bi bi-hourglass-split"></i>
+                    @inactiveUsers در انتظار تأیید
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--success">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">کاربران فعال</span>
+                    <span class="metric-card__subtitle">دسترسی کامل و فعالیت منظم</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--positive">@FormatPercent(activePercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-people-fill"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@activeUsers</div>
+            <div class="metric-card__hint">کاربرانی که هم‌اکنون دسترسی دارند</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                        <i class="bi bi-clipboard-data"></i>
+                    سهم @FormatPercent(activePercent)
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-people"></i>
+                    @totalUsers کل جامعه
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--warning">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">در انتظار فعال‌سازی</span>
+                    <span class="metric-card__subtitle">کاربران نیازمند پیگیری</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--warning">@FormatPercent(inactivePercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-clock-history"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@inactiveUsers</div>
+            <div class="metric-card__hint">ثبت‌نام شده اما غیرفعال</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--warning">
+                    <i class="bi bi-hourglass"></i>
+                    @inactiveUsers نفر منتظر
+                </span>
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-person-check"></i>
+                    @activeUsers فعال شده
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--danger">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">کاربران حذف‌شده</span>
+                    <span class="metric-card__subtitle">در دسترس برای بازیابی</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--danger">@FormatPercent(deletedPercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-trash"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@deletedUsers</div>
+            <div class="metric-card__hint">حساب‌های غیرفعال‌شده توسط مدیر</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--danger">
+                    <i class="bi bi-trash3"></i>
+                    @deletedUsers حذف‌شده
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-shield-check"></i>
+                    @FormatPercent(retainedPercent) نگهداشت
+                </span>
+            </div>
+        </article>
+    </div>
+
+    <div class="users-card app-card">
+        <div class="users-card__header">
+            <div>
+                <h2 class="users-card__title">لیست کاربران</h2>
+                <span class="users-card__subtitle">نمایش <span data-users-counter>@Model.Users.Count</span> کاربر</span>
+            </div>
+        </div>
+        <div class="users-card__actions">
+            <div class="users-card__buttons">
+                <button type="button" class="btn-action" data-bs-toggle="modal" data-bs-target="#usersFilterModal">
+                    <i class="bi bi-funnel me-1"></i>
+                    فیلتر
+                </button>
+                <a class="btn-action" href="#">
+                    <i class="bi bi-box-arrow-up me-1"></i>
+                    خروجی
+                </a>
+                <a class="btn-action"
+                   asp-action="Create"
+                   data-user-modal-trigger
+                   data-modal-url="@Url.Action("Create")">
+                    <i class="bi bi-person-plus-fill me-1"></i>
+                    افزودن کاربر
+                </a>
+            </div>
+            <div class="users-card__search">
+                <label class="app-search app-search--pill">
+                    <i class="bi bi-search"></i>
+                    <input type="search" class="form-control" id="usersSearchInput" placeholder="جستجو بر اساس نام، ایمیل یا نقش" aria-label="جستجوی کاربران" data-users-search />
+                </label>
+            </div>
+        </div>
+
+        @if (Model.Users.Count == 0)
+        {
+            <div class="users-empty">
+                هنوز کاربری با این شرایط در سیستم ثبت نشده است.
+            </div>
+        }
+        else
+        {
+            var totalPages = Model.TotalPages;
+            var pageNumber = Model.PageNumber;
+            var pageSize = Model.PageSize;
+            var currentCount = Model.Users.Count;
+            var firstItemIndex = Model.TotalCount == 0 ? 0 : ((pageNumber - 1) * pageSize) + 1;
+            var lastItemIndex = Model.TotalCount == 0 ? 0 : firstItemIndex + currentCount - 1;
+            var summaryFirst = Math.Max(0, firstItemIndex);
+            var summaryLast = Math.Max(0, lastItemIndex);
+
+            <div class="table-responsive">
+                <table class="table users-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">کاربر</th>
+                            <th scope="col">نقش/موقعیت</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">آخرین تغییر</th>
+                            <th scope="col" class="text-end">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        var statusClass = user.IsDeleted ? "badge-chip--danger" : !user.IsActive ? "badge-chip--pending" : "badge-chip--success";
+                        var statusIcon = user.IsDeleted ? "bi-trash" : !user.IsActive ? "bi-slash-circle" : "bi-check-circle";
+                        var statusLabel = user.IsDeleted ? "حذف شده" : !user.IsActive ? "غیرفعال" : "فعال";
+                        var statusDate = user.IsDeleted ? user.DeletedOn : (!user.IsActive ? user.DeactivatedOn : null);
+                        var statusHint = statusDate.HasValue
+                            ? $"آخرین تغییر وضعیت: {statusDate.Value.ToPersianDateTimeString()}"
+                            : "بدون تغییر وضعیت اخیر";
+                        var lastModified = user.LastModifiedOn.ToPersianDateTimeString();
+                        var baseName = !string.IsNullOrWhiteSpace(user.FullName) ? user.FullName.Trim() : user.Email.Trim();
+                        var displayName = string.IsNullOrWhiteSpace(user.FullName) ? user.Email : user.FullName;
+                        var avatarInitial = baseName.Length > 0 ? baseName[..1].ToUpperInvariant() : "؟";
+                        var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarPath) ? null : user.AvatarPath;
+                        var avatarAlt = displayName;
+                        var phoneDisplay = string.IsNullOrWhiteSpace(user.PhoneNumber) ? "-" : user.PhoneNumber;
+                        var roleTokens = string.Join(" ", user.Roles.Concat(user.RoleDisplayNames));
+                        var searchText = (user.FullName + " " + user.Email + " " + user.PhoneNumber + " " + roleTokens).ToLowerInvariant();
+                        <tr data-user-row data-search-text="@searchText">
+                            <td>
+                                <div class="users-table__user">
+                                    <span class="avatar avatar-md position-relative">
+                                        @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                                        {
+                                            <img src="@avatarUrl" alt="@($"آواتار {avatarAlt}")" />
+                                        }
+                                        else
+                                        {
+                                            @avatarInitial
+                                        }
+                                        @if (user.IsOnline)
+                                        {
+                                            <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-2 border-white" style="width: 12px; height: 12px; padding: 0;" title="آنلاین"></span>
+                                        }
+                                    </span>
+                                    <div>
+                                        <div class="users-table__name">
+                                            @displayName
+                                            @if (user.IsOnline)
+                                            {
+                                                <span class="badge bg-success-subtle text-success-emphasis ms-1" style="font-size: 0.7rem;">آنلاین</span>
+                                            }
+                                            else if (user.LastSeenAt.HasValue)
+                                            {
+                                                <span class="text-muted ms-1" style="font-size: 0.75rem;" title="آخرین بازدید: @user.LastSeenAt.Value.ToPersianDateTimeString()">
+                                                    @{
+                                                        var timeAgo = DateTimeOffset.UtcNow - user.LastSeenAt.Value;
+                                                        string timeAgoText;
+                                                        if (timeAgo.TotalMinutes < 1)
+                                                        {
+                                                            timeAgoText = "هم‌اکنون";
+                                                        }
+                                                        else if (timeAgo.TotalMinutes < 60)
+                                                        {
+                                                            timeAgoText = $"{(int)timeAgo.TotalMinutes} دقیقه پیش";
+                                                        }
+                                                        else if (timeAgo.TotalHours < 24)
+                                                        {
+                                                            timeAgoText = $"{(int)timeAgo.TotalHours} ساعت پیش";
+                                                        }
+                                                        else
+                                                        {
+                                                            timeAgoText = $"{(int)timeAgo.TotalDays} روز پیش";
+                                                        }
+                                                    }
+                                                    @timeAgoText
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="users-table__email">@user.Email</div>
+                                        <div class="users-table__phone">@phoneDisplay</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @{ var rolesForDisplay = user.RoleDisplayNames.Count > 0 ? user.RoleDisplayNames : user.Roles; }
+                                @if (rolesForDisplay.Count == 0)
+                                {
+                                    <span class="users-role text-muted">نقشی ثبت نشده</span>
+                                }
+                                else
+                                {
+                                    <div class="users-role">@string.Join("، ", rolesForDisplay)</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge-chip @statusClass">
+                                    <i class="bi @statusIcon"></i>
+                                    @statusLabel
+                                </span>
+                            </td>
+                            <td>
+                                <div class="users-table__hint">
+                                    <span class="users-table__hint-main">@lastModified</span>
+                                    <span class="users-table__hint-sub">@statusHint</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown users-actions-dropdown">
+                                    <button class="btn btn-soft-secondary btn-sm dropdown-toggle"
+                                            type="button"
+                                            id="userActionsDropdown-@user.Id"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        عملیات
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end users-actions-dropdown__menu"
+                                        aria-labelledby="userActionsDropdown-@user.Id">
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-action="Profile"
+                                               asp-route-id="@user.Id">
+                                                <i class="bi bi-person-circle"></i>
+                                                پروفایل کاربر
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-action="Edit"
+                                               asp-route-id="@user.Id"
+                                               data-user-modal-trigger
+                                               data-modal-url="@Url.Action("Edit", new { id = user.Id })">
+                                                <i class="bi bi-pencil"></i>
+                                                ویرایش
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-action="UserSessions"
+                                               asp-route-id="@user.Id">
+                                                <i class="bi bi-device-hdd"></i>
+                                                دستگاه‌ها
+                                            </a>
+                                        </li>
+                                        <li>
+                                            @if (!user.IsDeleted && user.IsActive)
+                                            {
+                                                <a class="dropdown-item"
+                                                   href="@Url.Action("Deactivate", new { id = user.Id })"
+                                                   data-user-modal-trigger
+                                                   data-modal-url="@Url.Action("Deactivate", new { id = user.Id })">
+                                                    <i class="bi bi-slash-circle"></i>
+                                                    غیرفعال کردن
+                                                </a>
+                                            }
+                                            else if (!user.IsDeleted && !user.IsActive)
+                                            {
+                                                <a class="dropdown-item"
+                                                   href="@Url.Action("Activate", new { id = user.Id })"
+                                                   data-user-modal-trigger
+                                                   data-modal-url="@Url.Action("Activate", new { id = user.Id })">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    فعال کردن
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="dropdown-item disabled">
+                                                    <i class="bi bi-slash-circle"></i>
+                                                    غیرفعال کردن
+                                                </span>
+                                            }
+                                        </li>
+                                        <li>
+                                            @if (!user.IsDeleted)
+                                            {
+                                                <a class="dropdown-item text-danger"
+                                                   href="@Url.Action("Delete", new { id = user.Id })"
+                                                   data-user-modal-trigger
+                                                   data-modal-url="@Url.Action("Delete", new { id = user.Id })">
+                                                    <i class="bi bi-trash"></i>
+                                                    حذف
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="dropdown-item disabled">
+                                                    <i class="bi bi-trash"></i>
+                                                    حذف
+                                                </span>
+                                            }
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="users-empty" data-users-empty hidden>
+                نتیجه‌ای مطابق جستجوی شما یافت نشد.
+            </div>
+
+            <nav class="users-pagination" aria-label="صفحه‌بندی کاربران">
+                @if (totalPages > 1)
+                {
+                    var maxDisplayedPages = 5;
+                    var startPage = Math.Max(1, pageNumber - 2);
+                    var endPage = Math.Min(totalPages, startPage + maxDisplayedPages - 1);
+                    startPage = Math.Max(1, endPage - maxDisplayedPages + 1);
+                    var previousPage = Math.Max(1, pageNumber - 1);
+                    var nextPage = Math.Min(totalPages, pageNumber + 1);
+
+                    <div class="users-pagination__controls d-flex flex-wrap justify-content-center align-items-center gap-2">
+                        <a class="btn btn-outline-primary users-pagination__control @(pageNumber == 1 ? "disabled" : string.Empty)"
+                           asp-area="Admin"
+                           asp-controller="Users"
+                           asp-action="Index"
+                           asp-route-page="@previousPage"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-fullName="@Model.FullName"
+                           asp-route-phoneNumber="@Model.PhoneNumber"
+                           asp-route-role="@Model.Role"
+                           asp-route-status="@Model.Status"
+                           asp-route-includeDeactivated="@Model.IncludeDeactivated"
+                           asp-route-includeDeleted="@Model.IncludeDeleted"
+                           asp-route-registeredFrom="@Model.RegisteredFrom"
+                           asp-route-registeredTo="@Model.RegisteredTo"
+                           tabindex="@(pageNumber == 1 ? "-1" : null)"
+                           aria-disabled="@(pageNumber == 1 ? "true" : null)">
+                            <i class="bi bi-chevron-right"></i>
+                            <span>قبلی</span>
+                        </a>
+
+                        <div class="users-pagination__numbers d-inline-flex flex-wrap justify-content-center gap-2">
+                            @for (var i = startPage; i <= endPage; i++)
+                            {
+                                var isActivePage = i == pageNumber;
+                                var numberClasses = isActivePage
+                                    ? "btn btn-primary"
+                                    : "btn btn-light";
+
+                                <a class="@($"{numberClasses} users-pagination__number")"
+                                   asp-area="Admin"
+                                   asp-controller="Users"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-fullName="@Model.FullName"
+                                   asp-route-phoneNumber="@Model.PhoneNumber"
+                                   asp-route-role="@Model.Role"
+                                   asp-route-status="@Model.Status"
+                                   asp-route-includeDeactivated="@Model.IncludeDeactivated"
+                                   asp-route-includeDeleted="@Model.IncludeDeleted"
+                                   asp-route-registeredFrom="@Model.RegisteredFrom"
+                                   asp-route-registeredTo="@Model.RegisteredTo"
+                                   aria-current="@(isActivePage ? "page" : null)">
+                                    @i
+                                </a>
+                            }
+                        </div>
+
+                        <a class="btn btn-outline-primary users-pagination__control @(pageNumber == totalPages ? "disabled" : string.Empty)"
+                           asp-area="Admin"
+                           asp-controller="Users"
+                           asp-action="Index"
+                           asp-route-page="@nextPage"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-fullName="@Model.FullName"
+                           asp-route-phoneNumber="@Model.PhoneNumber"
+                           asp-route-role="@Model.Role"
+                           asp-route-status="@Model.Status"
+                           asp-route-includeDeactivated="@Model.IncludeDeactivated"
+                           asp-route-includeDeleted="@Model.IncludeDeleted"
+                           asp-route-registeredFrom="@Model.RegisteredFrom"
+                           asp-route-registeredTo="@Model.RegisteredTo"
+                           tabindex="@(pageNumber == totalPages ? "-1" : null)"
+                           aria-disabled="@(pageNumber == totalPages ? "true" : null)">
+                            <span>بعدی</span>
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </div>
+                }
+
+                <div class="users-pagination__summary text-center text-muted small">
+                    نمایش @summaryFirst تا @summaryLast از @Model.TotalCount کاربر
+                </div>
+            </nav>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="usersFilterModal" tabindex="-1" aria-labelledby="usersFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content users-filter-modal admin-filter-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="usersFilterModalLabel">فیلتر تنظیمات</h5>
+                    <p class="modal-subtitle">گزینه‌های مورد نیاز خود را برای محدود کردن نتایج مشخص کنید.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <form method="get" class="users-filter-form admin-filter-modal__form" data-users-filter-form>
+                    <div class="admin-filter-modal__notice">
+                        <div class="admin-filter-modal__notice-icon">
+                            <i class="bi bi-funnel"></i>
+                        </div>
+                        <div>
+                            <p class="admin-filter-modal__notice-title">راهنمای جستجو</p>
+                            <p class="admin-filter-modal__notice-text">با انتخاب فیلدهای زیر می‌توانید نمایش کاربران را دقیق‌تر و سریع‌تر انجام دهید.</p>
+                        </div>
+                    </div>
+                    <input type="hidden" name="includeDeactivated" value="@(Model.IncludeDeactivated.ToString().ToLowerInvariant())" data-filter-include-deactivated />
+                    <input type="hidden" name="includeDeleted" value="@(Model.IncludeDeleted.ToString().ToLowerInvariant())" data-filter-include-deleted />
+                    <div class="admin-filter-modal__fields row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterFullName">نام کاربر</label>
+                            <input type="text" class="form-control" id="filterFullName" name="fullName" placeholder="مثلاً: سارا احمدی" value="@(Model.FullName ?? string.Empty)" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPhoneNumber">شماره تماس</label>
+                            <input type="tel" class="form-control" id="filterPhoneNumber" name="phoneNumber" placeholder="0912 000 0000" value="@(Model.PhoneNumber ?? string.Empty)" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterRole">نقش کاربر</label>
+                            <select class="form-select admin-select" id="filterRole" name="role">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.Role))">همه نقش‌ها</option>
+                                @foreach (var role in Model.AvailableRoles)
+                                {
+                                    <option value="@role.Value" selected="@(string.Equals(role.Value, Model.Role, System.StringComparison.OrdinalIgnoreCase))">@role.Label</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterStatus">وضعیت کاربر</label>
+                            <select class="form-select admin-select" id="filterStatus" name="status" data-filter-status>
+                                <option value="all" selected="@(Model.Status == UserStatusFilter.All)">همه وضعیت‌ها</option>
+                                <option value="active" selected="@(Model.Status == UserStatusFilter.Active)">فعال</option>
+                                <option value="inactive" selected="@(Model.Status == UserStatusFilter.Inactive)">غیرفعال</option>
+                                <option value="deleted" selected="@(Model.Status == UserStatusFilter.Deleted)">حذف‌شده</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">تاریخ ثبت‌نام از</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.RegisteredFrom != null ? Model.RegisteredFrom.Replace("-", "/") : string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.RegisteredFrom != null ? Model.RegisteredFrom.Replace("-", "/") : string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden" name="registeredFrom" value="@(Model.RegisteredFrom ?? string.Empty)" data-jalali-target />
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">تاریخ ثبت‌نام تا</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.RegisteredTo != null ? Model.RegisteredTo.Replace("-", "/") : string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.RegisteredTo != null ? Model.RegisteredTo.Replace("-", "/") : string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden" name="registeredTo" value="@(Model.RegisteredTo ?? string.Empty)" data-jalali-target />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-filter-modal__actions">
+                        <button type="reset" class="btn btn-light">پاکسازی</button>
+                        <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userFormModal" tabindex="-1" aria-hidden="true" data-user-form-modal></div>
+
+@section Scripts {
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/users-index.js" asp-append-version="true"></script>
+}

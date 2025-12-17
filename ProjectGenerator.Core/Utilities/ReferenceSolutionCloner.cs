@@ -1,4 +1,5 @@
 using ProjectGenerator.Core.Models;
+using ProjectGenerator.Core.Templates;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,13 @@ namespace ProjectGenerator.Core.Utilities;
 
 internal static class ReferenceSolutionCloner
 {
+    private enum ReferenceTemplateKind
+    {
+        Unknown = 0,
+        Arsis = 1,
+        Attar = 2
+    }
+
     private static readonly string[] SourceDirectories =
     [
         "Domain",
@@ -23,7 +31,9 @@ internal static class ReferenceSolutionCloner
         "obj",
         ".git",
         ".vs",
-        "logs",
+        // NOTE: we intentionally do NOT add "logs" here because some valid
+        // source folders (like Application/DTOs/Logs) would be skipped.
+        // Runtime log folders are filtered explicitly in ShouldSkip instead.
         "TestResults"
     };
 
@@ -87,22 +97,39 @@ internal static class ReferenceSolutionCloner
         "Areas/Admin/Controllers/AssessmentController.cs",
         "Areas/Admin/Controllers/TestsController.cs",
         "Areas/Admin/Controllers/OrganizationsController.cs",
+        "Areas/Admin/Controllers/ResultController.cs",
         "Areas/Admin/Views/Assessment",
         "Areas/Admin/Views/Tests",
         "Areas/Admin/Views/Organizations",
+        "Areas/Admin/Views/Exam",
+        "Areas/Admin/Models/Tests",
+        "Models/Test",
         "Views/Test",
+        "Views/Exam",
         "Controllers/TestController.cs",
         "Controllers/AssessmentController.cs",
+        "Controllers/ResultController.cs",
         "Areas/User/Controllers/TestController.cs",
         "Areas/User/Controllers/AssessmentController.cs",
         "Areas/User/Views/Test",
         "Areas/User/Views/Assessment",
+        // WebSite Growth
+        "Growth",
+        // WebSite Models
+        "Models/Result",
+        // WebSite Views
+        "Views/Results",
+        "Views/Result",
+        // WebSite Routes/Controllers
+        "Controllers/MetricsController.cs",
+        "Areas/Admin/Controllers/MetricsController.cs",
         // Specific files
         "Question.cs",
         "UserResponse.cs",
         "Talent.cs",
         "TalentScore.cs",
-        "Organization.cs"
+        "Organization.cs",
+        "Result.cs"
     };
 
     private static readonly HashSet<string> BinaryExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -127,7 +154,7 @@ internal static class ReferenceSolutionCloner
         var websiteSource = ReferencePaths.FindReferenceProjectRoot();
         if (websiteSource is null)
         {
-            Console.WriteLine("⚠ Reference EndPoint.WebSite folder not found. Falling back to template generation.");
+            Console.WriteLine("⚠ Reference web project folder not found. Falling back to template generation.");
             return false;
         }
 
@@ -138,11 +165,20 @@ internal static class ReferenceSolutionCloner
             return false;
         }
 
-        var referenceSrcRoot = Path.Combine(referenceRoot, "src");
-        if (!Directory.Exists(referenceSrcRoot))
+        var templateKind = DetectTemplateKind(websiteSource);
+
+        // Old layout has src/Domain, src/Application, ... next to the web project.
+        // New layout (mainproject) puts Domain/Application/... directly under referenceRoot.
+        string referenceSrcRoot;
+        var legacySrc = Path.Combine(referenceRoot, "src");
+        if (Directory.Exists(legacySrc))
         {
-            Console.WriteLine("⚠ Reference src folder not found. Falling back to template generation.");
-            return false;
+            referenceSrcRoot = legacySrc;
+        }
+        else
+        {
+            // Assume new mainproject layout (Domain/Application/Infrastructure/SharedKernel at the root)
+            referenceSrcRoot = referenceRoot;
         }
 
         Console.WriteLine("Cloning reference solution structure...");
@@ -165,41 +201,112 @@ internal static class ReferenceSolutionCloner
 
             var targetDir = Path.Combine(targetSrcRoot, folder);
             Console.WriteLine($" - {folder}");
-            CopyDirectory(sourceDir, targetDir, config);
+            CopyDirectory(sourceDir, targetDir, config, templateKind);
         }
 
         var websiteTargetDir = Path.Combine(targetSrcRoot, $"{config.ProjectName}.WebSite");
         Console.WriteLine($" - {config.ProjectName}.WebSite");
-        CopyDirectory(websiteSource, websiteTargetDir, config);
+        CopyDirectory(websiteSource, websiteTargetDir, config, templateKind);
+
+        // Ensure BaseTypes folder and Result.cs exist in SharedKernel
+        EnsureSharedKernelBaseTypes(targetSrcRoot, config);
 
         Console.WriteLine("✓ Reference source cloned successfully");
         return true;
     }
 
-    private static void CopyDirectory(string sourceDir, string destinationDir, ProjectConfig config)
+    private static void EnsureSharedKernelBaseTypes(string srcRoot, ProjectConfig config)
+    {
+        var sharedKernelPath = Path.Combine(srcRoot, "SharedKernel");
+        if (!Directory.Exists(sharedKernelPath))
+        {
+            Console.WriteLine("⚠ SharedKernel directory not found. Creating it...");
+            Directory.CreateDirectory(sharedKernelPath);
+        }
+
+        var baseTypesPath = Path.Combine(sharedKernelPath, "BaseTypes");
+        if (!Directory.Exists(baseTypesPath))
+        {
+            Console.WriteLine("Creating SharedKernel/BaseTypes directory...");
+            Directory.CreateDirectory(baseTypesPath);
+        }
+
+        var resultFilePath = Path.Combine(baseTypesPath, "Result.cs");
+        if (!File.Exists(resultFilePath))
+        {
+            Console.WriteLine("Creating SharedKernel/BaseTypes/Result.cs...");
+            var templateProvider = new ProjectGenerator.Core.Templates.TemplateProvider(config.Namespace);
+            var resultContent = templateProvider.GetSharedKernelResultTemplate();
+            File.WriteAllText(resultFilePath, resultContent, Encoding.UTF8);
+        }
+    }
+
+    private static void CopyDirectory(string sourceDir, string destinationDir, ProjectConfig config, ReferenceTemplateKind templateKind)
     {
         Directory.CreateDirectory(destinationDir);
 
         foreach (var directory in Directory.EnumerateDirectories(sourceDir, "*", SearchOption.AllDirectories))
         {
-            if (ShouldSkip(directory, sourceDir))
+            if (ShouldSkip(directory, sourceDir, templateKind))
             {
                 continue;
             }
 
             var relativePath = Path.GetRelativePath(sourceDir, directory);
+
+            // For legacy Arsis template we don't want to carry over old EF Core Migrations,
+            // but for the new mainproject template we keep everything as-is.
+            if (templateKind == ReferenceTemplateKind.Arsis)
+            {
+                var normalizedPath = relativePath.Replace('\\', '/');
+                var directoryName = Path.GetFileName(normalizedPath);
+
+                if (string.Equals(directoryName, "Migrations", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.Contains("/Migrations", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.Contains("\\Migrations", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+            }
+
             var transformedRelative = TransformRelativePath(relativePath, config);
             Directory.CreateDirectory(Path.Combine(destinationDir, transformedRelative));
         }
 
         foreach (var file in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
         {
-            if (ShouldSkip(file, sourceDir))
+            if (ShouldSkip(file, sourceDir, templateKind))
             {
                 continue;
             }
 
             var relativePath = Path.GetRelativePath(sourceDir, file);
+            var normalizedPath = relativePath.Replace('\\', '/');
+
+            if (templateKind == ReferenceTemplateKind.Arsis)
+            {
+                // For the legacy template we drop all migrations so each generated
+                // project can create its own clean migration history.
+                if (normalizedPath.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Skip migration snapshot files even if not in Migrations folder
+                var fileNameSnapshot = Path.GetFileName(relativePath);
+                if (!string.IsNullOrEmpty(fileNameSnapshot) &&
+                    fileNameSnapshot.Contains("Snapshot", StringComparison.OrdinalIgnoreCase) &&
+                    fileNameSnapshot.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+            }
+
+            var fileName = Path.GetFileName(relativePath);
+
             var transformedRelative = TransformRelativePath(relativePath, config);
             var destinationFile = Path.Combine(destinationDir, transformedRelative);
             Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
@@ -207,8 +314,7 @@ internal static class ReferenceSolutionCloner
             if (IsTextFile(file))
             {
                 var content = File.ReadAllText(file, Encoding.UTF8);
-                var fileName = Path.GetFileName(file);
-                var transformedContent = ApplyContentTransformations(content, config, fileName);
+                var transformedContent = ApplyContentTransformations(content, config, templateKind, fileName);
                 File.WriteAllText(destinationFile, transformedContent, Encoding.UTF8);
             }
             else
@@ -218,21 +324,143 @@ internal static class ReferenceSolutionCloner
         }
     }
 
-    private static bool ShouldSkip(string path, string basePath)
+    private static bool ShouldSkip(string path, string basePath, ReferenceTemplateKind templateKind)
     {
         var relative = Path.GetRelativePath(basePath, path);
         var segments = relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         
         // Skip standard build/version control directories
-        if (segments.Any(segment => SkippedDirectories.Contains(segment)))
+        for (var i = 0; i < segments.Length; i++)
+        {
+            var segment = segments[i];
+            if (string.IsNullOrWhiteSpace(segment))
+            {
+                continue;
+            }
+
+            // Skip runtime log folder only when it is at the root of the web project
+            // (e.g. Attar.WebSite/logs). We still want to keep code folders like
+            // Application/DTOs/Logs.
+            if (segment.Equals("logs", StringComparison.OrdinalIgnoreCase))
+            {
+                // Root-level logs folder (logs/..., not Application/DTOs/Logs)
+                if (i == 0)
+                {
+                    return true;
+                }
+
+                // Otherwise, treat as a normal folder (do not skip)
+                continue;
+            }
+
+            if (SkippedDirectories.Contains(segment))
+            {
+                return true;
+            }
+        }
+
+        if (templateKind == ReferenceTemplateKind.Arsis)
+        {
+            // For the legacy Arsis template we clean up migrations and
+            // test/assessment related files. For the new mainproject
+            // template we keep everything as-is.
+
+            // Skip all migration files - migrations should be created fresh for each new project
+            if (IsMigrationFile(relative))
+            {
+                return true;
+            }
+
+            // Skip test/assessment related paths
+            if (IsTestRelatedPath(relative))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsMigrationFile(string relativePath)
+    {
+        // Check if this is a migration file, snapshot file, or Migrations folder
+        // Skip all migration-related files and the entire Migrations folder
+        var normalizedPath = relativePath.Replace('\\', '/');
+        
+        // Check if path contains Migrations folder (anywhere in the path)
+        if (normalizedPath.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.Contains("/Migrations", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.Contains("\\Migrations", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
-
-        // Skip test/assessment related paths
-        if (IsTestRelatedPath(relative))
+        
+        // Check if file name is a migration snapshot file
+        var fileName = Path.GetFileName(normalizedPath);
+        if (!string.IsNullOrEmpty(fileName))
         {
-            return true;
+            // Migration snapshot files: ApplicationDbContextModelSnapshot.cs or similar
+            if (fileName.Contains("Snapshot", StringComparison.OrdinalIgnoreCase) &&
+                fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            // Migration files usually have pattern like: YYYYMMDDHHMMSS_Description.cs
+            if (fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
+                var migrationPattern = @"^\d{14}_";
+                if (Regex.IsMatch(fileName, migrationPattern))
+                {
+                    return true;
+                }
+            }
+            
+            // Also check for .Designer.cs files that are part of migrations
+            if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                // Check if parent directory is Migrations
+                var parentDir = Path.GetDirectoryName(normalizedPath);
+                if (!string.IsNullOrEmpty(parentDir) && 
+                    (parentDir.Contains("/Migrations", StringComparison.OrdinalIgnoreCase) ||
+                     parentDir.Contains("\\Migrations", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    private static bool IsTestRelatedMigration(string fileName)
+    {
+        // Check if migration file name contains Test/Assessment/Organization/Talent/Question related keywords
+        var testRelatedKeywords = new[]
+        {
+            "Test",
+            "Assessment",
+            "Organization",
+            "Talent",
+            "Question",
+            "UserTest",
+            "TestAttempt",
+            "TestResult",
+            "TestQuestion",
+            "TestSubmission",
+            "AssessmentRun",
+            "AssessmentResponse",
+            "AssessmentQuestion",
+            "TalentScore"
+        };
+
+        foreach (var keyword in testRelatedKeywords)
+        {
+            if (fileName.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -279,6 +507,34 @@ internal static class ReferenceSolutionCloner
         var file = Path.GetFileName(relativePath);
         if (file != null)
         {
+            // Skip SeedData.cs from Infrastructure.Persistence
+            if (file.Equals("SeedData.cs", StringComparison.OrdinalIgnoreCase) &&
+                (normalizedPath.Contains("Infrastructure/Persistence", StringComparison.OrdinalIgnoreCase) ||
+                 normalizedPath.Contains("Infrastructure\\Persistence", StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+            
+            // Skip Test/Organization related files from Areas/Admin/Models
+            if (normalizedPath.Contains("Areas/Admin/Models", StringComparison.OrdinalIgnoreCase) ||
+                normalizedPath.Contains("Areas\\Admin\\Models", StringComparison.OrdinalIgnoreCase))
+            {
+                var testOrgModelFiles = new[]
+                {
+                    "Test", "Assessment", "Organization", "Talent", "Question", 
+                    "UserTest", "TestAttempt", "TestResult", "TestQuestion",
+                    "TestSubmission", "AssessmentRun", "OrganizationStatus"
+                };
+                
+                foreach (var testOrgFile in testOrgModelFiles)
+                {
+                    if (file.Contains(testOrgFile, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
             var testRelatedFiles = new[] 
             { 
                 "SubmitTestDto.cs", 
@@ -299,7 +555,13 @@ internal static class ReferenceSolutionCloner
                 "TestQuestionOptionConfiguration.cs",
                 "TestResultConfiguration.cs",
                 "UserTestAnswerConfiguration.cs",
-                "UserTestAttemptConfiguration.cs"
+                "UserTestAttemptConfiguration.cs",
+                // Additional Test/Assessment related files
+                "AssessmentLabelResolver.cs",
+                "ImportController.cs",
+                "ExamController.cs",
+                "ResultController.cs",
+                "TestListViewModel.cs"
             };
             if (testRelatedFiles.Any(f => file.Equals(f, StringComparison.OrdinalIgnoreCase)))
             {
@@ -343,12 +605,82 @@ internal static class ReferenceSolutionCloner
         return TextExtensions.Contains(extension);
     }
 
-    private static string TransformRelativePath(string relativePath, ProjectConfig config)
+    private static ReferenceTemplateKind DetectTemplateKind(string websiteSource)
     {
-        return relativePath.Replace("EndPoint.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+        var directoryName = Path.GetFileName(websiteSource.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
+        if (directoryName.Equals("Attar.WebSite", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReferenceTemplateKind.Attar;
+        }
+
+        if (directoryName.Equals("EndPoint.WebSite", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReferenceTemplateKind.Arsis;
+        }
+
+        return ReferenceTemplateKind.Unknown;
     }
 
-    private static string ApplyContentTransformations(string content, ProjectConfig config, string? fileName = null)
+    private static string TransformRelativePath(string relativePath, ProjectConfig config)
+    {
+        var transformed = relativePath;
+
+        // Legacy template web project name
+        transformed = transformed.Replace("EndPoint.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+
+        // New mainproject web project name
+        transformed = transformed.Replace("Attar.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+
+        return transformed;
+    }
+
+    private static string ApplyContentTransformations(string content, ProjectConfig config, ReferenceTemplateKind templateKind, string? fileName = null)
+    {
+        return templateKind switch
+        {
+            ReferenceTemplateKind.Attar => ApplyAttarTransformations(content, config, fileName),
+            ReferenceTemplateKind.Arsis or ReferenceTemplateKind.Unknown => ApplyArsisTransformations(content, config, fileName),
+            _ => ApplyArsisTransformations(content, config, fileName)
+        };
+    }
+
+    private static string ApplyAttarTransformations(string content, ProjectConfig config, string? fileName)
+    {
+        // For the new mainproject template we only do safe renames (namespaces,
+        // project name, and database names). We do NOT strip any features –
+        // the generated project should be structurally identical to the
+        // original Attar project, just under a new name/namespace.
+        var transformed = content
+            // Web project name
+            .Replace("Attar.WebSite", $"{config.ProjectName}.WebSite", StringComparison.Ordinal)
+            // Root namespace
+            .Replace("namespace Attar", $"namespace {config.Namespace}", StringComparison.Ordinal)
+            .Replace("Attar.", $"{config.Namespace}.", StringComparison.Ordinal)
+            // Database names
+            .Replace("Attar_DB", $"{config.ProjectName}_DB", StringComparison.Ordinal)
+            .Replace("Attar_Logs_DB", $"{config.ProjectName}_Logs_DB", StringComparison.Ordinal)
+            .Replace("Attar_Hangfire_DB", $"{config.ProjectName}_Hangfire_DB", StringComparison.Ordinal)
+            // ApplicationName in appsettings
+            .Replace("Attar-WebSite", $"{config.ProjectName}-WebSite", StringComparison.Ordinal);
+
+        // Normalize logging entity and table names so they are not tied to the
+        // original Attar project name. We intentionally use a neutral name
+        // "ApplicationLog(s)" so the same template can be reused for any project.
+        transformed = transformed
+            // SQL / configuration table names and indexes
+            .Replace("[Logs].[AttarApplicationLogs]", "[Logs].[ApplicationLogs]", StringComparison.Ordinal)
+            .Replace("IX_AttarApplicationLogs_", "IX_ApplicationLogs_", StringComparison.Ordinal)
+            // EF Core configuration
+            .Replace("ToTable(\"AttarApplicationLogs\"", "ToTable(\"ApplicationLogs\"", StringComparison.Ordinal)
+            // DbSet and entity class names
+            .Replace("AttarApplicationLogs", "ApplicationLogs", StringComparison.Ordinal)
+            .Replace("AttarApplicationLog", "ApplicationLog", StringComparison.Ordinal);
+
+        return transformed;
+    }
+
+    private static string ApplyArsisTransformations(string content, ProjectConfig config, string? fileName)
     {
         var transformed = content
             .Replace("EndPoint.WebSite", $"{config.ProjectName}.WebSite", StringComparison.Ordinal)
@@ -376,6 +708,7 @@ internal static class ReferenceSolutionCloner
         if (fileName != null && fileName.Equals("Program.cs", StringComparison.OrdinalIgnoreCase))
         {
             transformed = RemoveAssessmentCode(transformed);
+            transformed = RemoveMetricsRoute(transformed);
         }
 
         // Remove Assessment/Test menu items from AdminSidebar
@@ -408,6 +741,73 @@ internal static class ReferenceSolutionCloner
             transformed = RemoveTestInterfaceReferences(transformed);
             // Also remove Test/Assessment related using statements and references
             transformed = RemoveTestRelatedReferences(transformed);
+            
+            // Special handling for BaseEntity.cs to remove ForeignKey attributes for non-existent properties
+            if (fileName != null && fileName.Equals("BaseEntity.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = RemoveForeignKeyAttributesFromBaseEntity(transformed);
+            }
+            
+            // Special handling for DiscountCode.cs to remove DiscountApplicationResult references
+            if (fileName != null && fileName.Equals("DiscountCode.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = RemoveDiscountApplicationResultReferences(transformed);
+            }
+            
+            // Special handling for ICommand.cs to fix BaseTypes and Result references
+            if (fileName != null && fileName.Equals("ICommand.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = FixICommandReferences(transformed);
+            }
+            
+            // Special handling for DiscountDtos.cs to add using statement and fix references
+            if (fileName != null && fileName.Equals("DiscountDtos.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = AddDiscountDtosUsingStatement(transformed);
+                // Also fix DiscountApplicationResult references to use DiscountCode.DiscountApplicationResult
+                transformed = FixDiscountApplicationResultReferences(transformed);
+            }
+            
+            // Remove non-existent properties from entity classes (that don't exist in database)
+            // Check if this is an entity class (in Domain/Entities or Domain/Base folder)
+            if (content.Contains("namespace", StringComparison.OrdinalIgnoreCase) &&
+                (content.Contains("Domain.Entities", StringComparison.OrdinalIgnoreCase) ||
+                 content.Contains("Domain\\Entities", StringComparison.OrdinalIgnoreCase) ||
+                 content.Contains("Domain.Base", StringComparison.OrdinalIgnoreCase) ||
+                 content.Contains("Domain\\Base", StringComparison.OrdinalIgnoreCase)))
+            {
+                transformed = RemoveNonExistentPropertiesFromEntity(transformed);
+            }
+            
+            // Special handling for DashboardController and SystemPerformanceSummaryViewModel
+            if (fileName.Equals("DashboardController.cs", StringComparison.OrdinalIgnoreCase) ||
+                fileName.Equals("SystemPerformanceSummaryViewModel.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = RemoveLearningMetricsReferences(transformed);
+                transformed = FixDashboardControllerBuildEmptySummary(transformed);
+            }
+            
+            // Special handling for CheckoutController
+            if (fileName.Equals("CheckoutController.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = RemoveTestResultReferences(transformed);
+                transformed = RemoveCheckoutControllerTestMethods(transformed);
+            }
+        }
+        
+        // Special handling for all Details.cshtml views (Invoice, Catalog, etc.)
+        if (fileName != null && fileName.Equals("Details.cshtml", StringComparison.OrdinalIgnoreCase))
+        {
+            transformed = RemoveInvoiceTestProperties(transformed);
+            transformed = CleanInvoiceDetailsView(transformed);
+            // Also add using statements for all Details views
+            transformed = AddUsingStatementsToDetailsView(transformed);
+        }
+        
+        // Special handling for _ViewImports.cshtml to remove WebSite.Models.Result reference
+        if (fileName != null && fileName.Equals("_ViewImports.cshtml", StringComparison.OrdinalIgnoreCase))
+        {
+            transformed = RemoveWebSiteModelsResultReference(transformed);
         }
 
         // Special handling for AppDbContext to remove Organization references
@@ -416,11 +816,30 @@ internal static class ReferenceSolutionCloner
             transformed = RemoveOrganizationFromDbContext(transformed);
         }
 
-        // Special handling for SeedData to remove Talent/Question references
-        if (fileName != null && fileName.Equals("SeedData.cs", StringComparison.OrdinalIgnoreCase))
+        // Ignore properties that don't exist in database for entity configurations
+        if (fileName != null && fileName.EndsWith("Configuration.cs", StringComparison.OrdinalIgnoreCase))
         {
-            transformed = RemoveTestEntitiesFromSeedData(transformed);
+            transformed = IgnoreNonExistentPropertiesInConfiguration(transformed);
         }
+
+        // Clean migration files to remove Test/Assessment/Organization related code
+        if (fileName != null && fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+        {
+            // Check if this is a migration file
+            var relativePath = content.Contains("namespace", StringComparison.OrdinalIgnoreCase) 
+                ? string.Empty 
+                : string.Empty; // We'll check by file path in ShouldSkip, but also clean content if needed
+            
+            // If file contains migration-related code and Test/Assessment references, clean it
+            if (content.Contains("migrationBuilder", StringComparison.OrdinalIgnoreCase) ||
+                content.Contains("CreateTable", StringComparison.OrdinalIgnoreCase) ||
+                content.Contains("DropTable", StringComparison.OrdinalIgnoreCase))
+            {
+                transformed = CleanMigrationFile(transformed);
+            }
+        }
+
+        // SeedData.cs is now skipped entirely, so no special handling needed
 
         return transformed;
     }
@@ -551,11 +970,117 @@ internal static class ReferenceSolutionCloner
         
         // After removing Talent/Question code, reformat SystemUser block again to ensure commas are correct
         // This is a safety measure in case the removal process affected the block
-        systemUserStartMatch = Regex.Match(content, systemUserStartPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
-        if (systemUserStartMatch.Success)
+        // Use a more flexible pattern to find SystemUser block
+        var systemUserFlexiblePattern = @"internal\s+static\s+readonly\s+ApplicationUser\s+SystemUser\s*=\s*new\s+ApplicationUser";
+        var finalSystemUserMatch = Regex.Match(content, systemUserFlexiblePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        
+        if (finalSystemUserMatch.Success)
         {
-            var startIndex = systemUserStartMatch.Index;
-            var declarationEnd = startIndex + systemUserStartMatch.Length;
+            var startIndex = finalSystemUserMatch.Index;
+            var declarationEnd = startIndex + finalSystemUserMatch.Length;
+            
+            // Find the opening brace
+            var braceStart = content.IndexOf('{', declarationEnd);
+            if (braceStart >= 0)
+            {
+                // Use brace matching to find the closing brace
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    // Find semicolon after closing brace
+                    var semicolonIndex = i;
+                    while (semicolonIndex < content.Length && char.IsWhiteSpace(content[semicolonIndex]))
+                        semicolonIndex++;
+                    if (semicolonIndex < content.Length && content[semicolonIndex] == ';')
+                        semicolonIndex++;
+                    
+                    // Extract properties block
+                    var propertiesContent = content.Substring(braceStart + 1, i - 1 - braceStart - 1);
+                    
+                    // Parse properties line by line and ensure ALL have commas
+                    var lines = propertiesContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+                    var processedLines = new List<string>();
+                    
+                    foreach (var line in lines)
+                    {
+                        var trimmed = line.Trim();
+                        
+                        // Skip empty lines
+                        if (string.IsNullOrWhiteSpace(trimmed))
+                            continue;
+                        
+                        // Skip braces if any
+                        if (trimmed == "{" || trimmed == "}")
+                            continue;
+                        
+                        // Check if it's a property assignment (contains =)
+                        if (trimmed.Contains("="))
+                        {
+                            // Remove any existing comma or semicolon
+                            trimmed = trimmed.TrimEnd(',', ';').TrimEnd();
+                            
+                            // Always add comma at the end
+                            processedLines.Add("    " + trimmed + ",");
+                        }
+                    }
+                    
+                    // Build the formatted SystemUser block with proper closing
+                    var formattedBlock = "internal static readonly ApplicationUser SystemUser = new ApplicationUser\r\n" +
+                                       "{\r\n" +
+                                       string.Join("\r\n", processedLines) + "\r\n" +
+                                       "};";
+                    
+                    // Replace the old block with the formatted one
+                    var endIndex = semicolonIndex;
+                    while (endIndex < content.Length && (content[endIndex] == '\r' || content[endIndex] == '\n'))
+                        endIndex++;
+                    
+                    content = content.Substring(0, startIndex) + 
+                             formattedBlock + 
+                             content.Substring(endIndex);
+                }
+            }
+        }
+        
+        // Clean up any remaining orphaned elements as a safety measure
+        // Remove any remaining Talent ID constants
+        var talentIdNames = new[]
+        {
+            "AnalyticalThinkingId", "CreativeVisionId", "LeadershipInfluenceId", "TeamCollaborationId",
+            "EmotionalIntelligenceId", "StrategicPlanningId", "ProblemSolvingId", "AdaptabilityId",
+            "CommunicationExcellenceId", "DecisionMakingId", "InnovationCatalystId", "ResilienceId",
+            "LearningAgilityId", "TimeManagementId", "CustomerFocusId", "TechnicalMasteryId",
+            "MentoringId", "NegotiationId", "ConflictResolutionId", "EntrepreneurshipId",
+            "AttentionToDetailId", "ProductivityDriveId", "CulturalAwarenessId", "ServiceOrientationId"
+        };
+
+        foreach (var idName in talentIdNames)
+        {
+            content = Regex.Replace(
+                content,
+                $@"^\s*internal\s+static\s+readonly\s+Guid\s+{Regex.Escape(idName)}\s*=\s*Guid\.Parse\([^)]+\);\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+        }
+        
+        // FINAL STEP: Reformat SystemUser block one more time after all removals
+        // This ensures the block is correctly formatted with commas and proper closing
+        var finalSystemUserPattern = @"internal\s+static\s+readonly\s+ApplicationUser\s+SystemUser\s*=\s*new\s+ApplicationUser";
+        var finalMatch = Regex.Match(content, finalSystemUserPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        
+        if (finalMatch.Success)
+        {
+            var startIndex = finalMatch.Index;
+            var declarationEnd = startIndex + finalMatch.Length;
             
             var braceStart = content.IndexOf('{', declarationEnd);
             if (braceStart >= 0)
@@ -609,28 +1134,6 @@ internal static class ReferenceSolutionCloner
                              content.Substring(endIndex);
                 }
             }
-        }
-        
-        // Clean up any remaining orphaned elements as a safety measure
-        // Remove any remaining Talent ID constants
-        var talentIdNames = new[]
-        {
-            "AnalyticalThinkingId", "CreativeVisionId", "LeadershipInfluenceId", "TeamCollaborationId",
-            "EmotionalIntelligenceId", "StrategicPlanningId", "ProblemSolvingId", "AdaptabilityId",
-            "CommunicationExcellenceId", "DecisionMakingId", "InnovationCatalystId", "ResilienceId",
-            "LearningAgilityId", "TimeManagementId", "CustomerFocusId", "TechnicalMasteryId",
-            "MentoringId", "NegotiationId", "ConflictResolutionId", "EntrepreneurshipId",
-            "AttentionToDetailId", "ProductivityDriveId", "CulturalAwarenessId", "ServiceOrientationId"
-        };
-
-        foreach (var idName in talentIdNames)
-        {
-            content = Regex.Replace(
-                content,
-                $@"^\s*internal\s+static\s+readonly\s+Guid\s+{Regex.Escape(idName)}\s*=\s*Guid\.Parse\([^)]+\);\s*\r?\n",
-                string.Empty,
-                RegexOptions.IgnoreCase | RegexOptions.Multiline
-            );
         }
 
         // Remove Talents collection - use a more robust approach
@@ -1715,6 +2218,14 @@ internal static class ReferenceSolutionCloner
             string.Empty,
             RegexOptions.IgnoreCase | RegexOptions.Multiline
         );
+        
+        // Remove Growth namespace using statement
+        content = Regex.Replace(
+            content,
+            @"using\s+[^;]*\.Growth[^;]*;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
 
         // Remove Assessment service registrations using parenthesis matching for accuracy
         // Remove MatricesOptions configuration
@@ -1846,9 +2357,28 @@ internal static class ReferenceSolutionCloner
         }
         
         // Remove orphaned closing parentheses and semicolons (leftover from removed lines)
+        // Match standalone ); on a line (with optional whitespace)
         content = Regex.Replace(
             content,
             @"^\s*\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+        
+        // Also remove ); that might be on the same line as other content but orphaned
+        // Match ); followed by newline or end of line, but not part of a valid statement
+        // This handles cases where ); is left alone on a line
+        content = Regex.Replace(
+            content,
+            @"\r?\n\s*\);\s*\r?\n",
+            "\r\n",
+            RegexOptions.Multiline
+        );
+        
+        // Remove ); at the start of a line (after previous removals)
+        content = Regex.Replace(
+            content,
+            @"^\s*\);\s*$",
             string.Empty,
             RegexOptions.Multiline
         );
@@ -1858,15 +2388,111 @@ internal static class ReferenceSolutionCloner
             string.Empty,
             RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
         );
+        // Remove IQuestionImporter service registration
+        // Pattern: builder.Services.AddScoped<IQuestionImporter, QuestionImporter>();
         content = Regex.Replace(
             content,
-            @"builder\.Services\.AddScoped<IQuestionImporter[^>]*>\([^)]+\);\s*\r?\n",
+            @"builder\.Services\.AddScoped<IQuestionImporter\s*,\s*QuestionImporter\s*>\s*\([^)]*\);\s*\r?\n",
             string.Empty,
             RegexOptions.IgnoreCase | RegexOptions.Multiline
         );
+        // Also match without generic type parameters (fallback)
         content = Regex.Replace(
             content,
-            @"builder\.Services\.AddScoped<[^>]*AssessmentService[^>]*>\([^)]+\);\s*\r?\n",
+            @"builder\.Services\.AddScoped<IQuestionImporter[^>]*>\s*\([^)]+\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        // Remove Growth.AssessmentService service registration (matches both aa.WebSite.Growth.AssessmentService and Growth.AssessmentService)
+        content = Regex.Replace(
+            content,
+            @"builder\.Services\.AddScoped<[^>]*Growth\.AssessmentService[^>]*>\([^)]*\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove MatrixLoader service registration
+        // Match: builder.Services.AddSingleton(sp => { ... return MatrixLoader.Load(...); });
+        var matrixLoaderPattern = @"builder\.Services\.AddSingleton\s*\(\s*sp\s*=>\s*\{";
+        var matrixLoaderMatch = Regex.Match(content, matrixLoaderPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        while (matrixLoaderMatch.Success)
+        {
+            var startIndex = matrixLoaderMatch.Index;
+            var lineStart = startIndex;
+            while (lineStart > 0 && content[lineStart - 1] != '\n' && content[lineStart - 1] != '\r')
+                lineStart--;
+            
+            var braceStart = content.IndexOf('{', startIndex);
+            if (braceStart >= 0)
+            {
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    // Check if this block contains MatrixLoader.Load
+                    var blockContent = content.Substring(braceStart + 1, i - 1 - braceStart - 1);
+                    if (blockContent.Contains("MatrixLoader.Load", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Find semicolon and closing parenthesis after closing brace
+                        while (i < content.Length && char.IsWhiteSpace(content[i]))
+                            i++;
+                        if (i < content.Length && content[i] == ')')
+                            i++;
+                        while (i < content.Length && char.IsWhiteSpace(content[i]))
+                            i++;
+                        if (i < content.Length && content[i] == ';')
+                            i++;
+                        // Include newline
+                        while (i < content.Length && (content[i] == '\r' || content[i] == '\n'))
+                            i++;
+                        
+                        // Remove from line start to end of AddSingleton call
+                        content = content.Remove(lineStart, i - lineStart);
+                        matrixLoaderMatch = Regex.Match(content, matrixLoaderPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Remove IQuestionImporter service registration
+        // Pattern: builder.Services.AddScoped<IQuestionImporter, QuestionImporter>();
+        content = Regex.Replace(
+            content,
+            @"builder\.Services\.AddScoped<IQuestionImporter\s*,\s*QuestionImporter\s*>\s*\([^)]*\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        // Also match without generic type parameters
+        content = Regex.Replace(
+            content,
+            @"builder\.Services\.AddScoped<IQuestionImporter[^>]*>\s*\([^)]+\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove AssessmentService from Growth namespace
+        content = Regex.Replace(
+            content,
+            @"builder\.Services\.AddScoped<[^>]*\.Growth\.AssessmentService[^>]*>\([^)]+\);\s*\r?\n",
             string.Empty,
             RegexOptions.IgnoreCase | RegexOptions.Multiline
         );
@@ -1999,9 +2625,884 @@ internal static class ReferenceSolutionCloner
             RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
         );
 
+        // Final cleanup: Remove any remaining orphaned ); patterns
+        // This is a catch-all to ensure no orphaned ); remains after all removals
+        
+        // Remove standalone ); lines (with optional whitespace before and after)
+        // This handles lines that contain only ); with optional whitespace
+        content = Regex.Replace(
+            content,
+            @"^\s*\);\s*$",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+        
+        // Remove lines that contain only ); with optional whitespace (including newlines)
+        // Pattern: newline, optional whitespace, );, optional whitespace, newline
+        content = Regex.Replace(
+            content,
+            @"\r?\n\s*\);\s*\r?\n",
+            "\r\n",
+            RegexOptions.Multiline
+        );
+        
+        // Remove orphaned ); that might be on a line by itself after other code
+        // Pattern: newline, optional whitespace, );, optional whitespace, followed by newline or end of string
+        content = Regex.Replace(
+            content,
+            @"\r?\n\s*\);\s*(?=\r?\n|$)",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+        
+        // Additional cleanup: Remove ); that appears alone on a line (more aggressive)
+        // This handles cases where ); is on its own line but might have different whitespace patterns
+        content = Regex.Replace(
+            content,
+            @"(?<=\r?\n)\s*\);\s*(?=\r?\n)",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+        
+        // Remove ); at the start of a line (after previous removals)
+        content = Regex.Replace(
+            content,
+            @"^\s*\);\s*$",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+
+        // Additional pass: Remove any remaining orphaned ); that might have been missed
+        // This is a more aggressive cleanup to catch any remaining cases
+        var orphanedPattern = @"\r?\n\s*\);\s*(?=\r?\n|$)";
+        var orphanedMatch = Regex.Match(content, orphanedPattern, RegexOptions.Multiline);
+        while (orphanedMatch.Success)
+        {
+            content = Regex.Replace(
+                content,
+                orphanedPattern,
+                string.Empty,
+                RegexOptions.Multiline
+            );
+            orphanedMatch = Regex.Match(content, orphanedPattern, RegexOptions.Multiline);
+        }
+        
+        // Remove AddEndpointsApiExplorer
+        content = Regex.Replace(
+            content,
+            @"builder\.Services\.AddEndpointsApiExplorer\s*\([^)]*\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+
+        // Remove app.UseSwagger()
+        content = Regex.Replace(
+            content,
+            @"app\.UseSwagger\s*\([^)]*\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+
+        // Final aggressive cleanup: Remove any remaining orphaned ); 
+        // This must be done after all other removals to catch any remaining cases
+        // Try multiple patterns to ensure we catch all cases
+        var finalCleanupPatterns = new[]
+        {
+            @"\r?\n\s*\);\s*\r?\n",           // ); on its own line with newlines
+            @"\r?\n\s*\);\s*$",                 // ); at end of file
+            @"^\s*\);\s*\r?\n",                 // ); at start of line
+            @"\r?\n\s*\);\s*(?=\r?\n|$)",       // ); followed by newline or end
+            @"(?<=\r?\n)\s*\);\s*(?=\r?\n)",    // ); between two newlines
+        };
+        
+        foreach (var pattern in finalCleanupPatterns)
+        {
+            var match = Regex.Match(content, pattern, RegexOptions.Multiline);
+            while (match.Success)
+            {
+                content = Regex.Replace(content, pattern, string.Empty, RegexOptions.Multiline);
+                match = Regex.Match(content, pattern, RegexOptions.Multiline);
+            }
+        }
+        
+        // Remove app.UseSwaggerUI block
+        var swaggerUIPattern = @"app\.UseSwaggerUI\s*\(\s*options\s*=>\s*\{";
+        var swaggerUIMatch = Regex.Match(content, swaggerUIPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        while (swaggerUIMatch.Success)
+        {
+            var startIndex = swaggerUIMatch.Index;
+            var lineStart = startIndex;
+            while (lineStart > 0 && content[lineStart - 1] != '\n' && content[lineStart - 1] != '\r')
+                lineStart--;
+            
+            var braceStart = content.IndexOf('{', startIndex);
+            if (braceStart >= 0)
+            {
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    // Find semicolon after closing brace
+                    while (i < content.Length && char.IsWhiteSpace(content[i]))
+                        i++;
+                    if (i < content.Length && content[i] == ';')
+                        i++;
+                    // Include newline
+                    while (i < content.Length && (content[i] == '\r' || content[i] == '\n'))
+                        i++;
+                    
+                    // Remove from line start to end of UseSwaggerUI call
+                    content = content.Remove(lineStart, i - lineStart);
+                    swaggerUIMatch = Regex.Match(content, swaggerUIPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Final pass: One more aggressive cleanup for orphaned ); at the very end
+        // This ensures we catch any ); that might have been left after all other processing
+        content = Regex.Replace(
+            content,
+            @"\r?\n\s*\);\s*(?=\r?\n|$)",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+        
+        // Remove any standalone ); lines one more time
+        content = Regex.Replace(
+            content,
+            @"^\s*\);\s*$",
+            string.Empty,
+            RegexOptions.Multiline
+        );
+
         return content;
     }
+    
+    private static string RemoveMetricsRoute(string content)
+    {
+        // Remove /metrics route mapping
+        // Pattern: app.MapGet("/metrics", ...) or app.MapControllerRoute with metrics
+        content = Regex.Replace(
+            content,
+            @"app\.MapGet\s*\(\s*""/metrics""[^)]+\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove MapControllerRoute for metrics
+        content = Regex.Replace(
+            content,
+            @"app\.MapControllerRoute\s*\([^)]*""/metrics""[^)]+\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove route pattern containing /metrics
+        content = Regex.Replace(
+            content,
+            @"app\.Map\w+\s*\([^)]*""/metrics""[^)]+\);\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
 
+        return content;
+    }
+    
+    private static string IgnoreNonExistentPropertiesInConfiguration(string content)
+    {
+        // Properties that don't exist in database but might be in entity classes
+        // Note: UpdaterId, CreatorId, IsDeleted, and RemoveDate are kept as they might be needed
+        var propertiesToIgnore = new[]
+        {
+            "Tags"
+        };
+
+        // Find the Configure method in the configuration class
+        var configureMethodPattern = @"public\s+void\s+Configure\s*\([^)]+\)\s*\{";
+        var configureMatch = Regex.Match(content, configureMethodPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        
+        if (!configureMatch.Success)
+        {
+            return content;
+        }
+
+        var configureStart = configureMatch.Index;
+        var braceStart = content.IndexOf('{', configureStart);
+        if (braceStart < 0)
+        {
+            return content;
+        }
+
+        // Find the end of the Configure method
+        int braceCount = 1;
+        int i = braceStart + 1;
+        while (i < content.Length && braceCount > 0)
+        {
+            if (content[i] == '{') braceCount++;
+            else if (content[i] == '}') braceCount--;
+            i++;
+        }
+
+        if (braceCount != 0)
+        {
+            return content;
+        }
+
+        var configureMethodContent = content.Substring(braceStart + 1, i - 1 - braceStart - 1);
+        var beforeMethod = content.Substring(0, braceStart + 1);
+        var afterMethod = content.Substring(i - 1);
+
+        // Remove property configurations for properties that don't exist in database
+        foreach (var prop in propertiesToIgnore)
+        {
+            // Remove builder.Property configurations for this property
+            // Pattern: builder.Property(e => e.PropertyName)...;
+            var propertyConfigPattern = $@"builder\.Property\s*\([^)]*=>\s*[^)]*\.{prop}[^)]*\)[^;]*;\s*\r?\n";
+            configureMethodContent = Regex.Replace(
+                configureMethodContent,
+                propertyConfigPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+            
+            // Also remove HasOne/HasMany configurations that reference these properties
+            var hasOnePattern = $@"builder\.HasOne\s*\([^)]*=>\s*[^)]*\.{prop}[^)]*\)[^;]*;\s*\r?\n";
+            configureMethodContent = Regex.Replace(
+                configureMethodContent,
+                hasOnePattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+            
+            var hasManyPattern = $@"builder\.HasMany\s*\([^)]*=>\s*[^)]*\.{prop}[^)]*\)[^;]*;\s*\r?\n";
+            configureMethodContent = Regex.Replace(
+                configureMethodContent,
+                hasManyPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+        }
+
+        // Reconstruct the content
+        return beforeMethod + configureMethodContent + afterMethod;
+    }
+    
+    private static string RemoveForeignKeyAttributesFromBaseEntity(string content)
+    {
+        // Remove ForeignKey attributes for properties that don't exist
+        var propertiesToRemove = new[]
+        {
+            "UpdaterId",
+            "CreatorId"
+        };
+
+        foreach (var prop in propertiesToRemove)
+        {
+            // Remove [ForeignKey(nameof(PropertyName))] attribute
+            var foreignKeyPattern = $@"\[\s*ForeignKey\s*\(\s*nameof\s*\(\s*{prop}\s*\)\s*\)\s*\]\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                foreignKeyPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+        }
+
+        return content;
+    }
+    
+    private static string RemoveNonExistentPropertiesFromEntity(string content)
+    {
+        // Properties that don't exist in database (but keep UpdaterId, CreatorId, IsDeleted, and RemoveDate as they might be needed)
+        var propertiesToRemove = new[]
+        {
+            "Tags"
+        };
+
+        foreach (var prop in propertiesToRemove)
+        {
+            // Remove public property declarations
+            // Pattern: public [type] PropertyName { get; set; } or { get; private set; } etc.
+            var propertyPattern = $@"public\s+[^\s]+\s+{prop}\s*{{\s*get[^}}]*}}\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                propertyPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            
+            // Also remove private fields if they exist
+            var fieldPattern = $@"private\s+[^\s]+\s+_{prop}[^;]*;\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                fieldPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+        }
+
+        return content;
+    }
+    
+    private static string AddUsingStatementsToDetailsView(string content)
+    {
+        // Add required using statements if not present
+        var hasTextJson = content.Contains("@using System.Text.Json", StringComparison.OrdinalIgnoreCase);
+        var hasGlobalization = content.Contains("@using System.Globalization", StringComparison.OrdinalIgnoreCase);
+        
+        if (!hasTextJson || !hasGlobalization)
+        {
+            // Try to find the best insertion point: after existing @using statements or before @model
+            var insertPosition = 0;
+            var usingStatements = new List<string>();
+            
+            // First, try to find existing @using statements and add after them
+            var existingUsingPattern = @"(@using\s+[^\r\n]+[\r\n]+)";
+            var existingUsingMatches = Regex.Matches(content, existingUsingPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            
+            if (existingUsingMatches.Count > 0)
+            {
+                // Insert after the last @using statement
+                var lastUsing = existingUsingMatches[existingUsingMatches.Count - 1];
+                insertPosition = lastUsing.Index + lastUsing.Length;
+            }
+            else
+            {
+                // If no @using found, try to find @model and insert before it
+                var modelPattern = @"@model\s+";
+                var modelMatch = Regex.Match(content, modelPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (modelMatch.Success)
+                {
+                    insertPosition = modelMatch.Index;
+                }
+                else
+                {
+                    // If no @model found, insert at the beginning
+                    insertPosition = 0;
+                }
+            }
+            
+            if (!hasTextJson)
+            {
+                usingStatements.Add("@using System.Text.Json");
+            }
+            
+            if (!hasGlobalization)
+            {
+                usingStatements.Add("@using System.Globalization");
+            }
+            
+            if (usingStatements.Count > 0)
+            {
+                var usingBlock = string.Join("\r\n", usingStatements) + "\r\n";
+                content = content.Insert(insertPosition, usingBlock);
+            }
+        }
+        
+        return content;
+    }
+    
+    private static string CleanMigrationFile(string content)
+    {
+        // Remove CreateTable calls for Test/Assessment/Organization related tables
+        var testTableNames = new[]
+        {
+            "Tests",
+            "TestQuestions",
+            "TestQuestionOptions",
+            "TestResults",
+            "TestSubmissions",
+            "UserTestAttempts",
+            "UserTestAnswers",
+            "Assessments",
+            "AssessmentQuestions",
+            "AssessmentRuns",
+            "AssessmentResponses",
+            "AssessmentUserResponses",
+            "Organizations",
+            "Talents",
+            "TalentScores",
+            "Questions"
+        };
+
+        foreach (var tableName in testTableNames)
+        {
+            // Remove CreateTable for this table (with full block using brace matching)
+            var createTablePattern = $@"migrationBuilder\.CreateTable\s*\(\s*name:\s*""{tableName}""";
+            var createTableMatch = Regex.Match(content, createTablePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            while (createTableMatch.Success)
+            {
+                var startIndex = createTableMatch.Index;
+                var lineStart = startIndex;
+                while (lineStart > 0 && content[lineStart - 1] != '\n' && content[lineStart - 1] != '\r')
+                    lineStart--;
+                
+                // Find the opening parenthesis
+                var parenStart = content.IndexOf('(', startIndex);
+                if (parenStart >= 0)
+                {
+                    int parenCount = 1;
+                    int i = parenStart + 1;
+                    bool inString = false;
+                    char stringChar = '\0';
+                    
+                    while (i < content.Length && parenCount > 0)
+                    {
+                        if (!inString)
+                        {
+                            if (content[i] == '"' || content[i] == '\'')
+                            {
+                                inString = true;
+                                stringChar = content[i];
+                            }
+                            else if (content[i] == '(') parenCount++;
+                            else if (content[i] == ')') parenCount--;
+                        }
+                        else
+                        {
+                            if (content[i] == stringChar && (i == 0 || content[i - 1] != '\\'))
+                                inString = false;
+                        }
+                        i++;
+                    }
+                    
+                    if (parenCount == 0)
+                    {
+                        // Find semicolon
+                        while (i < content.Length && char.IsWhiteSpace(content[i]))
+                            i++;
+                        if (i < content.Length && content[i] == ';')
+                            i++;
+                        // Include newline
+                        while (i < content.Length && (content[i] == '\r' || content[i] == '\n'))
+                            i++;
+                        
+                        // Remove from line start to end of CreateTable call
+                        content = content.Remove(lineStart, i - lineStart);
+                        createTableMatch = Regex.Match(content, createTablePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Remove DropTable for this table
+            var dropTablePattern = $@"migrationBuilder\.DropTable\s*\(\s*name:\s*""{tableName}""\s*\);\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                dropTablePattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+
+            // Remove AddForeignKey for this table
+            var addForeignKeyPattern = $@"migrationBuilder\.AddForeignKey\s*\([^)]*""{tableName}""[^)]+\);\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                addForeignKeyPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+
+            // Remove DropForeignKey for this table
+            var dropForeignKeyPattern = $@"migrationBuilder\.DropForeignKey\s*\([^)]*""{tableName}""[^)]+\);\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                dropForeignKeyPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+
+            // Remove CreateIndex for this table
+            var createIndexPattern = $@"migrationBuilder\.CreateIndex\s*\([^)]*""{tableName}""[^)]+\);\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                createIndexPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+
+            // Remove DropIndex for this table
+            var dropIndexPattern = $@"migrationBuilder\.DropIndex\s*\([^)]*""{tableName}""[^)]+\);\s*\r?\n";
+            content = Regex.Replace(
+                content,
+                dropIndexPattern,
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+            );
+        }
+
+        return content;
+    }
+    
+    private static string RemoveDiscountApplicationResultReferences(string content)
+    {
+        // Extract namespace from content
+        var namespaceMatch = Regex.Match(content, @"namespace\s+([^;{]+)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fullNamespace = "YourProject.Domain.Entities";
+        if (namespaceMatch.Success && namespaceMatch.Groups.Count > 1)
+        {
+            fullNamespace = namespaceMatch.Groups[1].Value.Trim();
+        }
+        
+        // Extract root namespace
+        var rootNamespace = fullNamespace.Split('.')[0];
+        
+        // Check if DiscountApplicationResult record already exists in the file
+        var hasDiscountApplicationResult = content.Contains("record DiscountApplicationResult", StringComparison.OrdinalIgnoreCase) ||
+                                          content.Contains("class DiscountApplicationResult", StringComparison.OrdinalIgnoreCase);
+        
+        // If not, add the record definition at the end of the namespace (before closing brace)
+        if (!hasDiscountApplicationResult)
+        {
+            // Find the last closing brace of the namespace
+            var lastBraceIndex = content.LastIndexOf('}');
+            if (lastBraceIndex > 0)
+            {
+                // Find the line before the last closing brace
+                var insertPosition = lastBraceIndex;
+                while (insertPosition > 0 && content[insertPosition - 1] != '\n' && content[insertPosition - 1] != '\r')
+                    insertPosition--;
+                
+                // Add the record definition
+                var recordDefinition = $@"
+    public sealed record DiscountApplicationResult(
+        string Code,
+        {rootNamespace}.Domain.Enums.DiscountType AppliedDiscountType,
+        decimal AppliedDiscountValue,
+        decimal OriginalPrice,
+        decimal DiscountAmount,
+        string? NormalizedAudienceKey,
+        bool WasCapped,
+        DateTimeOffset EvaluatedAt,
+        decimal? EffectiveMaxDiscount)
+    {{
+        public bool Success => !string.IsNullOrWhiteSpace(Code);
+        public string Message => Success ? ""Discount applied successfully"" : ""Discount application failed"";
+        public decimal Amount => DiscountAmount;
+        public decimal FinalPrice => OriginalPrice - DiscountAmount;
+        public string? AudienceKey => NormalizedAudienceKey;
+        public decimal? MaxDiscountAmount => EffectiveMaxDiscount;
+        
+        public static DiscountApplicationResult CreateSuccess(
+            string code,
+            {rootNamespace}.Domain.Enums.DiscountType appliedDiscountType,
+            decimal appliedDiscountValue,
+            decimal originalPrice,
+            decimal discountAmount,
+            string? normalizedAudienceKey,
+            bool wasCapped,
+            DateTimeOffset evaluatedAt,
+            decimal? effectiveMaxDiscount)
+        {{
+            return new DiscountApplicationResult(
+                code,
+                appliedDiscountType,
+                appliedDiscountValue,
+                originalPrice,
+                discountAmount,
+                normalizedAudienceKey,
+                wasCapped,
+                evaluatedAt,
+                effectiveMaxDiscount);
+        }}
+        
+        public static DiscountApplicationResult CreateFailure(string message = ""Discount application failed"")
+        {{
+            return new DiscountApplicationResult(
+                string.Empty,
+                {rootNamespace}.Domain.Enums.DiscountType.Percentage,
+                0m,
+                0m,
+                0m,
+                null,
+                false,
+                DateTimeOffset.UtcNow,
+                null);
+        }}
+    }}
+";
+                content = content.Insert(insertPosition, recordDefinition);
+            }
+        }
+        else
+        {
+            // If record exists, add missing properties
+            // Add FinalPrice property if not exists
+            if (!content.Contains("public decimal FinalPrice", StringComparison.OrdinalIgnoreCase))
+            {
+                var amountPropertyPattern = @"(public\s+decimal\s+Amount\s*=>\s*DiscountAmount\s*;)";
+                var amountMatch = Regex.Match(content, amountPropertyPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (amountMatch.Success)
+                {
+                    var insertPos = amountMatch.Index + amountMatch.Length;
+                    content = content.Insert(insertPos, "\r\n        public decimal FinalPrice => OriginalPrice - DiscountAmount;");
+                }
+            }
+            
+            // Add AudienceKey property if not exists
+            if (!content.Contains("public string? AudienceKey", StringComparison.OrdinalIgnoreCase))
+            {
+                var finalPricePattern = @"(public\s+decimal\s+FinalPrice\s*=>\s*OriginalPrice\s*-\s*DiscountAmount\s*;)";
+                var finalPriceMatch = Regex.Match(content, finalPricePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (finalPriceMatch.Success)
+                {
+                    var insertPos = finalPriceMatch.Index + finalPriceMatch.Length;
+                    content = content.Insert(insertPos, "\r\n        public string? AudienceKey => NormalizedAudienceKey;");
+                }
+                else
+                {
+                    // Try to find Amount property
+                    var amountPropertyPattern = @"(public\s+decimal\s+Amount\s*=>\s*DiscountAmount\s*;)";
+                    var amountMatch = Regex.Match(content, amountPropertyPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    if (amountMatch.Success)
+                    {
+                        var insertPos = amountMatch.Index + amountMatch.Length;
+                        content = content.Insert(insertPos, "\r\n        public string? AudienceKey => NormalizedAudienceKey;");
+                    }
+                }
+            }
+            
+            // Add MaxDiscountAmount property if not exists
+            if (!content.Contains("public decimal? MaxDiscountAmount", StringComparison.OrdinalIgnoreCase))
+            {
+                var audienceKeyPattern = @"(public\s+string\?\s+AudienceKey\s*=>\s*NormalizedAudienceKey\s*;)";
+                var audienceKeyMatch = Regex.Match(content, audienceKeyPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (audienceKeyMatch.Success)
+                {
+                    var insertPos = audienceKeyMatch.Index + audienceKeyMatch.Length;
+                    content = content.Insert(insertPos, "\r\n        public decimal? MaxDiscountAmount => EffectiveMaxDiscount;");
+                }
+                else
+                {
+                    // Try to find FinalPrice property
+                    var finalPricePattern = @"(public\s+decimal\s+FinalPrice\s*=>\s*OriginalPrice\s*-\s*DiscountAmount\s*;)";
+                    var finalPriceMatch = Regex.Match(content, finalPricePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    if (finalPriceMatch.Success)
+                    {
+                        var insertPos = finalPriceMatch.Index + finalPriceMatch.Length;
+                        content = content.Insert(insertPos, "\r\n        public decimal? MaxDiscountAmount => EffectiveMaxDiscount;");
+                    }
+                    else
+                    {
+                        // Try to find Amount property
+                        var amountPropertyPattern = @"(public\s+decimal\s+Amount\s*=>\s*DiscountAmount\s*;)";
+                        var amountMatch = Regex.Match(content, amountPropertyPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                        if (amountMatch.Success)
+                        {
+                            var insertPos = amountMatch.Index + amountMatch.Length;
+                            content = content.Insert(insertPos, "\r\n        public decimal? MaxDiscountAmount => EffectiveMaxDiscount;");
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Replace static method calls DiscountApplicationResult.Success(...) with CreateSuccess(...)
+        content = Regex.Replace(
+            content,
+            @"DiscountApplicationResult\.Success\s*\(",
+            "DiscountApplicationResult.CreateSuccess(",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Replace static method calls DiscountApplicationResult.Failure(...) with CreateFailure(...)
+        content = Regex.Replace(
+            content,
+            @"DiscountApplicationResult\.Failure\s*\(",
+            "DiscountApplicationResult.CreateFailure(",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
+    private static string FixICommandReferences(string content)
+    {
+        // Extract namespace from content
+        var namespaceMatch = Regex.Match(content, @"namespace\s+([^;{]+)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fullNamespace = "YourProject.Application.Abstractions.Messaging";
+        if (namespaceMatch.Success && namespaceMatch.Groups.Count > 1)
+        {
+            fullNamespace = namespaceMatch.Groups[1].Value.Trim();
+        }
+        
+        // Extract root namespace
+        var rootNamespace = fullNamespace.Split('.')[0];
+        
+        // Ensure using statement for SharedKernel.BaseTypes is present
+        var hasBaseTypes = content.Contains("SharedKernel.BaseTypes", StringComparison.OrdinalIgnoreCase);
+        if (!hasBaseTypes)
+        {
+            // Find first using statement or namespace
+            var usingPattern = @"using\s+";
+            var namespacePattern = @"namespace\s+";
+            var usingMatch = Regex.Match(content, usingPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            var namespacePosMatch = Regex.Match(content, namespacePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            
+            int insertPosition = 0;
+            if (usingMatch.Success)
+            {
+                // Find the last using statement
+                var lastUsing = usingMatch;
+                while (usingMatch.Success)
+                {
+                    lastUsing = usingMatch;
+                    usingMatch = usingMatch.NextMatch();
+                }
+                // Insert after the last using
+                insertPosition = lastUsing.Index + lastUsing.Length;
+                // Find end of line
+                while (insertPosition < content.Length && content[insertPosition] != '\r' && content[insertPosition] != '\n')
+                    insertPosition++;
+                if (insertPosition < content.Length && content[insertPosition] == '\r')
+                    insertPosition++;
+                if (insertPosition < content.Length && content[insertPosition] == '\n')
+                    insertPosition++;
+            }
+            else if (namespacePosMatch.Success)
+            {
+                insertPosition = namespacePosMatch.Index;
+            }
+            
+            if (insertPosition > 0)
+            {
+                var usingStatement = $"using {rootNamespace}.SharedKernel.BaseTypes;\r\n";
+                content = content.Insert(insertPosition, usingStatement);
+            }
+        }
+        
+        return content;
+    }
+    
+    private static string AddDiscountDtosUsingStatement(string content)
+    {
+        // Extract namespace from content
+        var namespaceMatch = Regex.Match(content, @"namespace\s+([^;{]+)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fullNamespace = "YourProject.Application.DTOs.Discounts";
+        if (namespaceMatch.Success && namespaceMatch.Groups.Count > 1)
+        {
+            fullNamespace = namespaceMatch.Groups[1].Value.Trim();
+        }
+        
+        // Extract root namespace
+        var rootNamespace = fullNamespace.Split('.')[0];
+        
+        // Check if using statement for Domain.Entities.Discounts exists
+        var hasDiscountsUsing = content.Contains("Domain.Entities.Discounts", StringComparison.OrdinalIgnoreCase);
+        if (!hasDiscountsUsing)
+        {
+            // Find first using statement or namespace
+            var usingPattern = @"using\s+";
+            var namespacePattern = @"namespace\s+";
+            var usingMatch = Regex.Match(content, usingPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            var namespacePosMatch = Regex.Match(content, namespacePattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            
+            int insertPosition = 0;
+            if (usingMatch.Success)
+            {
+                // Find the last using statement
+                var lastUsing = usingMatch;
+                while (usingMatch.Success)
+                {
+                    lastUsing = usingMatch;
+                    usingMatch = usingMatch.NextMatch();
+                }
+                // Insert after the last using
+                insertPosition = lastUsing.Index + lastUsing.Length;
+                // Find end of line
+                while (insertPosition < content.Length && content[insertPosition] != '\r' && content[insertPosition] != '\n')
+                    insertPosition++;
+                if (insertPosition < content.Length && content[insertPosition] == '\r')
+                    insertPosition++;
+                if (insertPosition < content.Length && content[insertPosition] == '\n')
+                    insertPosition++;
+            }
+            else if (namespacePosMatch.Success)
+            {
+                insertPosition = namespacePosMatch.Index;
+            }
+            
+            if (insertPosition > 0)
+            {
+                var usingStatement = $"using {rootNamespace}.Domain.Entities.Discounts;\r\n";
+                content = content.Insert(insertPosition, usingStatement);
+            }
+        }
+        
+        return content;
+    }
+    
+    private static string FixDiscountApplicationResultReferences(string content)
+    {
+        // Extract namespace from content
+        var namespaceMatch = Regex.Match(content, @"namespace\s+([^;{]+)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fullNamespace = "YourProject.Application.DTOs.Discounts";
+        if (namespaceMatch.Success && namespaceMatch.Groups.Count > 1)
+        {
+            fullNamespace = namespaceMatch.Groups[1].Value.Trim();
+        }
+        
+        // Extract root namespace
+        var rootNamespace = fullNamespace.Split('.')[0];
+        
+        // Replace DiscountApplicationResult with DiscountCode.DiscountApplicationResult
+        // But only if it's not already qualified and not already DiscountCode.DiscountApplicationResult
+        var qualifiedName = $"{rootNamespace}.Domain.Entities.Discounts.DiscountCode.DiscountApplicationResult";
+        
+        // Replace unqualified DiscountApplicationResult with fully qualified name
+        content = Regex.Replace(
+            content,
+            @"\bDiscountApplicationResult\b(?!\.)",
+            qualifiedName,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
+    private static string RemoveWebSiteModelsResultReference(string content)
+    {
+        // Remove using statement for WebSite.Models.Result
+        content = Regex.Replace(
+            content,
+            @"@using\s+[^\s]+\s*\.\s*WebSite\s*\.\s*Models\s*\.\s*Result\s*;?\s*\r?\n?",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Also remove any reference to WebSite.Models.Result in the file
+        content = Regex.Replace(
+            content,
+            @"WebSite\.Models\.Result",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
     private static string RemoveTestMenuItems(string content)
     {
         // Remove "مدیریت آزمون‌ها" menu group
@@ -2046,7 +3547,7 @@ internal static class ReferenceSolutionCloner
             );
         }
 
-        // Remove references to Test/Assessment query/command types
+        // Remove references to Test/Assessment query/command types and DTOs
         var testTypes = new[]
         {
             "GetPublicTestListQuery",
@@ -2059,7 +3560,14 @@ internal static class ReferenceSolutionCloner
             "AssessmentResponse",
             "ScoringOptions",
             "AssessmentRun",
-            "OrganizationStatus"
+            "OrganizationStatus",
+            // Test/Assessment DTOs
+            "TestQuestionDto",
+            "UserTestAttemptDetailDto",
+            "UserTestAttemptDto",
+            "TestListDto",
+            "TestDetailDto",
+            "TestResultDto"
         };
 
         foreach (var typeName in testTypes)
@@ -2114,6 +3622,60 @@ internal static class ReferenceSolutionCloner
                 string.Empty,
                 RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
             );
+            
+            // Remove property declarations with these types
+            content = Regex.Replace(
+                content,
+                $@"public\s+{Regex.Escape(typeName)}\s+[a-zA-Z0-9_]+\s*{{\s*get\s*;\s*set\s*;\s*}}\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            content = Regex.Replace(
+                content,
+                $@"public\s+{Regex.Escape(typeName)}\?\s+[a-zA-Z0-9_]+\s*{{\s*get\s*;\s*set\s*;\s*}}\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            
+            // Remove return type declarations
+            content = Regex.Replace(
+                content,
+                $@"\s*:\s*{Regex.Escape(typeName)}\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            content = Regex.Replace(
+                content,
+                $@"\s*:\s*{Regex.Escape(typeName)}\?\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            
+            // Remove method return types
+            content = Regex.Replace(
+                content,
+                $@"Task<{Regex.Escape(typeName)}>\s+",
+                "Task ",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            content = Regex.Replace(
+                content,
+                $@"Task<{Regex.Escape(typeName)}\?>\s+",
+                "Task ",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            content = Regex.Replace(
+                content,
+                $@"{Regex.Escape(typeName)}\s+[a-zA-Z0-9_]+\s*\(",
+                "void ",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+            content = Regex.Replace(
+                content,
+                $@"{Regex.Escape(typeName)}\?\s+[a-zA-Z0-9_]+\s*\(",
+                "void ",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
         }
 
         // Remove references to Tests namespace in using statements
@@ -2132,6 +3694,411 @@ internal static class ReferenceSolutionCloner
             RegexOptions.IgnoreCase | RegexOptions.Multiline
         );
 
+        return content;
+    }
+    
+    private static string RemoveLearningMetricsReferences(string content)
+    {
+        // Remove LearningMetricsDto type references and variable declarations
+        content = Regex.Replace(
+            content,
+            @"LearningMetricsDto\s+[a-zA-Z0-9_]+\s*[=;]?[^\r\n]*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove LearningMetricsDto variable declarations with await
+        content = Regex.Replace(
+            content,
+            @"var\s+[a-zA-Z0-9_]+\s*=\s*await\s+BuildLearningMetricsAsync[^;]+;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Fix SystemPerformanceSummaryDto constructor calls - remove learning argument
+        // Pattern: new SystemPerformanceSummaryDto(period, people, commerce, learning, content, now)
+        // Should become: new SystemPerformanceSummaryDto(period, people, commerce, content, now)
+        content = Regex.Replace(
+            content,
+            @"new\s+SystemPerformanceSummaryDto\s*\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*[^,]+,\s*([^,]+),\s*([^)]+)\)",
+            "new SystemPerformanceSummaryDto($1, $2, $3, $4, $5)",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove LearningMetricsViewModel constructor calls that reference Learning
+        // Find and replace LearningMetricsViewModel initialization that uses .Learning properties
+        content = Regex.Replace(
+            content,
+            @"new\s+LearningMetricsViewModel\s*\(\s*[^)]*\.Learning\.[^)]+\)",
+            "new LearningMetricsViewModel(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove lines that assign .Learning properties to variables
+        // Pattern: var something = summary.Learning.Something;
+        content = Regex.Replace(
+            content,
+            @"^\s*var\s+[a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+\.Learning\.[a-zA-Z0-9_]+\s*;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove lines that assign .Learning properties (without var)
+        // Pattern: something = summary.Learning.Something;
+        content = Regex.Replace(
+            content,
+            @"^\s*[a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+\.Learning\.[a-zA-Z0-9_]+\s*;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove .Learning property access in expressions (replace with placeholder)
+        content = Regex.Replace(
+            content,
+            @"\.Learning\.[a-zA-Z0-9_]+",
+            ".LearningPlaceholder",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
+    private static string RemoveTestResultReferences(string content)
+    {
+        // Remove testResult variable references
+        content = Regex.Replace(
+            content,
+            @"var\s+testResult\s*=[^;]+;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove lines that use testResult
+        content = Regex.Replace(
+            content,
+            @"[^\r\n]*testResult[^\r\n]*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
+    private static string RemoveInvoiceTestProperties(string content)
+    {
+        // Remove TestAttemptId and TestAttemptStatus from InvoiceDetailDto
+        content = Regex.Replace(
+            content,
+            @"@Model\.TestAttemptId[^\r\n]*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        content = Regex.Replace(
+            content,
+            @"@Model\.TestAttemptStatus[^\r\n]*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        // Remove entire lines that reference TestAttempt
+        content = Regex.Replace(
+            content,
+            @"[^\r\n]*TestAttempt[^\r\n]*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
+        
+        return content;
+    }
+    
+    private static string FixDashboardControllerBuildEmptySummary(string content)
+    {
+        // Fix PeriodWindowDto constructor in BuildEmptySummary - add previousPeriodEnd parameter
+        // Pattern: new PeriodWindowDto(currentPeriodStart, currentPeriodEnd, previousPeriodStart, currentWeekStart, previousWeekStart)
+        // Should become: new PeriodWindowDto(currentPeriodStart, currentPeriodEnd, previousPeriodStart, previousPeriodEnd, currentWeekStart, previousWeekStart)
+        content = Regex.Replace(
+            content,
+            @"new\s+PeriodWindowDto\s*\(\s*currentPeriodStart\s*,\s*currentPeriodEnd\s*,\s*previousPeriodStart\s*,\s*currentWeekStart\s*,\s*previousWeekStart\s*\)",
+            "new PeriodWindowDto(\r\n                currentPeriodStart,\r\n                currentPeriodEnd,\r\n                previousPeriodStart,\r\n                previousPeriodEnd,\r\n                currentWeekStart,\r\n                previousWeekStart)",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove LearningMetricsDto from BuildEmptySummary constructor call
+        // Pattern: new SystemPerformanceSummaryDto(..., new LearningMetricsDto(...), ...)
+        content = Regex.Replace(
+            content,
+            @",\s*new\s+LearningMetricsDto\s*\([^)]+\)\s*,",
+            ",",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Fix SystemPerformanceSummaryDto constructor call - ensure proper formatting
+        // Pattern: new SystemPerformanceSummaryDto(new PeriodWindowDto(...), new PeopleMetricsDto(...), new CommerceMetricsDto(...), new LearningMetricsDto(...), new ContentMetricsDto(...), referenceTime)
+        // After fix: new SystemPerformanceSummaryDto(new PeriodWindowDto(...), new PeopleMetricsDto(...), new CommerceMetricsDto(...), new ContentMetricsDto(...), referenceTime)
+        // Make sure PeriodWindowDto has all 6 parameters
+        content = Regex.Replace(
+            content,
+            @"return\s+new\s+SystemPerformanceSummaryDto\s*\(\s*new\s+PeriodWindowDto\s*\([^)]+\)\s*,\s*new\s+PeopleMetricsDto\([^)]+\)\s*,\s*new\s+CommerceMetricsDto\([^)]+\)\s*,\s*new\s+LearningMetricsDto\([^)]+\)\s*,\s*new\s+ContentMetricsDto\([^)]+\)\s*,\s*([^)]+)\)\s*;",
+            "return new SystemPerformanceSummaryDto(\r\n            new PeriodWindowDto(\r\n                currentPeriodStart,\r\n                currentPeriodEnd,\r\n                previousPeriodStart,\r\n                previousPeriodEnd,\r\n                currentWeekStart,\r\n                previousWeekStart),\r\n            new PeopleMetricsDto(0, 0, 0, 0, 0, 0, 0, 0),\r\n            new CommerceMetricsDto(0m, 0m, 0m, 0m, 0m, 0, 0, 0, 0, 0),\r\n            new ContentMetricsDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),\r\n            $1);",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        return content;
+    }
+    
+    private static string RemoveCheckoutControllerTestMethods(string content)
+    {
+        // Remove Test method (HttpGet)
+        // Match from [HttpGet] to the closing brace of the method
+        var testMethodPattern = @"\[HttpGet\]\s*\r?\n\s*public\s+async\s+Task<IActionResult>\s+Test\s*\([^)]+\)\s*\{";
+        var testMethodMatch = Regex.Match(content, testMethodPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        while (testMethodMatch.Success)
+        {
+            var startIndex = testMethodMatch.Index;
+            var braceStart = content.IndexOf('{', startIndex);
+            if (braceStart >= 0)
+            {
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    // Find the start of the line
+                    var lineStart = startIndex;
+                    while (lineStart > 0 && content[lineStart - 1] != '\n' && content[lineStart - 1] != '\r')
+                        lineStart--;
+                    
+                    content = content.Remove(lineStart, i - lineStart);
+                    testMethodMatch = Regex.Match(content, testMethodPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Remove PayTest method (HttpPost)
+        var payTestMethodPattern = @"\[HttpPost\]\s*\r?\n\s*\[ValidateAntiForgeryToken\]\s*\r?\n\s*public\s+async\s+Task<IActionResult>\s+PayTest\s*\([^)]+\)\s*\{";
+        var payTestMethodMatch = Regex.Match(content, payTestMethodPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        while (payTestMethodMatch.Success)
+        {
+            var startIndex = payTestMethodMatch.Index;
+            var braceStart = content.IndexOf('{', startIndex);
+            if (braceStart >= 0)
+            {
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    var lineStart = startIndex;
+                    while (lineStart > 0 && content[lineStart - 1] != '\n' && content[lineStart - 1] != '\r')
+                        lineStart--;
+                    
+                    content = content.Remove(lineStart, i - lineStart);
+                    payTestMethodMatch = Regex.Match(content, payTestMethodPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Remove GetTestTypeName method
+        content = Regex.Replace(
+            content,
+            @"private\s+static\s+string\s+GetTestTypeName\s*\([^)]+\)\s*=>\s*type\s+switch\s*\{[^}]+\}\s*;",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove using aa.Domain.Enums if TestType was the only usage
+        // This is a simple check - might need refinement
+        if (!content.Contains("InvoiceItemType") && !content.Contains("InvoiceStatus") && !content.Contains("TransactionStatus"))
+        {
+            content = Regex.Replace(
+                content,
+                @"using\s+[^;]+\.Domain\.Enums\s*;\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+        }
+        
+        return content;
+    }
+    
+    private static string CleanInvoiceDetailsView(string content)
+    {
+        // Add required using statements if not present
+        var hasTextJson = content.Contains("@using System.Text.Json", StringComparison.OrdinalIgnoreCase);
+        var hasGlobalization = content.Contains("@using System.Globalization", StringComparison.OrdinalIgnoreCase);
+        
+        if (!hasTextJson || !hasGlobalization)
+        {
+            // Try to find the best insertion point: after existing @using statements or before @model
+            var insertPosition = 0;
+            var usingStatements = new List<string>();
+            
+            // First, try to find existing @using statements and add after them
+            var existingUsingPattern = @"(@using\s+[^\r\n]+[\r\n]+)";
+            var existingUsingMatches = Regex.Matches(content, existingUsingPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            
+            if (existingUsingMatches.Count > 0)
+            {
+                // Insert after the last @using statement
+                var lastUsing = existingUsingMatches[existingUsingMatches.Count - 1];
+                insertPosition = lastUsing.Index + lastUsing.Length;
+            }
+            else
+            {
+                // If no @using found, try to find @model and insert before it
+                var modelPattern = @"@model\s+";
+                var modelMatch = Regex.Match(content, modelPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                if (modelMatch.Success)
+                {
+                    insertPosition = modelMatch.Index;
+                }
+                else
+                {
+                    // If no @model found, insert at the beginning
+                    insertPosition = 0;
+                }
+            }
+            
+            if (!hasTextJson)
+            {
+                usingStatements.Add("@using System.Text.Json");
+            }
+            
+            if (!hasGlobalization)
+            {
+                usingStatements.Add("@using System.Globalization");
+            }
+            
+            if (usingStatements.Count > 0)
+            {
+                var usingBlock = string.Join("\r\n", usingStatements) + "\r\n";
+                content = content.Insert(insertPosition, usingBlock);
+            }
+        }
+        
+        // Remove testItem and isPaid variable declarations
+        content = Regex.Replace(
+            content,
+            @"var\s+testItem\s*=[^;]+;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        content = Regex.Replace(
+            content,
+            @"var\s+isPaid\s*=[^;]+;\s*\r?\n",
+            string.Empty,
+            RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Singleline
+        );
+        
+        // Remove entire @if block for testItem
+        // Match from @if (testItem != null && isPaid) to the matching @else if or @}
+        var testItemIfPattern = @"@if\s*\(\s*testItem\s*!=\s*null\s*&&\s*isPaid\s*\)";
+        var testItemIfMatch = Regex.Match(content, testItemIfPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        while (testItemIfMatch.Success)
+        {
+            var startIndex = testItemIfMatch.Index;
+            var braceStart = content.IndexOf('{', startIndex);
+            if (braceStart >= 0)
+            {
+                int braceCount = 1;
+                int i = braceStart + 1;
+                while (i < content.Length && braceCount > 0)
+                {
+                    if (content[i] == '{') braceCount++;
+                    else if (content[i] == '}') braceCount--;
+                    i++;
+                }
+                
+                if (braceCount == 0)
+                {
+                    // Check if there's an else if after
+                    var afterBlock = content.Substring(i);
+                    var elseIfMatch = Regex.Match(afterBlock, @"^\s*else\s+if", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                    if (elseIfMatch.Success)
+                    {
+                        // Remove the entire if block including the else if, but keep the else if content
+                        var elseIfStart = i + elseIfMatch.Index;
+                        var elseIfBraceStart = content.IndexOf('{', elseIfStart);
+                        if (elseIfBraceStart >= 0)
+                        {
+                            int elseIfBraceCount = 1;
+                            int j = elseIfBraceStart + 1;
+                            while (j < content.Length && elseIfBraceCount > 0)
+                            {
+                                if (content[j] == '{') elseIfBraceCount++;
+                                else if (content[j] == '}') elseIfBraceCount--;
+                                j++;
+                            }
+                            
+                            if (elseIfBraceCount == 0)
+                            {
+                                // Replace the entire if-else if with just the else if content
+                                var elseIfContent = content.Substring(elseIfBraceStart + 1, j - 1 - elseIfBraceStart - 1);
+                                content = content.Remove(startIndex, j - startIndex);
+                                content = content.Insert(startIndex, elseIfContent);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Just remove the if block
+                        content = content.Remove(startIndex, i - startIndex);
+                    }
+                    
+                    testItemIfMatch = Regex.Match(content, testItemIfPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        // Remove using aa.Domain.Enums if it's no longer needed
+        if (!content.Contains("InvoiceItemType") && !content.Contains("InvoiceStatus"))
+        {
+            content = Regex.Replace(
+                content,
+                @"@using\s+[^;]+\.Domain\.Enums\s*\r?\n",
+                string.Empty,
+                RegexOptions.IgnoreCase | RegexOptions.Multiline
+            );
+        }
+        
         return content;
     }
 

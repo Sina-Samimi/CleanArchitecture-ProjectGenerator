@@ -1,0 +1,1945 @@
+﻿@model ProductDetailViewModel
+@{
+    Layout = "_HomeTemplateLayout";
+    ViewData["Title"] = Model.Product.Name;
+    ViewData["MetaDescription"] = Model.Product.ShortDescription;
+    var commentSuccess = TempData["ProductCommentSuccess"] as bool?;
+}
+
+@Html.AntiForgeryToken()
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/product-details.css" asp-append-version="true" />
+}
+
+<!-- Product Details Section -->
+<section class="product-details-section">
+    <div class="container">
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">خانه</a> /
+            <a asp-controller="Product" asp-action="Index">محصولات</a> /
+            <span>@Model.Product.Name</span>
+        </div>
+
+        <div class="product-details-container">
+            <!-- Product Images -->
+            <div class="product-images">
+                <button type="button" class="violation-report-btn" onclick="openViolationReportModal()">
+                    ⚠️ گزارش تخلف
+                </button>
+                <div class="main-image">
+                    <img id="main-product-image" src="@Model.HeroImageUrl" alt="@Model.Product.Name">
+                </div>
+                <div class="thumbnail-images">
+                    <img class="thumbnail active" src="@Model.HeroImageUrl" alt="تصویر 1" onclick="changeMainImage(this.src)">
+                    @if (!string.IsNullOrWhiteSpace(Model.Product.ThumbnailUrl) && Model.Product.ThumbnailUrl != Model.HeroImageUrl)
+                    {
+                        <img class="thumbnail" src="@Model.Product.ThumbnailUrl" alt="تصویر 2" onclick="changeMainImage(this.src)">
+                    }
+                    @foreach (var galleryImage in Model.Gallery.OrderBy(g => g.DisplayOrder))
+                    {
+                        <img class="thumbnail" src="@galleryImage.ImagePath" alt="تصویر گالری" onclick="changeMainImage(this.src)">
+                    }
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <h1 class="product-title" style="flex: 1; margin: 0;">@Model.Product.Name</h1>
+                </div>
+                <div class="product-rating">
+                    <span class="stars">
+                        @for (int i = 0; i < (int)Model.Product.Rating; i++)
+                        {
+                            <span>★</span>
+                        }
+                    </span>
+                    <span class="rating-text">(@Model.Product.GetRatingLabel() از ۵ - @Model.Product.GetReviewCountLabel())</span>
+                </div>
+
+                <!-- Product Price -->
+                <div class="product-price-section" style="margin-bottom: 15px;">
+                    <span class="current-price" id="productPrice">@Model.Product.GetFormattedPrice() تومان</span>
+                    @if (Model.Product.OriginalPrice.HasValue)
+                    {
+                        <span class="old-price" id="productOriginalPrice">@Model.Product.GetFormattedOriginalPrice() تومان</span>
+                    }
+                </div>
+
+                <!-- انتخاب گزینه -->
+                @{
+                    // بررسی اینکه آیا محصول variant دارد
+                    var hasVariants = Model.VariantAttributes != null && Model.VariantAttributes.Any() && 
+                                      Model.Variants != null && Model.Variants.Any();
+                }
+                @if (hasVariants)
+                {
+                    <div class="product-variants mb-4" data-product-variants>
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            لطفاً گزینه‌های مورد نظر را انتخاب کنید
+                        </div>
+                        @foreach (var attr in Model.VariantAttributes.OrderBy(a => a.DisplayOrder))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">@attr.Name: <span class="text-danger">*</span></label>
+                                <div class="d-flex flex-wrap gap-2" data-variant-attribute="@attr.Id">
+                                    @if (attr.Options != null && attr.Options.Any())
+                                    {
+                                        @foreach (var option in attr.Options)
+                                        {
+                                            <button type="button" 
+                                                    class="btn btn-outline-secondary variant-option-btn" 
+                                                    data-attribute-id="@attr.Id"
+                                                    data-option-value="@option"
+                                                    onclick="selectVariantOption(this, '@attr.Id', '@option')">
+                                                @option
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @* ویژگی بدون گزینه - دکمه کلیک برای انتخاب *@
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary variant-option-btn" 
+                                                data-attribute-id="@attr.Id"
+                                                data-option-value=""
+                                                onclick="selectVariantAttributeWithoutOption(this, '@attr.Id')">
+                                            انتخاب
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <div class="mt-2">
+                            <small class="text-muted" id="variantStockInfo">لطفاً تمام گزینه‌ها را انتخاب کنید</small>
+                            <small class="text-danger" id="variantOutOfStockInfo" style="display: none;">این گزینه موجودی ندارد</small>
+                        </div>
+                    </div>
+                }
+
+                <div class="product-description">
+                    <h3>توضیحات محصول</h3>
+                    <p>@Html.Raw(Model.Description)</p>
+                    @if (Model.Highlights.Any())
+                    {
+                        <ul class="product-features">
+                            @foreach (var highlight in Model.Highlights)
+                            {
+                                <li>✅ @highlight</li>
+                            }
+                        </ul>
+                    }
+                </div>
+
+                <div class="product-actions d-flex flex-wrap gap-2 align-items-center">
+                    @if (Model.CanAddToCart)
+                    {
+                        var hasStock = !Model.TrackInventory || Model.StockQuantity > 0;
+                        var isBaseOutOfStock = !hasVariants && !hasStock;
+                        var addToCartButtonType = isBaseOutOfStock ? "button" : "submit";
+                        // کنترل disabled بودن دکمه به عهده JavaScript است
+                        // در HTML اولیه attribute disabled را اضافه نمی‌کنیم
+                        <form asp-controller="Cart" asp-action="Add" method="post" id="addToCartForm" onsubmit="return validateVariantSelection(event)">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@Model.Product.Id" />
+                            <input type="hidden" name="quantity" value="1" />
+                            <input type="hidden" name="variantId" id="formVariantId" value="" />
+                            @* Hidden inputs برای variant attributes و options انتخاب شده - به صورت dynamic ایجاد می‌شوند *@
+                            <div id="selectedVariantAttributesContainer"></div>
+                            <button type="@addToCartButtonType"
+                                    class="btn btn-primary me-2"
+                                    id="addToCartBtn"
+                                    data-out-of-stock="@(isBaseOutOfStock.ToString().ToLower())"
+                                    aria-disabled="@(isBaseOutOfStock.ToString().ToLower())"
+                                    style="@(isBaseOutOfStock ? "opacity: .65; cursor: not-allowed;" : string.Empty)">
+                                @(isBaseOutOfStock ? "ناموجود" : "🛒 افزودن به سبد خرید")
+                            </button>
+
+                            @* دکمه "خبرم کن" فقط وقتی محصول پایه ناموجود است نمایش داده می‌شود *@
+                            @if (isBaseOutOfStock)
+                            {
+                                var subscribedText = Model.HasBackInStockSubscription ? "لغو خبرم کن" : "خبرم کن";
+                                var isSubscribed = Model.HasBackInStockSubscription.ToString().ToLower();
+                                <button type="button"
+                                        class="btn btn-outline-primary"
+                                        id="backInStockNotifyBtn"
+                                        data-product-id="@Model.Product.Id"
+                                        data-subscribed="@isSubscribed">
+                                    @subscribedText
+                                </button>
+                            }
+                            @if (hasVariants)
+                            {
+                                <div class="mt-2">
+                                    <small class="text-danger" id="variantValidationError" style="display: none;">
+                                        لطفاً تمام گزینه‌ها را انتخاب کنید
+                                    </small>
+                                </div>
+                            }
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary" disabled>
+                            🛒 امکان ثبت سفارش وجود ندارد
+                        </button>
+                    }
+                    <button type="button" id="wishlist-btn" class="btn btn-secondary ms-auto" onclick="addToWishlist('@Model.Product.Id')">
+                        ❤️ افزودن به علاقه‌مندی‌ها
+                    </button>
+                </div>
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📦</span>
+                        <span>ضمانت اصل بودن کالا</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🚚</span>
+                        <span>امکان تحویل اکسپرس</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🔒</span>
+                        <span>پرداخت امن و مطمئن</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🕒</span>
+                        <span>
+                            ۲۴ ساعته، ۷ روز هفته
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Product Tabs -->
+        <div class="product-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab('specifications')">مشخصات</button>
+                <button class="tab-btn" onclick="showTab('reviews')">نظرات (@Model.Comments.Count)</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="specifications" class="tab-pane active">
+                    <table class="specifications-table">
+                        @foreach (var attr in Model.Attributes)
+                        {
+                            <tr>
+                                <td>@attr.Key</td>
+                                <td>@attr.Value</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+
+                <div id="reviews" class="tab-pane">
+                   
+                    <ol class="blog-comment__list product-comment__list" aria-label="نظرات محصول">
+        @foreach (var comment in Model.Comments)
+        {
+            ViewData["ProductSlug"] = Model.Product.Slug;
+            ViewData["ProductId"] = Model.Product.Id;
+            @await Html.PartialAsync("_ProductComment", comment)
+        }
+    </ol>
+
+                    <div class="review-form">
+                        <h3>نظر خود را ثبت کنید</h3>
+                        <form asp-action="AddComment" asp-route-slug="@Model.Product.Slug" method="post" class="blog-comment-form" id="commentForm" novalidate>
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger" style="display: none;"></div>
+                            <input type="hidden" asp-for="NewComment.ProductId" />
+                            <input type="hidden" asp-for="NewComment.ParentId" value="" />
+                            <div class="form-group blog-comment-form__field">
+                                <label asp-for="NewComment.AuthorName">نام:</label>
+                                <input asp-for="NewComment.AuthorName" class="form-control" id="commentAuthorName" required />
+                                <span asp-validation-for="NewComment.AuthorName" class="text-danger" style="display: none;"></span>
+                            </div>
+                            <div class="form-group blog-comment-form__field">
+                                <label asp-for="NewComment.Rating">امتیاز:</label>
+                                <div class="rating-input">
+                                    <input type="hidden" asp-for="NewComment.Rating" id="ratingValue" value="5" />
+                                    <div class="star-rating" id="starRating">
+                                        @for (int i = 5; i >= 1; i--)
+                                        {
+                                            <span class="star" data-rating="@i">★</span>
+                                        }
+                                    </div>
+                                    <span class="rating-text" id="ratingText">5 ستاره</span>
+                                </div>
+                                <span asp-validation-for="NewComment.Rating" class="text-danger" style="display: none;"></span>
+                            </div>
+                            <div class="form-group blog-comment-form__field">
+                                <label asp-for="NewComment.Content">نظر شما:</label>
+                                <textarea asp-for="NewComment.Content" rows="4" class="form-control" id="commentContent" required></textarea>
+                                <span asp-validation-for="NewComment.Content" class="text-danger" style="display: none;"></span>
+                            </div>
+                            <button type="submit" class="btn blog-comment-form__submit">ثبت نظر</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggested Products -->
+        <div class="suggested-products-section" style="margin-top: 60px; margin-bottom: 40px;">
+            <h2 class="section-title" style="font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #333; text-align: center;">فروشندگان دیگر این محصول</h2>
+            @if (Model.SuggestedProductOffers.Any())
+            {
+                <div class="suggested-products-list">
+                    @foreach (var offer in Model.SuggestedProductOffers)
+                    {
+                        <div class="suggested-product-card">
+                            <!-- Product Image -->
+                            <div class="suggested-product-image">
+                                <img src="@offer.ImageUrl" alt="@offer.ProductName" />
+                            </div>
+
+                            <!-- Product Info -->
+                            <div class="suggested-product-info">
+                                <div class="suggested-product-name">@offer.SellerName</div>
+                                <div class="suggested-product-category">📦 @offer.ProductName</div>
+                                @if (!string.IsNullOrWhiteSpace(offer.ShopAddress))
+                                {
+                                    <div class="suggested-product-address">📍 @offer.ShopAddress</div>
+                                }
+                            </div>
+
+                            <!-- Price -->
+                            <div class="suggested-product-price">
+                                <span class="price-value">@offer.GetFormattedPrice()</span>
+                                <span class="price-unit">تومان</span>
+                            </div>
+
+                            <!-- Add to Cart Button -->
+                            <div class="suggested-product-action">
+                                <form asp-controller="Cart" asp-action="Add" method="post" style="margin: 0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@Model.Product.Id" />
+                                    <input type="hidden" name="quantity" value="1" />
+                                    <input type="hidden" name="offerId" value="@offer.Id" />
+                                    <button type="submit" class="add-to-cart-btn" @(offer.IsInStock ? "" : "disabled")>
+                                        @(offer.IsInStock ? "افزودن به سبد خرید" : "ناموجود")
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-suggested-products" style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 12px; color: #666;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px; opacity: 0.5;">
+                        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p style="font-size: 16px; margin: 0; color: #666;">هنوز پیشنهادی از فروشندگان دیگر برای این محصول ثبت نشده است.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Related Products -->
+        @if (Model.RelatedProducts.Any())
+        {
+            <div class="related-products">
+                <h2 class="section-title">محصولات مرتبط</h2>
+                <div class="products-grid">
+                    @foreach (var relatedProduct in Model.RelatedProducts.Take(3))
+                    {
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="@relatedProduct.ThumbnailUrl" alt="@relatedProduct.Name" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-name">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-slug="@relatedProduct.Slug" style="text-decoration: none; color: inherit;">@StringHelper.TruncateName(relatedProduct.Name)</a>
+                                </h3>
+                                <p class="product-description">@StringHelper.TruncateDescription(relatedProduct.ShortDescription)</p>
+                                <div class="product-price">@relatedProduct.GetFormattedPrice() تومان</div>
+                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@relatedProduct.Slug" style="text-decoration: none;">
+                                    <span class="archive-product-btn">مشاهده جزئیات</span>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Out-of-stock modal -->
+<div id="outOfStockModal" class="product-stock-modal" aria-hidden="true">
+    <div class="product-stock-modal__dialog">
+        <div class="product-stock-modal__header">
+            <h5 class="product-stock-modal__title">ناموجود</h5>
+            <button type="button" class="product-stock-modal__close" data-product-modal-close>&times;</button>
+        </div>
+        <div class="product-stock-modal__body">
+            <div class="stock-modal-icon stock-modal-icon--warning">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#f59e0b" stroke-width="2"/>
+                    <line x1="12" y1="8" x2="12" y2="12" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="16" r="1" fill="#f59e0b"/>
+                </svg>
+            </div>
+            <p class="stock-modal-desc">این محصول در حال حاضر موجودی ندارد.</p>
+            <button type="button" class="stock-modal-btn stock-modal-btn--secondary" data-product-modal-close>
+                متوجه شدم
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Back in stock - Phone modal -->
+<div id="backInStockModal" class="product-stock-modal" aria-hidden="true">
+    <div class="product-stock-modal__dialog">
+        <div class="product-stock-modal__header">
+            <h5 class="product-stock-modal__title">خبرم کن وقتی موجود شد</h5>
+            <button type="button" class="product-stock-modal__close" data-product-modal-close>&times;</button>
+        </div>
+        <div class="product-stock-modal__body">
+            <div class="stock-modal-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <p class="stock-modal-desc">برای اطلاع‌رسانی موجود شدن محصول، شماره موبایل خود را وارد کنید.</p>
+            <form id="backInStockPhoneForm" method="post" novalidate>
+                <div class="stock-modal-field">
+                    <label for="backInStockPhone" class="stock-modal-label">شماره موبایل</label>
+                    <input type="tel"
+                           class="stock-modal-input"
+                           id="backInStockPhone"
+                           name="phoneNumber"
+                           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                           dir="ltr"
+                           required />
+                    <div class="stock-modal-error d-none" id="backInStockPhoneError"></div>
+                </div>
+                <button type="submit" class="stock-modal-btn" id="backInStockPhoneSubmitBtn">
+                    ارسال کد تایید
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Back in stock - Code verification modal -->
+<div id="backInStockCodeModal" class="product-stock-modal" aria-hidden="true">
+    <div class="product-stock-modal__dialog">
+        <div class="product-stock-modal__header">
+            <h5 class="product-stock-modal__title">تایید شماره موبایل</h5>
+            <button type="button" class="product-stock-modal__close" data-product-modal-close>&times;</button>
+        </div>
+        <div class="product-stock-modal__body">
+            <div class="stock-modal-icon stock-modal-icon--code">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#10b981" stroke-width="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <p class="stock-modal-desc">کد تایید به شماره <span id="backInStockDisplayPhone" class="fw-bold" dir="ltr"></span> ارسال شد.</p>
+            <form id="backInStockCodeForm" method="post" novalidate>
+                <div class="stock-modal-field">
+                    <label for="backInStockCode" class="stock-modal-label">کد تایید ۶ رقمی</label>
+                    <input type="text"
+                           class="stock-modal-input stock-modal-input--code"
+                           id="backInStockCode"
+                           maxlength="6"
+                           inputmode="numeric"
+                           placeholder="- - - - - -"
+                           dir="ltr"
+                           required />
+                    <div class="stock-modal-hint">
+                        <span>کد تست:</span>
+                        <span id="backInStockDebugCode" class="fw-bold text-primary" dir="ltr"></span>
+                    </div>
+                    <div class="stock-modal-error d-none" id="backInStockCodeError"></div>
+                </div>
+                <button type="submit" class="stock-modal-btn stock-modal-btn--success" id="backInStockCodeSubmitBtn">
+                    تایید و ثبت درخواست
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Back in stock - Success modal -->
+<div id="backInStockSuccessModal" class="product-stock-modal" aria-hidden="true">
+    <div class="product-stock-modal__dialog">
+        <div class="product-stock-modal__header">
+            <h5 class="product-stock-modal__title">درخواست شما ثبت شد</h5>
+            <button type="button" class="product-stock-modal__close" data-product-modal-close>&times;</button>
+        </div>
+        <div class="product-stock-modal__body">
+            <div class="stock-modal-icon stock-modal-icon--success">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2" />
+                    <path d="M8 12.5l2.5 2.5L16 9" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <p class="stock-modal-desc">
+                درخواست اطلاع‌رسانی موجود شدن این محصول با موفقیت ثبت شد.
+                به محض موجود شدن، از طریق پیامک به شما اطلاع داده می‌شود.
+            </p>
+            <button type="button" class="stock-modal-btn stock-modal-btn--success" data-product-modal-close>
+                متوجه شدم
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal for Comment -->
+@if (commentSuccess == true)
+{
+    <div id="commentSuccessModal" class="comment-success-modal" style="display: none;">
+        <div class="comment-success-modal__backdrop" onclick="closeCommentSuccessModal()"></div>
+        <div class="comment-success-modal__dialog">
+            <div class="comment-success-modal__content">
+                <div class="comment-success-modal__icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#28a745" opacity="0.1" />
+                        <path d="M9 12l2 2 4-4" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3 class="comment-success-modal__title">نظر شما با موفقیت ثبت شد</h3>
+                <p class="comment-success-modal__message">
+                    نظر شما پس از بررسی و تایید مدیریت در سایت نمایش داده خواهد شد.
+                </p>
+                <button type="button" class="comment-success-modal__button" onclick="closeCommentSuccessModal()">
+                    متشکرم
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Error Modal for Comment Validation -->
+<div id="commentErrorModal" class="comment-error-modal" style="display: none;">
+    <div class="comment-error-modal__backdrop" onclick="closeCommentErrorModal()"></div>
+    <div class="comment-error-modal__dialog">
+        <div class="comment-error-modal__content">
+            <div class="comment-error-modal__icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#dc3545" opacity="0.1" />
+                    <path d="M9 9l6 6M15 9l-6 6" stroke="#dc3545" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <h3 class="comment-error-modal__title" id="commentErrorTitle">لطفاً خطاهای زیر را برطرف کنید</h3>
+            <div class="comment-error-modal__message" id="commentErrorMessage">
+                <!-- Error messages will be inserted here -->
+            </div>
+            <button type="button" class="comment-error-modal__button" onclick="closeCommentErrorModal()">
+                متوجه شدم
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // منطق انتخاب گزینه
+        const variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.Variants ?? new List<ProductVariantViewModel>()).Select(v => new {
+            id = v.Id,
+            price = v.Price,
+            compareAtPrice = v.CompareAtPrice,
+            stockQuantity = v.StockQuantity,
+            options = v.Options.ToDictionary(o => o.VariantAttributeId.ToString(), o => o.Value)
+        })));
+        
+        const basePrice = @(Model.Product.Price?.ToString("0.00") ?? "null");
+        const baseOriginalPrice = @(Model.Product.OriginalPrice?.ToString("0.00") ?? "null");
+        const baseStockQuantity = @(Model.StockQuantity);
+        const trackInventory = @(Model.TrackInventory ? "true" : "false");
+        
+        let selectedOptions = {};
+        
+        function updateVariantAttributeHiddenInput(attributeId, optionValue) {
+            // ایجاد یا به‌روزرسانی hidden input برای variant attribute
+            const container = document.getElementById('selectedVariantAttributesContainer');
+            if (!container) return;
+            
+            const inputId = `variantAttribute_${attributeId}`;
+            let input = document.getElementById(inputId);
+            
+            if (!input) {
+                // ایجاد hidden input جدید
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.id = inputId;
+                input.name = `selectedVariantAttributes[${attributeId}]`;
+                container.appendChild(input);
+            }
+            
+            // به‌روزرسانی مقدار
+            input.value = optionValue || '__SELECTED__';
+        }
+        
+        function removeVariantAttributeHiddenInput(attributeId) {
+            // حذف hidden input برای variant attribute
+            const inputId = `variantAttribute_${attributeId}`;
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.remove();
+            }
+        }
+        
+        function selectVariantOption(button, attributeId, optionValue) {
+            // attributeId از Razor به صورت string می‌آید (مثلاً: "550e8400-e29b-41d4-a716-446655440000")
+            const attrIdStr = String(attributeId);
+            
+            // به‌روزرسانی گزینه‌های انتخاب شده
+            selectedOptions[attrIdStr] = optionValue;
+            
+            // به‌روزرسانی hidden input در فرم برای این variant attribute
+            updateVariantAttributeHiddenInput(attrIdStr, optionValue);
+            
+            // به‌روزرسانی وضعیت دکمه‌ها
+            const attributeContainer = button.closest('[data-variant-attribute]');
+            if (attributeContainer) {
+                attributeContainer.querySelectorAll('.variant-option-btn').forEach(btn => {
+                    btn.classList.remove('active', 'btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                });
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('active', 'btn-primary');
+            }
+            
+            // پیدا کردن گزینه مطابق
+            const matchingVariant = findMatchingVariant();
+            
+            // وقتی هر variant option انتخاب شد، دکمه را فعال کن
+            // backend validation نهایی را بررسی می‌کند
+            const addToCartBtnCheck = document.getElementById('addToCartBtn');
+            if (addToCartBtnCheck && Object.keys(selectedOptions).length > 0) {
+                // کاملاً attribute disabled را حذف کن
+                addToCartBtnCheck.disabled = false;
+                addToCartBtnCheck.removeAttribute('disabled');
+            }
+            
+            if (matchingVariant) {
+                // Set variantId in the form
+                const formVariantIdElement = document.getElementById('formVariantId');
+                if (formVariantIdElement) {
+                    formVariantIdElement.value = matchingVariant.id;
+                }
+                
+                // به‌روزرسانی قیمت
+                const priceElement = document.getElementById('productPrice');
+                const originalPriceElement = document.getElementById('productOriginalPrice');
+                
+                if (matchingVariant.price !== null) {
+                    priceElement.textContent = formatPrice(matchingVariant.price) + ' تومان';
+                } else if (basePrice !== null) {
+                    priceElement.textContent = formatPrice(basePrice) + ' تومان';
+                }
+                
+                if (matchingVariant.compareAtPrice !== null) {
+                    if (originalPriceElement) {
+                        originalPriceElement.textContent = formatPrice(matchingVariant.compareAtPrice) + ' تومان';
+                        originalPriceElement.style.display = 'inline';
+                    }
+                } else if (baseOriginalPrice !== null) {
+                    if (originalPriceElement) {
+                        originalPriceElement.textContent = formatPrice(baseOriginalPrice) + ' تومان';
+                        originalPriceElement.style.display = 'inline';
+                    }
+                } else {
+                    if (originalPriceElement) {
+                        originalPriceElement.style.display = 'none';
+                    }
+                }
+                
+                // به‌روزرسانی اطلاعات موجودی
+                // اگر variant موجودی داشت (> 0) از آن استفاده کن، در غیر این صورت از موجودی محصول
+                const variantStock = matchingVariant.stockQuantity !== null && matchingVariant.stockQuantity !== undefined 
+                    ? matchingVariant.stockQuantity 
+                    : 0;
+                // اگر variant موجودی 0 یا null/undefined باشد، از موجودی محصول استفاده می‌شود (backend این را بررسی می‌کند)
+                const finalStockQuantity = variantStock > 0 ? variantStock : baseStockQuantity;
+                const stockInfo = document.getElementById('variantStockInfo');
+                const addToCartBtn = document.getElementById('addToCartBtn');
+                
+                // نمایش موجودی (فقط برای نمایش - backend موجودی واقعی را بررسی می‌کند)
+                if (trackInventory) {
+                    if (variantStock > 0) {
+                        // Variant موجودی دارد
+                        stockInfo.textContent = `موجودی: ${variantStock} عدد`;
+                        stockInfo.className = 'text-success';
+                    } else if (baseStockQuantity > 0) {
+                        // Variant موجودی ندارد اما محصول موجودی دارد
+                        stockInfo.textContent = `موجودی: ${baseStockQuantity} عدد (محصول)`;
+                        stockInfo.className = 'text-success';
+                    } else {
+                        stockInfo.textContent = 'ناموجود';
+                        stockInfo.className = 'text-danger';
+                    }
+                } else {
+                    stockInfo.textContent = 'موجود';
+                    stockInfo.className = 'text-success';
+                }
+                
+                // وضعیت دکمه را بر اساس موجودی variant/محصول تنظیم کن
+                if (addToCartBtn) {
+                    const isVariantOutOfStock = trackInventory && finalStockQuantity <= 0;
+                    addToCartBtn.dataset.variantOutOfStock = isVariantOutOfStock ? 'true' : 'false';
+
+                    if (isVariantOutOfStock) {
+                        addToCartBtn.disabled = false; // برای نمایش مودال باید کلیک‌پذیر بماند
+                        addToCartBtn.textContent = 'ناموجود';
+                        addToCartBtn.classList.remove('btn-primary');
+                        addToCartBtn.classList.add('btn-outline-secondary');
+                    } else {
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.removeAttribute('disabled');
+                        addToCartBtn.textContent = '🛒 افزودن به سبد خرید';
+                        addToCartBtn.classList.add('btn-primary');
+                        addToCartBtn.classList.remove('btn-outline-secondary');
+                    }
+                }
+            } else {
+                // هنوز گزینه مطابقی پیدا نشده (همه گزینه‌ها انتخاب نشده‌اند)
+                // variantId را خالی کن (اما hidden inputs برای variant attributes را نگه دار)
+                const formVariantIdElement = document.getElementById('formVariantId');
+                if (formVariantIdElement) {
+                    formVariantIdElement.value = '';
+                }
+                
+                // قیمت پایه را نگه دار
+                const priceElement = document.getElementById('productPrice');
+                const originalPriceElement = document.getElementById('productOriginalPrice');
+                
+                if (basePrice !== null) {
+                    priceElement.textContent = formatPrice(basePrice) + ' تومان';
+                }
+                
+                if (baseOriginalPrice !== null && originalPriceElement) {
+                    originalPriceElement.textContent = formatPrice(baseOriginalPrice) + ' تومان';
+                    originalPriceElement.style.display = 'inline';
+                }
+                
+                // موجودی را از محصول نمایش بده
+                const stockInfoElement = document.getElementById('variantStockInfo');
+                const addToCartBtnElement = document.getElementById('addToCartBtn');
+                if (stockInfoElement) {
+                    stockInfoElement.textContent = 'لطفاً تمام گزینه‌ها را انتخاب کنید';
+                    stockInfoElement.className = 'text-muted';
+                }
+                
+                // اگر option انتخاب شده باشد، دکمه را enable نگه دار (قبلاً در خط 503-508 enable شده)
+                // فقط وقتی هیچ option انتخاب نشده، disable کن
+                if (addToCartBtnElement) {
+                    if (Object.keys(selectedOptions).length === 0) {
+                        // هیچ option انتخاب نشده، disable کن
+                        addToCartBtnElement.disabled = true;
+                    } else {
+                        // option انتخاب شده، enable نگه دار
+                        addToCartBtnElement.disabled = false;
+                        addToCartBtnElement.removeAttribute('disabled');
+                    }
+                    addToCartBtnElement.textContent = '🛒 افزودن به سبد خرید';
+                    addToCartBtnElement.dataset.variantOutOfStock = 'false';
+                }
+                // توجه: hidden inputs برای variant attributes را نگه می‌داریم تا مشخص باشد کدام‌ها انتخاب شده‌اند
+            }
+        }
+        
+        function selectVariantAttributeWithoutOption(button, attributeId) {
+            // برای ویژگی بدون گزینه، فقط attributeId را علامت بزن
+            const attrIdStr = String(attributeId);
+            selectedOptions[attrIdStr] = '__SELECTED__';
+            
+            // به‌روزرسانی hidden input در فرم
+            updateVariantAttributeHiddenInput(attrIdStr, '__SELECTED__');
+            
+            // بقیه منطق...
+            
+            // به‌روزرسانی وضعیت دکمه
+            const attributeContainer = button.closest('[data-variant-attribute]');
+            if (attributeContainer) {
+                attributeContainer.querySelectorAll('.variant-option-btn').forEach(btn => {
+                    btn.classList.remove('active', 'btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                });
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('active', 'btn-primary');
+            }
+            
+            // پیدا کردن variant مطابق - برای ویژگی بدون گزینه، variant باید فقط این attribute را داشته باشد
+            const matchingVariant = findMatchingVariantForAttributeWithoutOption(attributeId);
+            
+            if (matchingVariant) {
+                // Set variantId in the form
+                const formVariantIdElement = document.getElementById('formVariantId');
+                if (formVariantIdElement) {
+                    formVariantIdElement.value = matchingVariant.id;
+                }
+                
+                // به‌روزرسانی قیمت
+                const priceElement = document.getElementById('productPrice');
+                const originalPriceElement = document.getElementById('productOriginalPrice');
+                
+                if (matchingVariant.price !== null) {
+                    priceElement.textContent = formatPrice(matchingVariant.price) + ' تومان';
+                } else if (basePrice !== null) {
+                    priceElement.textContent = formatPrice(basePrice) + ' تومان';
+                }
+                
+                if (matchingVariant.compareAtPrice !== null) {
+                    if (originalPriceElement) {
+                        originalPriceElement.textContent = formatPrice(matchingVariant.compareAtPrice) + ' تومان';
+                        originalPriceElement.style.display = 'inline';
+                    }
+                } else if (baseOriginalPrice !== null) {
+                    if (originalPriceElement) {
+                        originalPriceElement.textContent = formatPrice(baseOriginalPrice) + ' تومان';
+                        originalPriceElement.style.display = 'inline';
+                    }
+                } else {
+                    if (originalPriceElement) {
+                        originalPriceElement.style.display = 'none';
+                    }
+                }
+                
+                // به‌روزرسانی اطلاعات موجودی
+                const variantStock = matchingVariant.stockQuantity !== null && matchingVariant.stockQuantity !== undefined 
+                    ? matchingVariant.stockQuantity 
+                    : 0;
+                const stockInfo = document.getElementById('variantStockInfo');
+                const addToCartBtn = document.getElementById('addToCartBtn');
+                
+                // نمایش موجودی (فقط برای نمایش - backend موجودی واقعی را بررسی می‌کند)
+                if (trackInventory) {
+                    if (variantStock > 0) {
+                        // Variant موجودی دارد
+                        stockInfo.textContent = `موجودی: ${variantStock} عدد`;
+                        stockInfo.className = 'text-success';
+                    } else if (baseStockQuantity > 0) {
+                        // Variant موجودی ندارد اما محصول موجودی دارد
+                        stockInfo.textContent = `موجودی: ${baseStockQuantity} عدد (محصول)`;
+                        stockInfo.className = 'text-success';
+                    } else {
+                        stockInfo.textContent = 'ناموجود';
+                        stockInfo.className = 'text-danger';
+                    }
+                } else {
+                    stockInfo.textContent = 'موجود';
+                    stockInfo.className = 'text-success';
+                }
+                
+                // همیشه دکمه را enable کن چون variant انتخاب شده است
+                // backend validation موجودی واقعی را بررسی می‌کند (variant یا محصول)
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = false;
+                    addToCartBtn.removeAttribute('disabled');
+                    addToCartBtn.textContent = '🛒 افزودن به سبد خرید';
+                }
+            } else {
+                // اگر variant مطابقی پیدا نشد، از مشخصات محصول استفاده کن
+                const formVariantIdElement = document.getElementById('formVariantId');
+                if (formVariantIdElement) {
+                    // variantId را با attributeId تنظیم کن (یا می‌توانیم اولین variant را پیدا کنیم)
+                    const firstVariantWithAttribute = variants.find(v => {
+                        // بررسی اینکه آیا variant این attribute را دارد
+                        return v.options && v.options[attributeId] !== undefined;
+                    });
+                    if (firstVariantWithAttribute) {
+                        formVariantIdElement.value = firstVariantWithAttribute.id;
+                    } else {
+                        // اگر variant مطابقی پیدا نشد، از اولین variant استفاده کن
+                        if (variants && variants.length > 0) {
+                            formVariantIdElement.value = variants[0].id;
+                        }
+                    }
+                }
+                
+                // قیمت پایه را نگه دار
+                const priceElement = document.getElementById('productPrice');
+                const originalPriceElement = document.getElementById('productOriginalPrice');
+                
+                if (basePrice !== null) {
+                    priceElement.textContent = formatPrice(basePrice) + ' تومان';
+                }
+                
+                if (baseOriginalPrice !== null && originalPriceElement) {
+                    originalPriceElement.textContent = formatPrice(baseOriginalPrice) + ' تومان';
+                    originalPriceElement.style.display = 'inline';
+                }
+                
+                // موجودی را از محصول نمایش بده
+                const stockInfo = document.getElementById('variantStockInfo');
+                const addToCartBtn = document.getElementById('addToCartBtn');
+                
+                if (trackInventory) {
+                    if (baseStockQuantity > 0) {
+                        stockInfo.textContent = `موجودی: ${baseStockQuantity} عدد`;
+                        stockInfo.className = 'text-success';
+                    } else {
+                        stockInfo.textContent = 'ناموجود';
+                        stockInfo.className = 'text-danger';
+                    }
+                } else {
+                    stockInfo.textContent = 'موجود';
+                    stockInfo.className = 'text-success';
+                }
+                
+                // دکمه را disable کن چون variant انتخاب نشده است
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.textContent = '🛒 افزودن به سبد خرید';
+                    // حذف attribute اگر وجود دارد (اما disabled = true می‌ماند)
+                }
+            }
+        }
+        
+        function findMatchingVariant() {
+            // همه variant attributes را در نظر بگیر (با گزینه و بدون گزینه)
+            const allVariantAttributes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Select(a => a.Id.ToString())));
+            const variantAttributesWithOptions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Where(a => a.Options != null && a.Options.Any()).Select(a => a.Id.ToString())));
+            
+            console.log('findMatchingVariant - allVariantAttributes:', allVariantAttributes);
+            console.log('findMatchingVariant - variantAttributesWithOptions:', variantAttributesWithOptions);
+            console.log('findMatchingVariant - selectedOptions:', selectedOptions);
+            console.log('findMatchingVariant - variants:', variants);
+            
+            // اگر variant attribute ای وجود ندارد، null برگردان
+            if (!allVariantAttributes || allVariantAttributes.length === 0) {
+                console.log('findMatchingVariant - No variant attributes found');
+                return null;
+            }
+            
+            // بررسی اینکه آیا تمام ویژگی‌ها (که گزینه دارند) انتخاب شده‌اند
+            for (const attrId of variantAttributesWithOptions) {
+                // attrId حالا string است (از ToString() در C#)
+                const attrIdStr = String(attrId);
+                // بررسی هم با string و هم با مقدار اصلی
+                const hasSelection = selectedOptions[attrIdStr] || selectedOptions[attrId];
+                console.log(`findMatchingVariant - Checking attrId: ${attrIdStr}, hasSelection:`, hasSelection);
+                if (!hasSelection) {
+                    console.log('findMatchingVariant - Missing selection for:', attrIdStr);
+                    return null; // تمام ویژگی‌های دارای گزینه انتخاب نشده‌اند
+                }
+            }
+            
+            // پیدا کردن گزینه‌ای که با تمام انتخاب‌ها مطابقت دارد
+            const matching = variants.find(v => {
+                if (!v.options) {
+                    console.log('findMatchingVariant - Variant has no options:', v);
+                    return false;
+                }
+                
+                console.log('findMatchingVariant - Checking variant:', v.id, 'options:', v.options);
+                
+                // بررسی اینکه آیا variant با تمام انتخاب‌های کاربر مطابقت دارد
+                // نکته: variant باید برای همه attribute های انتخاب شده، مقدار مطابق داشته باشد
+                // اگر variant یک attribute را ندارد، باید variant دیگری را پیدا کنیم
+                let allAttributesMatch = true;
+                for (const attrId of variantAttributesWithOptions) {
+                    // attrId حالا string است (از ToString() در C#)
+                    const attrIdStr = String(attrId);
+                    // بررسی هم با string و هم با مقدار اصلی
+                    const selectedValue = selectedOptions[attrIdStr] || selectedOptions[attrId];
+                    if (!selectedValue) {
+                        console.log(`findMatchingVariant - No selected value for attrId: ${attrIdStr}`);
+                        allAttributesMatch = false;
+                        break;
+                    }
+                    
+                    // مقایسه با کلیدهای options (که string هستند)
+                    const variantOption = v.options[attrIdStr];
+                    console.log(`findMatchingVariant - Comparing attrId: ${attrIdStr}, selectedValue: ${selectedValue}, variantOption: ${variantOption}`);
+                    
+                    // اگر variant این attribute را ندارد (undefined)، این variant مناسب نیست
+                    if (variantOption === undefined) {
+                        console.log(`findMatchingVariant - Variant doesn't have attribute: ${attrIdStr}`);
+                        allAttributesMatch = false;
+                        break;
+                    }
+                    
+                    // variant این attribute را دارد، پس باید مطابقت داشته باشد
+                    if (String(variantOption).trim() !== String(selectedValue).trim()) {
+                        console.log(`findMatchingVariant - Mismatch for attrId: ${attrIdStr}`);
+                        allAttributesMatch = false;
+                        break;
+                    }
+                }
+                
+                if (!allAttributesMatch) {
+                    return false;
+                }
+                
+                // برای ویژگی‌های بدون گزینه، فقط بررسی کن که variant این attribute را دارد
+                for (const attrId of allVariantAttributes) {
+                    if (!variantAttributesWithOptions.includes(attrId)) {
+                        // این ویژگی بدون گزینه است
+                        const attrIdStr = String(attrId);
+                        if (selectedOptions[attrIdStr] === '__SELECTED__') {
+                            // کاربر این ویژگی را انتخاب کرده، پس variant باید این attribute را داشته باشد
+                            if (!v.options[attrIdStr]) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                console.log('findMatchingVariant - Variant matched:', v.id);
+                return true;
+            });
+            
+            console.log('findMatchingVariant - Final matching result:', matching);
+            return matching;
+        }
+        
+        function findMatchingVariantForAttributeWithoutOption(attributeId) {
+            // پیدا کردن variant که این attribute را دارد
+            const attrIdStr = String(attributeId);
+            return variants.find(v => {
+                return v.options && v.options[attrIdStr] !== undefined;
+            });
+        }
+        
+        function formatPrice(price) {
+            return new Intl.NumberFormat('fa-IR').format(Math.round(price));
+        }
+
+        function openProductStockModal(modalId) {
+            try {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                modalElement.classList.add('show');
+                modalElement.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Error while opening stock modal:', error);
+            }
+        }
+
+        function closeProductStockModal(modalElement) {
+            try {
+                if (!modalElement) return;
+
+                modalElement.classList.remove('show');
+                modalElement.setAttribute('aria-hidden', 'true');
+
+                // اگر هیچ مودال دیگری باز نیست، اسکرول را برگردان
+                const anyOpen = document.querySelector('.product-stock-modal.show');
+                if (!anyOpen) {
+                    document.body.style.overflow = '';
+                }
+            } catch (error) {
+                console.error('Error while closing stock modal:', error);
+            }
+        }
+
+        function showOutOfStockModal() {
+            openProductStockModal('outOfStockModal');
+        }
+        
+        function validateVariantSelection(event) {
+            try {
+                // بررسی اینکه آیا محصول variant دارد
+                const allVariantAttributes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Select(a => a.Id.ToString())));
+                const hasVariants = allVariantAttributes && allVariantAttributes.length > 0 && variants && variants.length > 0;
+                
+                // اگر محصول variant نداشته باشد، اجازه ارسال
+                if (!hasVariants) {
+                    const formVariantId = document.getElementById('formVariantId');
+                    if (formVariantId) {
+                        formVariantId.value = ''; // variantId را خالی بگذار
+                    }
+                    return true; // اجازه ارسال
+                }
+                
+                // اگر محصول variant دارد، باید variant انتخاب شده باشد
+                const formVariantIdElement = document.getElementById('formVariantId');
+                const variantId = formVariantIdElement ? (formVariantIdElement.value || '') : '';
+                // همه variant attributes را در نظر بگیر
+                const variantAttributes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Select(a => a.Id.ToString())));
+                const variantAttributesWithOptions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Where(a => a.Options != null && a.Options.Any()).Select(a => a.Id.ToString())));
+                
+                // اگر variant attribute ای وجود ندارد، اجازه ارسال
+                if (!variantAttributes || variantAttributes.length === 0) {
+                    if (formVariantIdElement) {
+                        formVariantIdElement.value = '';
+                    }
+                    return true;
+                }
+                
+                // بررسی اینکه آیا تمام ویژگی‌های دارای گزینه انتخاب شده‌اند
+                let allSelected = true;
+                for (const attrId of variantAttributesWithOptions) {
+                    const attrIdStr = String(attrId);
+                    if (!selectedOptions[attrIdStr]) {
+                        allSelected = false;
+                        break;
+                    }
+                }
+                
+                // بررسی اینکه آیا ویژگی‌های بدون گزینه انتخاب شده‌اند
+                for (const attrId of variantAttributes) {
+                    if (!variantAttributesWithOptions.includes(attrId)) {
+                        // این ویژگی بدون گزینه است
+                        const attrIdStr = String(attrId);
+                        if (selectedOptions[attrIdStr] === '__SELECTED__') {
+                            // این ویژگی انتخاب شده است
+                            allSelected = true; // حداقل یک ویژگی انتخاب شده است
+                        }
+                    }
+                }
+                
+                const addToCartBtnForValidation = document.getElementById('addToCartBtn');
+                const isBaseOutOfStock = addToCartBtnForValidation && addToCartBtnForValidation.dataset.outOfStock === 'true';
+                const isVariantOutOfStock = addToCartBtnForValidation && addToCartBtnForValidation.dataset.variantOutOfStock === 'true';
+
+                // اگر تمام ویژگی‌ها انتخاب نشده یا variantId وجود ندارد، خطا
+                if (!allSelected || !variantId || variantId.trim() === '') {
+                    event.preventDefault();
+                    const errorElement = document.getElementById('variantValidationError');
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
+                }
+
+                // اگر محصول یا variant ناموجود باشد، اجازه ارسال نده و مودال را نمایش بده
+                if (isBaseOutOfStock || isVariantOutOfStock) {
+                    event.preventDefault();
+                    showOutOfStockModal();
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error in validateVariantSelection:', error);
+                // در صورت خطا، اجازه ارسال بده (fallback)
+                return true;
+            }
+        }
+        
+        // مقداردهی اولیه وضعیت دکمه هنگام بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            // بررسی اینکه آیا محصول variant دارد
+            const allVariantAttributes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.VariantAttributes ?? new List<ProductVariantAttributeViewModel>()).Select(a => a.Id.ToString())));
+            const hasVariants = allVariantAttributes && allVariantAttributes.length > 0 && variants && variants.length > 0;
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            if (addToCartBtn) {
+                const isBaseOutOfStock = addToCartBtn.dataset.outOfStock === 'true';
+
+                if (isBaseOutOfStock) {
+                    // محصول بدون variant و ناموجود: دکمه فقط برای نمایش مودال استفاده می‌شود
+                    addToCartBtn.classList.remove('btn-primary');
+                    addToCartBtn.classList.add('btn-outline-secondary');
+                } else if (hasVariants) {
+                    // اگر محصول variant دارد، دکمه را غیرفعال کن تا کاربر variant را انتخاب کند
+                    addToCartBtn.disabled = true;
+                } else {
+                    // اگر محصول variant ندارد و ناموجود هم نیست، دکمه را فعال کن
+                    addToCartBtn.disabled = false;
+                    addToCartBtn.removeAttribute('disabled');
+                    // variantId را خالی بگذار
+                    const formVariantId = document.getElementById('formVariantId');
+                    if (formVariantId) {
+                        formVariantId.value = '';
+                    }
+                    
+                    // پاک کردن hidden inputs برای variant attributes (چون محصول variant ندارد)
+                    const container = document.getElementById('selectedVariantAttributesContainer');
+                    if (container) {
+                        container.innerHTML = '';
+                    }
+                }
+
+                // کلیک روی دکمه را برای نمایش مودال در حالت ناموجود مدیریت کن
+                addToCartBtn.addEventListener('click', function (e) {
+                    const isBaseOutOfStockClick = addToCartBtn.dataset.outOfStock === 'true';
+                    const isVariantOutOfStockClick = addToCartBtn.dataset.variantOutOfStock === 'true';
+                    if (isBaseOutOfStockClick || isVariantOutOfStockClick) {
+                        e.preventDefault();
+                        showOutOfStockModal();
+                    }
+                });
+
+                // Back-in-stock "خبرم کن" button
+                const backInStockBtn = document.getElementById('backInStockNotifyBtn');
+
+                function getAntiForgeryToken() {
+                    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                    return tokenInput ? tokenInput.value : '';
+                }
+
+                // تبدیل ارقام فارسی/عربی به انگلیسی (با Unicode range برای اطمینان از صحت)
+                function convertPersianToEnglish(str) {
+                    return str
+                        // Persian digits: ۰-۹ (U+06F0 to U+06F9)
+                        .replace(/[\u06F0-\u06F9]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48); })
+                        // Arabic-Indic digits: ٠-٩ (U+0660 to U+0669)
+                        .replace(/[\u0660-\u0669]/g, function(d) { return String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48); });
+                }
+
+                let backInStockVerifiedPhone = null;
+
+                function resetBackInStockPhoneForm() {
+                    const phoneInput = document.getElementById('backInStockPhone');
+                    const phoneError = document.getElementById('backInStockPhoneError');
+
+                    if (phoneInput) {
+                        phoneInput.value = '';
+                    }
+                    if (phoneError) {
+                        phoneError.classList.add('d-none');
+                        phoneError.textContent = '';
+                    }
+                    backInStockVerifiedPhone = null;
+                }
+
+                function resetBackInStockCodeForm() {
+                    const codeInput = document.getElementById('backInStockCode');
+                    const codeError = document.getElementById('backInStockCodeError');
+                    const debugCode = document.getElementById('backInStockDebugCode');
+                    const successMsg = document.getElementById('backInStockSuccessMessage');
+                    const displayPhone = document.getElementById('backInStockDisplayPhone');
+
+                    if (codeInput) codeInput.value = '';
+                    if (codeError) {
+                        codeError.classList.add('d-none');
+                        codeError.textContent = '';
+                    }
+                    if (debugCode) debugCode.textContent = '';
+                    if (successMsg) {
+                        successMsg.classList.add('d-none');
+                        successMsg.textContent = '';
+                    }
+                    if (displayPhone) displayPhone.textContent = '';
+                }
+
+                function openBackInStockModal() {
+                    resetBackInStockPhoneForm();
+                    openProductStockModal('backInStockModal');
+                }
+
+                function openBackInStockCodeModal(phone, code) {
+                    resetBackInStockCodeForm();
+                    const displayPhone = document.getElementById('backInStockDisplayPhone');
+                    const debugCode = document.getElementById('backInStockDebugCode');
+                    if (displayPhone) displayPhone.textContent = phone;
+                    if (debugCode && code) debugCode.textContent = code;
+                    openProductStockModal('backInStockCodeModal');
+                }
+
+                if (backInStockBtn) {
+                    backInStockBtn.addEventListener('click', function (e) {
+                        const isSubscribed = backInStockBtn.dataset.subscribed === 'true';
+
+                        if (isSubscribed) {
+                            // لغو خبرم کن
+                            e.preventDefault();
+
+                            const productId = backInStockBtn.dataset.productId;
+                            const token = getAntiForgeryToken();
+
+                            if (!productId || !token) {
+                                return;
+                            }
+
+                            const body = new URLSearchParams();
+                            body.append('productId', productId);
+
+                            fetch('@Url.Action("UnsubscribeBackInStock", "Product")', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                    'RequestVerificationToken': token
+                                },
+                                body: body.toString()
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data && data.success) {
+                                        backInStockBtn.dataset.subscribed = 'false';
+                                        backInStockBtn.textContent = 'خبرم کن';
+                                    } else if (data && data.message) {
+                                        alert(data.message);
+                                    }
+                                })
+                                .catch(() => {
+                                    alert('لغو درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+                                });
+                        } else {
+                            // ثبت خبرم کن
+                            openBackInStockModal();
+                        }
+                    });
+                }
+
+                // فرم شماره موبایل (مودال اول)
+                const backInStockPhoneForm = document.getElementById('backInStockPhoneForm');
+                if (backInStockPhoneForm) {
+                    backInStockPhoneForm.addEventListener('submit', function (event) {
+                        event.preventDefault();
+
+                        const phoneInput = document.getElementById('backInStockPhone');
+                        const errorElement = document.getElementById('backInStockPhoneError');
+
+                        if (!phoneInput || !errorElement) return;
+
+                        const token = getAntiForgeryToken();
+                        const productId = backInStockBtn ? backInStockBtn.dataset.productId : null;
+
+                        if (!productId || !token) return;
+
+                        // تبدیل ارقام فارسی به انگلیسی
+                        const rawPhone = convertPersianToEnglish((phoneInput.value || '').trim());
+
+                        // اعتبارسنجی شماره موبایل ایرانی
+                        const phoneRegex = /(^(0?9)|(\+?989))\d{2}\W?\d{3}\W?\d{4}/;
+                        if (!phoneRegex.test(rawPhone)) {
+                            errorElement.textContent = 'لطفاً شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789).';
+                            errorElement.classList.remove('d-none');
+                            return;
+                        }
+
+                        // نرمال‌سازی شماره به فرمت 09xxxxxxxxx
+                        const digits = rawPhone.replace(/[^0-9]/g, '');
+                        let normalizedPhone = digits;
+                        if (digits.startsWith('989')) {
+                            normalizedPhone = '0' + digits.substring(2); // 989... -> 09...
+                        } else if (digits.startsWith('9') && digits.length === 10) {
+                            normalizedPhone = '0' + digits; // 9... -> 09...
+                        }
+
+                        errorElement.classList.add('d-none');
+
+                        const body = new URLSearchParams();
+                        body.append('productId', productId);
+                        body.append('phoneNumber', normalizedPhone);
+
+                        fetch('@Url.Action("StartBackInStockVerification", "Product")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                'RequestVerificationToken': token
+                            },
+                            body: body.toString()
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.success) {
+                                    backInStockVerifiedPhone = normalizedPhone;
+                                    // بستن مودال شماره
+                                    closeProductStockModal(document.getElementById('backInStockModal'));
+                                    // باز کردن مودال کد
+                                    openBackInStockCodeModal(normalizedPhone, data.code);
+                                } else if (data && data.message) {
+                                    errorElement.textContent = data.message;
+                                    errorElement.classList.remove('d-none');
+                                }
+                            })
+                            .catch(() => {
+                                errorElement.textContent = 'ارسال کد تایید با خطا مواجه شد. لطفاً دوباره تلاش کنید.';
+                                errorElement.classList.remove('d-none');
+                            });
+                    });
+                }
+
+                // فرم کد تایید (مودال دوم)
+                const backInStockCodeForm = document.getElementById('backInStockCodeForm');
+                if (backInStockCodeForm) {
+                    backInStockCodeForm.addEventListener('submit', function (event) {
+                        event.preventDefault();
+
+                        const codeInput = document.getElementById('backInStockCode');
+                        const codeError = document.getElementById('backInStockCodeError');
+                        const successMsg = document.getElementById('backInStockSuccessMessage');
+
+                        if (!codeInput || !codeError) return;
+
+                        const token = getAntiForgeryToken();
+                        const productId = backInStockBtn ? backInStockBtn.dataset.productId : null;
+
+                        if (!productId || !token || !backInStockVerifiedPhone) return;
+
+                        // تبدیل ارقام فارسی به انگلیسی
+                        const code = convertPersianToEnglish((codeInput.value || '').trim());
+
+                        if (!/^\d{6}$/.test(code)) {
+                            codeError.textContent = 'کد تایید ۶ رقمی را به‌درستی وارد کنید.';
+                            codeError.classList.remove('d-none');
+                            return;
+                        }
+
+                        codeError.classList.add('d-none');
+
+                        const body = new URLSearchParams();
+                        body.append('productId', productId);
+                        body.append('phoneNumber', backInStockVerifiedPhone);
+                        body.append('code', code);
+
+                        fetch('@Url.Action("ConfirmBackInStock", "Product")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                'RequestVerificationToken': token
+                            },
+                            body: body.toString()
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.success) {
+                                    // در صورت موفقیت، مودال کد را ببند و مودال موفقیت را نشان بده
+                                    const codeModal = document.getElementById('backInStockCodeModal');
+                                    const successModalId = 'backInStockSuccessModal';
+
+                                    if (codeModal) {
+                                        closeProductStockModal(codeModal);
+                                    }
+
+                                    if (backInStockBtn) {
+                                        backInStockBtn.dataset.subscribed = 'true';
+                                        backInStockBtn.textContent = 'لغو خبرم کن';
+                                    }
+
+                                    openProductStockModal(successModalId);
+                                } else if (data && data.message) {
+                                    codeError.textContent = data.message;
+                                    codeError.classList.remove('d-none');
+                                }
+                            })
+                            .catch(() => {
+                                codeError.textContent = 'ثبت درخواست با خطا مواجه شد. لطفاً دوباره تلاش کنید.';
+                                codeError.classList.remove('d-none');
+                            });
+                    });
+                }
+
+                // هندل بستن مودال‌ها (کلید ضربدر، دکمه‌ها و کلیک روی پس‌زمینه)
+                document.querySelectorAll('.product-stock-modal').forEach(modalElement => {
+                    modalElement.addEventListener('click', function (e) {
+                        if (e.target === modalElement) {
+                            closeProductStockModal(modalElement);
+                        }
+                    });
+
+                    const closeButtons = modalElement.querySelectorAll('[data-product-modal-close]');
+                    closeButtons.forEach(btn => {
+                        btn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const parentModal = this.closest('.product-stock-modal') || modalElement;
+                            closeProductStockModal(parentModal);
+
+                            if (parentModal.id === 'backInStockModal') {
+                                resetBackInStockForm();
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        
+        function changeMainImage(src) {
+            document.getElementById('main-product-image').src = src;
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Star rating functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const starRating = document.getElementById('starRating');
+            const ratingValue = document.getElementById('ratingValue');
+            const ratingText = document.getElementById('ratingText');
+
+            if (starRating && ratingValue && ratingText) {
+                const stars = starRating.querySelectorAll('.star');
+
+                stars.forEach(star => {
+                    star.addEventListener('click', function() {
+                        const rating = parseInt(this.dataset.rating);
+                        ratingValue.value = rating;
+                        updateStarDisplay(stars, rating);
+                        ratingText.textContent = rating + ' ستاره';
+                    });
+
+                    star.addEventListener('mouseenter', function() {
+                        const rating = parseInt(this.dataset.rating);
+                        updateStarDisplay(stars, rating);
+                    });
+                });
+
+                starRating.addEventListener('mouseleave', function() {
+                    const currentRating = parseInt(ratingValue.value);
+                    updateStarDisplay(stars, currentRating);
+                });
+
+                // Initialize with default rating
+                updateStarDisplay(stars, parseInt(ratingValue.value));
+            }
+
+            function updateStarDisplay(stars, rating) {
+                stars.forEach((star, index) => {
+                    const starValue = parseInt(star.dataset.rating);
+                    if (starValue <= rating) {
+                        star.style.color = '#ffc107';
+                        star.style.cursor = 'pointer';
+                    } else {
+                        star.style.color = '#ccc';
+                        star.style.cursor = 'pointer';
+                    }
+                });
+            }
+        });
+
+        // Toggle reply form
+        function toggleReplyForm(formId, button) {
+            const form = document.getElementById(formId);
+            if (form) {
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                if (isExpanded) {
+                    form.style.display = 'none';
+                    button.setAttribute('aria-expanded', 'false');
+                } else {
+                    form.style.display = 'block';
+                    button.setAttribute('aria-expanded', 'true');
+                }
+            }
+        }
+
+        // Show comment success modal
+        @if (commentSuccess == true)
+        {
+                <text>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const modal = document.getElementById('commentSuccessModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+                </text>
+        }
+
+        // Close comment success modal
+        function closeCommentSuccessModal() {
+            const modal = document.getElementById('commentSuccessModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Show comment error modal
+        function showCommentErrorModal(errors) {
+            const modal = document.getElementById('commentErrorModal');
+            const errorMessageDiv = document.getElementById('commentErrorMessage');
+
+            if (!modal || !errorMessageDiv) return;
+
+            // Clear previous errors
+            errorMessageDiv.innerHTML = '';
+
+            // Create error list
+            if (Array.isArray(errors) && errors.length > 0) {
+                const ul = document.createElement('ul');
+                errors.forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    ul.appendChild(li);
+                });
+                errorMessageDiv.appendChild(ul);
+            } else if (typeof errors === 'string') {
+                errorMessageDiv.innerHTML = '<p style="color: #dc3545; margin: 0;">' + errors + '</p>';
+            }
+
+            // Show modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close comment error modal
+        function closeCommentErrorModal() {
+            const modal = document.getElementById('commentErrorModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Handle comment form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentForm = document.getElementById('commentForm');
+            if (commentForm) {
+                // Check for server-side validation errors on page load first
+                const serverErrors = [];
+
+                // Check validation summary (even if hidden)
+                const validationSummary = commentForm.querySelector('div.text-danger');
+                if (validationSummary) {
+                    const summaryText = validationSummary.textContent.trim();
+                    if (summaryText) {
+                        // Try to parse errors - they might be in a list or separated
+                        const errorLines = summaryText.split(/\n|\r/).map(e => e.trim()).filter(e => e && e.length > 0);
+                        errorLines.forEach(error => {
+                            if (error && !serverErrors.includes(error)) {
+                                serverErrors.push(error);
+                            }
+                        });
+                    }
+                }
+
+                // Check all error spans (even if hidden)
+                const allErrorSpans = commentForm.querySelectorAll('span.text-danger');
+                allErrorSpans.forEach(span => {
+                    const errorText = span.textContent.trim();
+                    if (errorText && !serverErrors.includes(errorText)) {
+                        serverErrors.push(errorText);
+                    }
+                });
+
+                // Show modal if there are server-side errors
+                if (serverErrors.length > 0) {
+                    showCommentErrorModal(serverErrors);
+                }
+
+                // Handle form submission
+                commentForm.addEventListener('submit', function(e) {
+                    // Validate required fields
+                    const authorName = document.getElementById('commentAuthorName');
+                    const content = document.getElementById('commentContent');
+                    const errors = [];
+
+                    if (!authorName || !authorName.value.trim()) {
+                        errors.push('لطفاً نام خود را وارد کنید.');
+                    }
+
+                    if (!content || !content.value.trim()) {
+                        errors.push('لطفاً متن نظر را بنویسید.');
+                    }
+
+                    // If there are client-side validation errors, show modal and prevent submission
+                    if (errors.length > 0) {
+                        e.preventDefault();
+                        showCommentErrorModal(errors);
+                        return false;
+                    }
+                });
+            }
+        });
+
+        // Add to wishlist functionality
+        async function addToWishlist(productId) {
+            const button = document.getElementById('wishlist-btn');
+            if (!button) return;
+
+            // Disable button during request
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '⏳ در حال پردازش...';
+
+            try {
+                // Get anti-forgery token
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (!tokenInput) {
+                    throw new Error('توکن امنیتی یافت نشد.');
+                }
+
+                const formData = new FormData();
+                formData.append('productId', productId);
+                formData.append('__RequestVerificationToken', tokenInput.value);
+
+                const response = await fetch('/Wishlist/Toggle', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': tokenInput.value
+                    }
+                });
+
+                // Check if response is redirect (unauthorized)
+                if (response.redirected || response.status === 401 || response.status === 302) {
+                    showNotification('لطفاً ابتدا وارد حساب کاربری خود شوید.', 'error');
+                    button.innerHTML = originalText;
+                    // Optionally redirect to login
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success - update button appearance
+                    button.innerHTML = '❤️ افزوده شد به علاقه‌مندی‌ها';
+                    button.classList.remove('btn-secondary');
+                    button.classList.add('btn-success');
+
+                    // Show success message
+                    showNotification(data.message || 'محصول به علاقه‌مندی‌ها اضافه شد.', 'success');
+                } else {
+                    // Error
+                    const errorMessage = data.error || 'خطا در افزودن به علاقه‌مندی‌ها';
+                    showNotification(errorMessage, 'error');
+                    button.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('Error adding to wishlist:', error);
+                showNotification('خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.', 'error');
+                button.innerHTML = originalText;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existing = document.querySelector('.wishlist-notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `wishlist-notification wishlist-notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                max-width: 300px;
+                font-size: 14px;
+            `;
+
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @@keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            if (!document.querySelector('style[data-wishlist-notification]')) {
+                style.setAttribute('data-wishlist-notification', 'true');
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+    </script>
+}
+
+<!-- Violation Report Modal -->
+<div class="violation-report-modal" id="violationReportModal">
+    <div class="violation-report-modal__dialog">
+        <div class="violation-report-modal__content">
+            <div class="violation-report-modal__header">
+                <h5 class="violation-report-modal__title">گزارش تخلف محصول</h5>
+                <button type="button" class="violation-report-modal__close" onclick="closeViolationReportModal()" aria-label="بستن">×</button>
+            </div>
+            <form asp-action="ReportViolation" asp-route-slug="@Model.Product.Slug" method="post" id="violationReportForm">
+                @Html.AntiForgeryToken()
+                <div class="violation-report-modal__body">
+                    @if (TempData["ViolationReportSuccess"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["ViolationReportSuccess"]
+                        </div>
+                    }
+                    @if (TempData["ViolationReportError"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @TempData["ViolationReportError"]
+                        </div>
+                    }
+
+                    <div class="violation-form-group">
+                        <label for="violationSubject" class="violation-form-label">موضوع تخلف <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="violationSubject" name="Subject" required maxlength="200" placeholder="مثال: محتوای نامناسب، قیمت غیرمنطقی، توضیحات نادرست">
+                        <div class="violation-form-text">لطفاً موضوع تخلف را به صورت خلاصه وارد کنید.</div>
+                    </div>
+
+                    <div class="violation-form-group">
+                        <label for="violationMessage" class="violation-form-label">پیام <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="violationMessage" name="Message" rows="5" required maxlength="2000" placeholder="لطفاً جزئیات تخلف را شرح دهید..."></textarea>
+                        <div class="violation-form-text">حداکثر ۲۰۰۰ کاراکتر</div>
+                    </div>
+
+                    <div class="violation-form-group">
+                        <label for="violationPhone" class="violation-form-label">شماره تماس <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="violationPhone" name="ReporterPhone" required maxlength="20" placeholder="09123456789">
+                        <div class="violation-form-text">شماره تماس شما برای پیگیری گزارش</div>
+                    </div>
+
+                    @if (Model.IsSiteProduct || Model.Offers.Any() || Model.SuggestedProductOffers.Any())
+                    {
+
+                        // Get all unique seller IDs from offers and suggested offers
+                        var allSellerIds = Model.Offers.Select(o => o.SellerId)
+                        .Concat(Model.SuggestedProductOffers.Select(o => o.SellerId))
+                        .Where(id => !string.IsNullOrWhiteSpace(id))
+                        .Distinct()
+                        .ToList();
+
+                        // Create a dictionary to map seller IDs to their display info
+                        var sellerOptions = new Dictionary<string, (string Name, Guid? OfferId, bool IsOffer)>();
+
+                        // Add offers first (they have priority)
+                        foreach (var offer in Model.Offers)
+                        {
+                            if (!string.IsNullOrWhiteSpace(offer.SellerId) && !sellerOptions.ContainsKey(offer.SellerId))
+                            {
+                                sellerOptions[offer.SellerId] = (offer.SellerName, offer.Id, true);
+                            }
+                        }
+
+                        // Add suggested offers only if not already added
+                        foreach (var offer in Model.SuggestedProductOffers)
+                        {
+                            if (!string.IsNullOrWhiteSpace(offer.SellerId) && !sellerOptions.ContainsKey(offer.SellerId))
+                            {
+                                sellerOptions[offer.SellerId] = (offer.SellerName, null, false);
+                            }
+                        }
+
+                        <div class="violation-form-group">
+                            <label for="violationOfferId" class="violation-form-label">فروشنده (اختیاری)</label>
+                            <select class="form-select" id="violationOfferId" name="ProductOfferId">
+                                <option value="">انتخاب کنید (اگر گزارش مربوط به فروشنده خاصی است)</option>
+                                @if (Model.IsSiteProduct)
+                                {
+                                    <option value="" data-seller-id="" data-is-offer="false" data-is-site="true">سایت</option>
+                                }
+                                @foreach (var sellerOption in sellerOptions)
+                                {
+                                    var (name, offerId, isOffer) = sellerOption.Value;
+                                    <option value="@(offerId?.ToString() ?? "")" data-seller-id="@sellerOption.Key" data-is-offer="@(isOffer ? "true" : "false")">
+                                        @name
+                                    </option>
+                                }
+                            </select>
+                            <div class="violation-form-text">اگر گزارش مربوط به فروشنده خاصی است، آن را انتخاب کنید.</div>
+                        </div>
+                    }
+
+                    <input type="hidden" name="SellerId" id="violationSellerId" />
+                </div>
+                <div class="violation-report-modal__footer">
+                    <button type="button" class="violation-modal-btn-cancel" onclick="closeViolationReportModal()">انصراف</button>
+                    <button type="submit" class="violation-modal-btn-submit">ثبت گزارش</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openViolationReportModal() {
+        const modal = document.getElementById('violationReportModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeViolationReportModal() {
+        const modal = document.getElementById('violationReportModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('violationReportModal');
+        const offerSelect = document.getElementById('violationOfferId');
+        const sellerIdInput = document.getElementById('violationSellerId');
+
+        // Close modal when clicking outside
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeViolationReportModal();
+                }
+            });
+        }
+
+        if (offerSelect) {
+            offerSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.dataset.isSite === 'true') {
+                    // Site product selected - clear both SellerId and ProductOfferId
+                    sellerIdInput.value = '';
+                    this.value = '';
+                } else if (selectedOption && selectedOption.dataset.sellerId) {
+                    sellerIdInput.value = selectedOption.dataset.sellerId;
+                    // If it's not an offer (SuggestedProductOffer), clear ProductOfferId
+                    if (selectedOption.dataset.isOffer === 'false') {
+                        this.value = '';
+                    }
+                } else {
+                    sellerIdInput.value = '';
+                }
+            });
+        }
+
+        @if (TempData["ViolationReportSuccess"] != null)
+        {
+                <text>
+                // Show success message and open modal
+                openViolationReportModal();
+                // Close modal after 3 seconds
+                setTimeout(function() {
+                    closeViolationReportModal();
+                }, 3000);
+                </text>
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal && modal.classList.contains('show')) {
+                closeViolationReportModal();
+            }
+        });
+    });
+</script>
+
+

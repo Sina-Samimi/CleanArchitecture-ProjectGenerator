@@ -1,0 +1,31 @@
+﻿@model ActivateUserViewModel
+@{
+    Layout = null;
+    var displayName = string.IsNullOrWhiteSpace(Model.FullName) ? Model.Email : Model.FullName;
+}
+
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content user-form-modal">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">فعال‌سازی کاربر</h5>
+                <p class="modal-subtitle">با تأیید این مرحله، دسترسی‌های کاربر دوباره فعال می‌شود.</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <form asp-action="Activate" asp-route-id="@Model.Id" method="post" class="user-form" data-user-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="FullName" />
+            <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <p class="mb-0">آیا می‌خواهید دسترسی‌های «@displayName» دوباره فعال شود؟</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">انصراف</button>
+                <button type="submit" class="btn btn-success">تأیید فعال‌سازی</button>
+            </div>
+        </form>
+    </div>
+</div>

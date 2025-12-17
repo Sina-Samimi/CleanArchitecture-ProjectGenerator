@@ -1,0 +1,146 @@
+@model ContactFormModel
+@{
+    Layout = "_HomeTemplateLayout";
+    var address = ViewData["ContactAddress"] as string;
+    var contactPhone = ViewData["ContactPhone"] as string;
+    var supportPhone = ViewData["SupportPhone"] as string;
+    var siteEmail = ViewData["SiteEmail"] as string;
+    var supportEmail = ViewData["SupportEmail"] as string;
+    var contactDescription = ViewData["ContactDescription"] as string;
+    var successMessage = TempData["ContactSuccess"] as string;
+    var errorMessage = TempData["ContactError"] as string;
+}
+
+<!-- Contact Section -->
+<section class="contact" id="contact">
+    <div class="container">
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">خانه</a> / 
+            <span>تماس با ما</span>
+        </div>
+        <h2 class="section-title">تماس با ما</h2>
+        <div class="contact-content">
+            <div class="contact-info">
+                <h3>اطلاعات تماس</h3>
+                @if (!string.IsNullOrWhiteSpace(address))
+                {
+                    <div class="contact-item">
+                        <span class="contact-icon">📍</span>
+                        <div>
+                            <strong>آدرس:</strong><br>
+                            @address
+                        </div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(supportPhone))
+                {
+                    <div class="contact-item">
+                        <span class="contact-icon">📞</span>
+                        <div>
+                            <strong>تلفن پشتیبانی:</strong><br>
+                            <a href="tel:@supportPhone">@supportPhone</a>
+                            
+                        </div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(supportEmail))
+                {
+                    <div class="contact-item">
+                        <span class="contact-icon">📧</span>
+                        <div>
+                            <strong>ایمیل پشتیبانی:</strong><br>
+                            <a href="mailto:@supportEmail">@supportEmail</a>
+                        </div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(contactDescription))
+                {
+                    <div class="contact-item">
+                        <span class="contact-icon">🕐</span>
+                        <div>
+                            <strong>ساعات پاسخگویی:</strong><br>
+                            @Html.Raw(contactDescription)
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="contact-form">
+                <h3>فرم تماس</h3>
+                <form asp-controller="Contact" asp-action="Submit" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="form-group">
+                        <label asp-for="FullName">نام و نام خانوادگی:</label>
+                        <input asp-for="FullName" class="form-control" required>
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email">ایمیل:</label>
+                        <input asp-for="Email" type="email" class="form-control" required>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Phone">شماره تماس:</label>
+                        <input asp-for="Phone" type="tel" class="form-control" required>
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Subject">موضوع:</label>
+                        <input asp-for="Subject" class="form-control" required>
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Message">پیام:</label>
+                        <textarea asp-for="Message" class="form-control" rows="5" required></textarea>
+                        <span asp-validation-for="Message" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-full">ارسال پیام</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Toast Container using app-toast system -->
+@if (!string.IsNullOrWhiteSpace(successMessage) || !string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="app-toast-stack" data-app-toast-stack style="inset-inline: 0; align-items: center;">
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="app-toast app-toast--success" role="status" aria-live="polite" data-app-toast data-toast-lifetime="5000">
+                <span class="app-toast__icon" aria-hidden="true">
+                    <span class="app-toast__icon-mark">✓</span>
+                </span>
+                <div class="app-toast__body">
+                    <strong>@successMessage</strong>
+                    <div class="text-muted small mt-1">از صبر و شکیبایی شما متشکریم.</div>
+                </div>
+                <button type="button" class="app-toast__close" aria-label="بستن اعلان" data-app-toast-dismiss>
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="app-toast app-toast--danger" role="alert" aria-live="assertive" data-app-toast data-toast-lifetime="5000">
+                <span class="app-toast__icon" aria-hidden="true">
+                    <span class="app-toast__icon-mark">!</span>
+                </span>
+                <div class="app-toast__body">
+                    <strong>@errorMessage</strong>
+                    <div class="text-muted small mt-1">لطفاً دوباره تلاش کنید.</div>
+                </div>
+                <button type="button" class="app-toast__close" aria-label="بستن اعلان" data-app-toast-dismiss>
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
+

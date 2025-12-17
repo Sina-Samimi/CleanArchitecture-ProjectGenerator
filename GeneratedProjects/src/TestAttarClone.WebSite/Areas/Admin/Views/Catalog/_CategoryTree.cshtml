@@ -1,0 +1,27 @@
+﻿@using System.Linq
+@using TestAttarClone.WebSite.Areas.Admin.Models
+@model ProductCategoryTreePartialModel
+@if (Model.Nodes is null || Model.Nodes.Count == 0)
+{
+    return;
+}
+
+<ul class="catalog-category-tree__list">
+@foreach (var node in Model.Nodes)
+{
+    var isHighlighted = Model.HighlightedCategoryId is not null && node.Id == Model.HighlightedCategoryId;
+    <li class="catalog-category-tree__item @(isHighlighted ? "is-highlighted" : string.Empty)" data-category-id="@node.Id">
+        <div class="catalog-category-tree__label">
+            <span class="catalog-category-tree__depth" aria-hidden="true">
+                @string.Concat(Enumerable.Repeat("⎯", Math.Max(0, node.Depth - 1)))
+            </span>
+            <span class="catalog-category-tree__name">@node.Name</span>
+            <span class="catalog-category-tree__meta">(@(node.Children?.Count ?? 0)) زیرمجموعه</span>
+        </div>
+        @if (node.Children is not null && node.Children.Count > 0)
+        {
+            @await Html.PartialAsync("_CategoryTree", new ProductCategoryTreePartialModel(node.Children, Model.HighlightedCategoryId))
+        }
+    </li>
+}
+</ul>

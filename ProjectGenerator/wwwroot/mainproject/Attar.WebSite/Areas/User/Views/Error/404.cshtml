@@ -1,0 +1,33 @@
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    ViewData["Title"] = "صفحه یافت نشد";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+                <div class="mb-4">
+                    <span class="display-4 text-info d-inline-flex align-items-center justify-content-center rounded-circle bg-info-subtle shadow-sm" style="width: 96px; height: 96px;">
+                        <i class="bi bi-file-earmark-x"></i>
+                    </span>
+                </div>
+                <h1 class="h3 mb-3">صفحه مورد نظر یافت نشد</h1>
+                <p class="text-muted mb-4">
+                    متأسفانه صفحه‌ای که به دنبال آن هستید وجود ندارد یا به آدرس دیگری منتقل شده است. لطفاً آدرس را بررسی کنید یا از طریق منوی سایت به صفحه مورد نظر خود دسترسی پیدا کنید.
+                </p>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-center">
+                    <a asp-area="User" asp-controller="Dashboard" asp-action="Index" class="btn btn-primary px-4">
+                        <i class="bi bi-house-door me-1"></i>
+                        بازگشت به داشبورد
+                    </a>
+                    <button onclick="window.history.back()" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        بازگشت به صفحه قبل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

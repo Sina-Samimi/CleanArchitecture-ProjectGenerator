@@ -1,0 +1,325 @@
+﻿@model PageAccessIndexViewModel
+@{
+    var pages = Model.Pages?.ToList() ?? new System.Collections.Generic.List<PageAccessPageViewModel>();
+    var filters = Model.Filters ?? new PageAccessIndexFilterViewModel();
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(filters.Search)
+        || !string.IsNullOrWhiteSpace(filters.Area)
+        || !string.IsNullOrWhiteSpace(filters.Permission)
+        || filters.Restriction != PageAccessRestrictionFilter.All
+        || Model.PageSize != 10;
+    var pageSizeOptions = new[] { 10, 20, 30, 50 };
+    var totalPages = Model.TotalPages;
+    var pageNumber = Model.PageNumber;
+    var pageSize = Model.PageSize;
+    if (Array.IndexOf(pageSizeOptions, Model.PageSize) < 0)
+    {
+        var extended = new System.Collections.Generic.List<int>(pageSizeOptions) { Model.PageSize };
+        extended.Sort();
+        pageSizeOptions = extended.ToArray();
+    }
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/page-access.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="page-access">
+    <div class="app-card page-access-card">
+        <div class="page-access-card__header">
+            <div>
+                <h2 class="page-access-card__title">تنظیم دسترسی صفحات</h2>
+                <span class="page-access-card__subtitle">
+                    @if (Model.FilteredCount > 0)
+                    {
+                        <text>نمایش @Model.FirstItemIndex تا @Model.LastItemIndex از @Model.FilteredCount نتیجه</text>
+                    }
+                    else
+                    {
+                        <text>نتیجه‌ای برای نمایش وجود ندارد</text>
+                    }
+                    @if (Model.FilteredCount != Model.TotalCount)
+                    {
+                        <span class="page-access-card__subtitle-total">(کل صفحات کشف‌شده: @Model.TotalCount)</span>
+                    }
+                </span>
+            </div>
+            <div class="page-access-card__actions">
+                <div class="page-access-card__buttons">
+                    <button type="button" class="page-access-card__action" data-bs-toggle="modal" data-bs-target="#pageAccessFiltersModal">
+                        <i class="bi bi-funnel me-1"></i>
+                        فیلتر
+                    </button>
+                    @if (hasActiveFilters)
+                    {
+                        <a class="page-access-card__reset"
+                           asp-area="Admin"
+                           asp-controller="PageAccess"
+                           asp-action="Index">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            حذف فیلترها
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <form method="get" class="page-access-card__search">
+            <input type="hidden" name="area" value="@filters.Area" />
+            <input type="hidden" name="permission" value="@filters.Permission" />
+            <input type="hidden" name="restriction" value="@filters.Restriction" />
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+            <label class="page-access-search">
+                <i class="bi bi-search"></i>
+                <input type="search"
+                       name="search"
+                       class="form-control"
+                       placeholder="جستجو بر اساس نام صفحه، کنترلر یا مجوز"
+                       value="@filters.Search"
+                       aria-label="جستجوی صفحه" />
+            </label>
+            <button type="submit" class="btn btn-primary page-access-search__submit">جستجو</button>
+            @if (!string.IsNullOrWhiteSpace(filters.Search))
+            {
+                <a class="page-access-search__reset"
+                   asp-area="Admin"
+                   asp-controller="PageAccess"
+                   asp-action="Index"
+                   asp-route-area="@filters.Area"
+                   asp-route-permission="@filters.Permission"
+                   asp-route-restriction="@filters.Restriction"
+                   asp-route-page="1"
+                   asp-route-pageSize="@Model.PageSize">
+                    حذف جستجو
+                </a>
+            }
+        </form>
+
+        @if (pages.Count == 0)
+        {
+            <div class="page-access__empty">
+                نتیجه‌ای مطابق با فیلترهای انتخابی یافت نشد.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 page-access-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">صفحه</th>
+                            <th scope="col">مسیر</th>
+                            <th scope="col">مجوزهای لازم</th>
+                            <th scope="col" class="text-end">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pageItem in pages)
+                        {
+                            var permissions = pageItem.Permissions?.ToList() ?? new System.Collections.Generic.List<PageAccessPermissionItemViewModel>();
+                            var areaDisplay = string.IsNullOrWhiteSpace(pageItem.Area) ? "بخش عمومی" : pageItem.Area;
+                            <tr>
+                                <td>
+                                    <div class="page-access-table__page">
+                                        <span class="page-access-table__name">@pageItem.DisplayName</span>
+                                        <span class="page-access-table__area">@areaDisplay</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="page-access-table__route">
+                                        <code>@pageItem.Controller/@pageItem.Action</code>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (permissions.Count == 0)
+                                    {
+                                        <span class="badge bg-light text-muted">بدون محدودیت</span>
+                                    }
+                                    else
+                                    {
+                                        <ul class="page-access__permission-list">
+                                            @foreach (var permission in permissions)
+                                            {
+                                                <li>
+                                                    <span class="badge bg-primary-subtle text-primary-emphasis">@permission.DisplayName</span>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-page-access-modal-trigger
+                                            data-modal-url="@Url.Action("Edit", new { controller = pageItem.Controller, action = pageItem.Action, area = pageItem.Area })">
+                                        <i class="bi bi-sliders"></i>
+                                        ویرایش دسترسی
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                var maxDisplayedPages = 5;
+                var startPage = Math.Max(1, pageNumber - 2);
+                var endPage = Math.Min(totalPages, startPage + maxDisplayedPages - 1);
+                startPage = Math.Max(1, endPage - maxDisplayedPages + 1);
+                var previousPage = Math.Max(1, pageNumber - 1);
+                var nextPage = Math.Min(totalPages, pageNumber + 1);
+
+                <nav class="page-access-pagination" aria-label="صفحه‌بندی دسترسی صفحات">
+                    <div class="page-access-pagination__controls d-flex flex-wrap justify-content-center align-items-center gap-2">
+                        <a class="btn btn-outline-primary page-access-pagination__control @(pageNumber == 1 ? "disabled" : string.Empty)"
+                           asp-area="Admin"
+                           asp-controller="PageAccess"
+                           asp-action="Index"
+                           asp-route-search="@filters.Search"
+                           asp-route-area="@filters.Area"
+                           asp-route-permission="@filters.Permission"
+                           asp-route-restriction="@filters.Restriction"
+                           asp-route-page="@previousPage"
+                           asp-route-pageSize="@pageSize"
+                           tabindex="@(pageNumber == 1 ? "-1" : null)"
+                           aria-disabled="@(pageNumber == 1 ? "true" : null)">
+                            <i class="bi bi-chevron-right"></i>
+                            <span>قبلی</span>
+                        </a>
+
+                        <div class="page-access-pagination__numbers d-inline-flex flex-wrap justify-content-center gap-2">
+                            @for (var i = startPage; i <= endPage; i++)
+                            {
+                                var isActivePage = i == pageNumber;
+                                var numberClasses = isActivePage ? "btn btn-primary" : "btn btn-light";
+                                <a class="@($"{numberClasses} page-access-pagination__number")"
+                                   asp-area="Admin"
+                                   asp-controller="PageAccess"
+                                   asp-action="Index"
+                                   asp-route-search="@filters.Search"
+                                   asp-route-area="@filters.Area"
+                                   asp-route-permission="@filters.Permission"
+                                   asp-route-restriction="@filters.Restriction"
+                                   asp-route-page="@i"
+                                   asp-route-pageSize="@pageSize"
+                                   aria-current="@(isActivePage ? "page" : null)">
+                                    @i
+                                </a>
+                            }
+                        </div>
+
+                        <a class="btn btn-outline-primary page-access-pagination__control @(pageNumber == totalPages ? "disabled" : string.Empty)"
+                           asp-area="Admin"
+                           asp-controller="PageAccess"
+                           asp-action="Index"
+                           asp-route-search="@filters.Search"
+                           asp-route-area="@filters.Area"
+                           asp-route-permission="@filters.Permission"
+                           asp-route-restriction="@filters.Restriction"
+                           asp-route-page="@nextPage"
+                           asp-route-pageSize="@pageSize"
+                           tabindex="@(pageNumber == totalPages ? "-1" : null)"
+                           aria-disabled="@(pageNumber == totalPages ? "true" : null)">
+                            <span>بعدی</span>
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </div>
+
+                    <div class="page-access-pagination__summary text-center text-muted small">
+                        نمایش @Model.FirstItemIndex تا @Model.LastItemIndex از @Model.FilteredCount صفحه
+                    </div>
+                </nav>
+            }
+        }
+    </div>
+</div>
+
+<div data-page-access-modal-container class="page-access__modal"></div>
+
+<div class="modal fade" id="pageAccessFiltersModal" tabindex="-1" aria-labelledby="pageAccessFiltersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content admin-filter-modal page-access-filter-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="pageAccessFiltersModalLabel">تنظیم فیلترها</h5>
+                    <p class="modal-subtitle">با انتخاب گزینه‌های زیر نتایج جدول را دقیق‌تر نمایش دهید.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <form method="get" class="admin-filter-modal__form">
+                    <div class="admin-filter-modal__notice">
+                        <div class="admin-filter-modal__notice-icon">
+                            <i class="bi bi-sliders"></i>
+                        </div>
+                        <div>
+                            <p class="admin-filter-modal__notice-title">راهنمای فیلتر</p>
+                            <p class="admin-filter-modal__notice-text">می‌توانید بر اساس ناحیه، مجوزها یا وضعیت محدودیت، فهرست صفحات را مدیریت کنید.</p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="search" value="@filters.Search" />
+                    <input type="hidden" name="page" value="1" />
+
+                    <div class="admin-filter-modal__fields row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterArea">ناحیه</label>
+                            <select class="form-select" id="filterArea" name="area">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(filters.Area))">همه بخش‌ها</option>
+                                @foreach (var area in Model.AreaOptions)
+                                {
+                                    <option value="@area.Value" selected="@(string.Equals(area.Value, filters.Area, System.StringComparison.OrdinalIgnoreCase))">@area.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPermission">مجوز</label>
+                            <select class="form-select" id="filterPermission" name="permission">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(filters.Permission))">همه مجوزها</option>
+                                @foreach (var option in Model.PermissionOptions)
+                                {
+                                    <option value="@option.Key" selected="@(string.Equals(option.Key, filters.Permission, System.StringComparison.OrdinalIgnoreCase))">@option.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterRestriction">نوع دسترسی</label>
+                            <select class="form-select" id="filterRestriction" name="restriction">
+                                <option value="All" selected="@(filters.Restriction == PageAccessRestrictionFilter.All)">همه صفحات</option>
+                                <option value="Restricted" selected="@(filters.Restriction == PageAccessRestrictionFilter.Restricted)">فقط صفحات محدود شده</option>
+                                <option value="Unrestricted" selected="@(filters.Restriction == PageAccessRestrictionFilter.Unrestricted)">فقط صفحات بدون محدودیت</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPageSize">تعداد نمایش در هر صفحه</label>
+                            <select class="form-select" id="filterPageSize" name="pageSize">
+                                @foreach (var size in pageSizeOptions)
+                                {
+                                    <option value="@size" selected="@(Model.PageSize == size)">@size مورد</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-filter-modal__actions">
+                        <button type="submit" class="btn btn-primary">اعمال فیلترها</button>
+                        <a class="btn btn-light" asp-area="Admin" asp-controller="PageAccess" asp-action="Index">حذف فیلترها</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/page-access.js" asp-append-version="true"></script>
+}

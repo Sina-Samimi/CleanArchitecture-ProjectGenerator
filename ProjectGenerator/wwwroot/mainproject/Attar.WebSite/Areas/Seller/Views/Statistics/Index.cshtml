@@ -1,0 +1,444 @@
+@using System.Globalization
+@model SellerStatisticsViewModel
+@{
+    ViewData["Title"] = "آمار و گزارشات";
+    ViewData["Sidebar:ActiveTab"] = "statistics";
+
+    var culture = new CultureInfo("fa-IR");
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatNumber(int value) => value.ToString("N0", culture);
+    string FormatDate(DateOnly date) => date.ToDateTime(TimeOnly.MinValue).ToPersianDateString();
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Seller" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">آمار و گزارشات</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="seller-statistics">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">آمار و گزارشات</h1>
+            <p class="text-muted mb-0">گزارش کامل از عملکرد فروشگاه شما</p>
+        </div>
+        <div class="text-muted small">
+            آخرین به‌روزرسانی: @Model.GeneratedAt.ToPersianDateTimeString()
+        </div>
+    </div>
+
+    <!-- کارت‌های آمار کلی -->
+    <div class="row g-4 mb-4">
+        <!-- آمار محصولات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-primary-subtle text-primary-emphasis">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalProducts)</div>
+                            <div class="seller-stat-card__label">کل محصولات</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> منتشر شده: @FormatNumber(Model.PublishedProducts)
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-warning">
+                                <i class="bi bi-clock"></i> در انتظار: @FormatNumber(Model.PendingProducts)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار بازدیدها -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-info-subtle text-info-emphasis">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalViews)</div>
+                            <div class="seller-stat-card__label">کل بازدیدها</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <div class="text-muted small">
+                            <i class="bi bi-info-circle"></i> مجموع بازدیدهای تمام محصولات
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار سفارشات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-success-subtle text-success-emphasis">
+                            <i class="bi bi-cart-check"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatNumber(Model.TotalOrders)</div>
+                            <div class="seller-stat-card__label">کل سفارشات</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">
+                                <i class="bi bi-check-circle"></i> پرداخت شده: @FormatNumber(Model.PaidOrders)
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="text-warning">
+                                <i class="bi bi-hourglass-split"></i> در انتظار: @FormatNumber(Model.PendingOrders)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار درآمد -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 seller-stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="seller-stat-card__icon bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-currency-exchange"></i>
+                        </div>
+                        <div class="text-end">
+                            <div class="seller-stat-card__value">@FormatMoney(Model.TotalRevenue)</div>
+                            <div class="seller-stat-card__label">درآمد کل</div>
+                        </div>
+                    </div>
+                    <div class="seller-stat-card__details">
+                        <div class="text-muted small">
+                            <i class="bi bi-info-circle"></i> از سفارشات پرداخت شده
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نمودار بازدیدهای روزانه -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-data text-primary"></i>
+                        بازدیدهای روزانه (آخرین 30 روز)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="statistics-chart">
+                        <canvas id="dailyViewsChart" height="80"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- آمار تفصیلی -->
+    <div class="row g-4 mb-4">
+        <!-- آمار نظرات -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-chat-dots text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h3 class="mb-1">@FormatNumber(Model.TotalComments)</h3>
+                    <p class="text-muted mb-2">کل نظرات</p>
+                    <div class="d-flex justify-content-between small">
+                        <span class="text-success">
+                            <i class="bi bi-check-circle"></i> تایید شده: @FormatNumber(Model.ApprovedComments)
+                        </span>
+                    </div>
+                    @if (Model.PendingReplyComments > 0)
+                    {
+                        <div class="mt-2">
+                            <span class="badge bg-warning">
+                                <i class="bi bi-exclamation-circle"></i> نیاز به پاسخ: @FormatNumber(Model.PendingReplyComments)
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار درخواست‌های سفارشی -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-clipboard-check text-info" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h3 class="mb-1">@FormatNumber(Model.TotalCustomRequests)</h3>
+                    <p class="text-muted mb-2">درخواست‌های سفارشی</p>
+                    @if (Model.PendingCustomRequests > 0)
+                    {
+                        <div class="mt-2">
+                            <span class="badge bg-warning">
+                                <i class="bi bi-clock"></i> در انتظار: @FormatNumber(Model.PendingCustomRequests)
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار ارسال‌ها -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-truck text-success" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h3 class="mb-1">@FormatNumber(Model.TotalShipments)</h3>
+                    <p class="text-muted mb-2">کل ارسال‌ها</p>
+                    <div class="d-flex flex-column gap-1 small mt-2">
+                        <span class="text-info">
+                            <i class="bi bi-hourglass-split"></i> در حال آماده‌سازی: @FormatNumber(Model.PreparingShipments)
+                        </span>
+                        <span class="text-primary">
+                            <i class="bi bi-send"></i> ارسال شده: @FormatNumber(Model.ShippedShipments)
+                        </span>
+                        <span class="text-success">
+                            <i class="bi bi-check-circle"></i> تحویل داده شده: @FormatNumber(Model.DeliveredShipments)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- خلاصه عملکرد -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-speedometer2 text-warning" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h3 class="mb-1">@{
+                        var performanceScore = Model.TotalProducts > 0 
+                            ? (int)((Model.PublishedProducts / (double)Model.TotalProducts) * 100)
+                            : 0;
+                    }@performanceScore%</h3>
+                    <p class="text-muted mb-2">نرخ انتشار</p>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: @performanceScore%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- محصولات برتر و آخرین سفارشات -->
+    <div class="row g-4">
+        <!-- محصولات برتر -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy text-warning"></i>
+                        محصولات پربازدید
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TopProducts.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>رتبه</th>
+                                        <th>عنوان محصول</th>
+                                        <th>بازدید</th>
+                                        <th>وضعیت</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.TopProducts.Count; i++)
+                                    {
+                                        var product = Model.TopProducts[i];
+                                        <tr>
+                                            <td>
+                                                @if (i < 3)
+                                                {
+                                                    <span class="badge bg-warning text-dark">@(i + 1)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">@(i + 1)</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-area="Seller" asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductId" class="text-decoration-none">
+                                                    @product.ProductTitle
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info-subtle text-info-emphasis">
+                                                    <i class="bi bi-eye"></i> @FormatNumber(product.ViewCount)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (product.IsPublished)
+                                                {
+                                                    <span class="badge bg-success-subtle text-success-emphasis">
+                                                        <i class="bi bi-check-circle"></i> منتشر شده
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis">
+                                                        <i class="bi bi-clock"></i> در انتظار
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2">محصولی برای نمایش وجود ندارد</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- آخرین سفارشات -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        آخرین سفارشات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentOrders.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>شماره فاکتور</th>
+                                        <th>مبلغ</th>
+                                        <th>وضعیت</th>
+                                        <th>تاریخ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a asp-area="Seller" asp-controller="Orders" asp-action="Index" class="text-decoration-none">
+                                                    @order.InvoiceNumber
+                                                </a>
+                                            </td>
+                                            <td>@FormatMoney(order.TotalAmount)</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = order.Status switch
+                                                    {
+                                                        "Paid" => "bg-success-subtle text-success-emphasis",
+                                                        "Pending" => "bg-warning-subtle text-warning-emphasis",
+                                                        "PartiallyPaid" => "bg-info-subtle text-info-emphasis",
+                                                        _ => "bg-secondary-subtle text-secondary-emphasis"
+                                                    };
+                                                    var statusLabel = order.Status switch
+                                                    {
+                                                        "Paid" => "پرداخت شده",
+                                                        "Pending" => "در انتظار",
+                                                        "PartiallyPaid" => "نیمه پرداخت",
+                                                        _ => order.Status
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@statusLabel</span>
+                                            </td>
+                                            <td class="text-muted small">@order.OrderDate.ToPersianDateString()</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2">سفارشی برای نمایش وجود ندارد</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('dailyViewsChart');
+            if (!ctx) return;
+
+            const dailyViews = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailyViews.Select(d => new { date = d.Date.ToString("yyyy-MM-dd"), count = d.ViewCount })));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyViews.map(d => d.date),
+                    datasets: [{
+                        label: 'بازدیدها',
+                        data: dailyViews.map(d => d.count),
+                        borderColor: 'rgb(245, 158, 11)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
+

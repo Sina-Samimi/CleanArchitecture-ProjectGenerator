@@ -1,0 +1,113 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class RemoveAttartLogTable : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.EnsureSchema(
+                name: "Logs");
+
+            migrationBuilder.CreateTable(
+                name: "AttarApplicationLogs",
+                schema: "Logs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Level = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SourceContext = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Properties = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RequestPath = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    RequestMethod = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    StatusCode = table.Column<int>(type: "int", nullable: true),
+                    ElapsedMs = table.Column<double>(type: "float", nullable: true),
+                    UserAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    RemoteIpAddress = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true),
+                    ApplicationName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    MachineName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Environment = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Ip = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    CreatorId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UpdaterId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    CreateDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    UpdateDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    RemoveDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AttarApplicationLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AttarApplicationLogs_AspNetUsers_CreatorId",
+                        column: x => x.CreatorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AttarApplicationLogs_AspNetUsers_UpdaterId",
+                        column: x => x.UpdaterId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_ApplicationName",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "ApplicationName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_CreateDate",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "CreateDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_CreatorId",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "CreatorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_Level",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "Level");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_Level_CreateDate",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                columns: new[] { "Level", "CreateDate" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_SourceContext",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "SourceContext");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttarApplicationLogs_UpdaterId",
+                schema: "Logs",
+                table: "AttarApplicationLogs",
+                column: "UpdaterId");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "AttarApplicationLogs",
+                schema: "Logs");
+        }
+    }
+}

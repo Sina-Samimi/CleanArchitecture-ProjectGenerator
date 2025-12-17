@@ -1,0 +1,145 @@
+﻿@model AdminNotificationsDropdownViewModel
+@using LogTableRenameTest.Domain.Enums
+
+<div class="dropdown">
+    <button class="btn btn-icon btn-ghost position-relative" 
+            type="button" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false" 
+            aria-label="اعلان‌ها"
+            id="adminNotificationsDropdownBtn">
+        <i class="bi bi-bell"></i>
+        @if (Model.TotalCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                @(Model.TotalCount > 99 ? "99+" : Model.TotalCount.ToString())
+            </span>
+        }
+        else
+        {
+            <span class="notification-dot"></span>
+        }
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 320px; max-width: 400px;" aria-labelledby="adminNotificationsDropdownBtn">
+        <li>
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <h6 class="mb-0">اعلان‌ها</h6>
+                @if (Model.TotalCount > 0)
+                {
+                    <span class="badge bg-danger">@Model.TotalCount درخواست جدید</span>
+                }
+            </div>
+        </li>
+        @if (Model.TotalCount == 0)
+        {
+            <li>
+                <div class="px-3 py-4 text-center text-muted">
+                    <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>
+                    <small>هیچ درخواست جدیدی وجود ندارد</small>
+                </div>
+            </li>
+        }
+        else
+        {
+            @if (Model.UnreadNotificationsCount > 0)
+            {
+                <li>
+                    <a class="dropdown-item" 
+                       asp-area="Admin" 
+                       asp-controller="Tickets" 
+                       asp-action="Index">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-ticket text-success mt-1 flex-shrink-0"></i>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                                    <strong class="small">اعلان‌های تیکتی</strong>
+                                    <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size: 0.5rem;">جدید</span>
+                                </div>
+                                <p class="mb-0 small text-muted">
+                                    شما @Model.UnreadNotificationsCount تا اعلان تیکتی دارید
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            }
+            @if (Model.CustomRequestsCount > 0)
+            {
+                <li>
+                    <a class="dropdown-item" 
+                       asp-area="Admin" 
+                       asp-controller="ProductCustomRequests" 
+                       asp-action="Index" 
+                       asp-route-status="@CustomRequestStatus.Pending">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-cart-plus text-info mt-1 flex-shrink-0"></i>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                                    <strong class="small">درخواست سفارش محصول</strong>
+                                    <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size: 0.5rem;">جدید</span>
+                                </div>
+                                <p class="mb-0 small text-muted">
+                                    شما @Model.CustomRequestsCount درخواست سفارش محصول دارید
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            }
+            @if (Model.WithdrawalRequestsCount > 0)
+            {
+                <li>
+                    @if (Model.FirstWithdrawalRequestId.HasValue)
+                    {
+                        <a class="dropdown-item" 
+                           asp-area="Admin" 
+                           asp-controller="WithdrawalRequests" 
+                           asp-action="Details" 
+                           asp-route-id="@Model.FirstWithdrawalRequestId.Value">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-wallet2 text-warning mt-1 flex-shrink-0"></i>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                                        <strong class="small">درخواست برداشت</strong>
+                                        <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size: 0.5rem;">جدید</span>
+                                    </div>
+                                    <p class="mb-0 small text-muted">
+                                        شما @Model.WithdrawalRequestsCount درخواست برداشت مبلغ دارید
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="dropdown-item" 
+                           asp-area="Admin" 
+                           asp-controller="WithdrawalRequests" 
+                           asp-action="Index" 
+                           asp-route-status="@WithdrawalRequestStatus.Pending">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-wallet2 text-warning mt-1 flex-shrink-0"></i>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                                        <strong class="small">درخواست برداشت</strong>
+                                        <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size: 0.5rem;">جدید</span>
+                                    </div>
+                                    <p class="mb-0 small text-muted">
+                                        شما @Model.WithdrawalRequestsCount درخواست برداشت مبلغ دارید
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </li>
+            }
+        }
+        <li><hr class="dropdown-divider" /></li>
+        <li>
+            <a class="dropdown-item text-center" asp-area="Admin" asp-controller="Notifications" asp-action="Index">
+                <small>مشاهده همه اعلان‌ها</small>
+            </a>
+        </li>
+    </ul>
+</div>
+

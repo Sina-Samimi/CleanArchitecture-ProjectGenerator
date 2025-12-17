@@ -1,0 +1,49 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using TestAttarClone.Application.Abstractions.Messaging;
+using TestAttarClone.Application.Interfaces;
+using TestAttarClone.SharedKernel.BaseTypes;
+
+namespace TestAttarClone.Application.Commands.Catalog;
+
+public sealed record DeleteProductCommand(Guid Id) : ICommand
+{
+    public sealed class Handler : ICommandHandler<DeleteProductCommand>
+    {
+        private readonly IProductRepository _productRepository;
+        private readonly IAuditContext _auditContext;
+
+        public Handler(IProductRepository productRepository, IAuditContext auditContext)
+        {
+            _productRepository = productRepository;
+            _auditContext = auditContext;
+        }
+
+        public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+        {
+            var product = await _productRepository.GetByIdAsync(request.Id, cancellationToken);
+            if (product is null)
+            {
+                return Result.Failure("محصول مورد نظر یافت نشد.");
+            }
+
+            if (product.IsDeleted)
+            {
+                return Result.Success();
+            }
+
+            var audit = _auditContext.Capture();
+
+            product.IsDeleted = true;
+            product.RemoveDate = audit.Timestamp;
+            product.UpdateDate = audit.Timestamp;
+            product.UpdaterId = audit.UserId;
+            product.Ip = audit.IpAddress;
+
+            await _productRepository.UpdateAsync(product, cancellationToken);
+
+            return Result.Success();
+        }
+    }
+}

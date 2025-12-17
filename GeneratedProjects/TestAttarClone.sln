@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAttarClone.WebSite", "src\TestAttarClone.WebSite\TestAttarClone.WebSite.csproj", "{AC0B94E7-60C9-4C79-9543-773BA892D202}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "src\Domain\Domain.csproj", "{EA422729-F6CF-41CB-9709-146A1D9E7438}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedKernel", "src\SharedKernel\SharedKernel.csproj", "{F434B2CA-01BA-4BA7-9144-CB0453AC63E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "src\Application\Application.csproj", "{2C277F45-A5EA-4576-8D27-46FA00DD94FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "src\Infrastructure\Infrastructure.csproj", "{411FAB9B-BA41-48ED-AD5C-05461290D511}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "tests\UnitTests\UnitTests.csproj", "{21FCE5D6-0B99-417F-A22E-DB0842D579AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B87AE8E3-8140-4482-B032-6F39CDBDDC43}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6D99343D-72DA-4196-9DE3-390EE5B3D163}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC0B94E7-60C9-4C79-9543-773BA892D202}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC0B94E7-60C9-4C79-9543-773BA892D202}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC0B94E7-60C9-4C79-9543-773BA892D202}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC0B94E7-60C9-4C79-9543-773BA892D202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA422729-F6CF-41CB-9709-146A1D9E7438}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA422729-F6CF-41CB-9709-146A1D9E7438}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA422729-F6CF-41CB-9709-146A1D9E7438}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA422729-F6CF-41CB-9709-146A1D9E7438}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F434B2CA-01BA-4BA7-9144-CB0453AC63E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F434B2CA-01BA-4BA7-9144-CB0453AC63E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F434B2CA-01BA-4BA7-9144-CB0453AC63E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F434B2CA-01BA-4BA7-9144-CB0453AC63E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C277F45-A5EA-4576-8D27-46FA00DD94FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C277F45-A5EA-4576-8D27-46FA00DD94FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C277F45-A5EA-4576-8D27-46FA00DD94FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C277F45-A5EA-4576-8D27-46FA00DD94FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{411FAB9B-BA41-48ED-AD5C-05461290D511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{411FAB9B-BA41-48ED-AD5C-05461290D511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{411FAB9B-BA41-48ED-AD5C-05461290D511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{411FAB9B-BA41-48ED-AD5C-05461290D511}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21FCE5D6-0B99-417F-A22E-DB0842D579AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21FCE5D6-0B99-417F-A22E-DB0842D579AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21FCE5D6-0B99-417F-A22E-DB0842D579AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21FCE5D6-0B99-417F-A22E-DB0842D579AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AC0B94E7-60C9-4C79-9543-773BA892D202} = {B87AE8E3-8140-4482-B032-6F39CDBDDC43}
+		{EA422729-F6CF-41CB-9709-146A1D9E7438} = {B87AE8E3-8140-4482-B032-6F39CDBDDC43}
+		{F434B2CA-01BA-4BA7-9144-CB0453AC63E1} = {B87AE8E3-8140-4482-B032-6F39CDBDDC43}
+		{2C277F45-A5EA-4576-8D27-46FA00DD94FA} = {B87AE8E3-8140-4482-B032-6F39CDBDDC43}
+		{411FAB9B-BA41-48ED-AD5C-05461290D511} = {B87AE8E3-8140-4482-B032-6F39CDBDDC43}
+		{21FCE5D6-0B99-417F-A22E-DB0842D579AD} = {6D99343D-72DA-4196-9DE3-390EE5B3D163}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,359 @@
+﻿@using System
+@using System.Text.Json
+@using Microsoft.AspNetCore.Http
+@{
+    var title = ViewData["Title"] as string ?? "پنل کاربری";
+    var subtitle = ViewData["Subtitle"] as string;
+    var alertMessage = TempData["Alert.Message"] as string;
+    var alertTitle = TempData["Alert.Title"] as string;
+    var alertType = TempData["Alert.Type"] as string;
+    var alertConfirmText = TempData["Alert.ConfirmText"] as string;
+    var hasAlert = !string.IsNullOrWhiteSpace(alertMessage);
+    string alertJson = string.Empty;
+
+    if (hasAlert)
+    {
+        var payload = new
+        {
+            title = string.IsNullOrWhiteSpace(alertTitle) ? "اعلان سیستم" : alertTitle,
+            message = alertMessage,
+            type = string.IsNullOrWhiteSpace(alertType) ? "info" : alertType,
+            confirmText = string.IsNullOrWhiteSpace(alertConfirmText) ? "باشه" : alertConfirmText
+        };
+
+        alertJson = JsonSerializer.Serialize(payload);
+    }
+
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    var greetingInitial = (ViewData["GreetingInitial"] as string)?.Trim();
+    var greetingAvatarUrl = ViewData["GreetingAvatarUrl"] as string;
+    var greetingTitle = ViewData["GreetingTitle"] as string ?? "سلام، کاربر گرامی 👋";
+    var greetingSubtitle = ViewData["GreetingSubtitle"] as string ?? "به پنل کاربری خوش آمدید";
+    var searchPlaceholder = ViewData["SearchPlaceholder"] as string ?? "جستجو در پنل";
+    var showSearch = ViewData["ShowSearch"] is bool showSearchValue ? showSearchValue : true;
+    var accountName = ViewData["AccountName"] as string ?? "کاربر";
+    var accountInitial = (ViewData["AccountInitial"] as string)?.Trim();
+    var accountAvatarUrl = ViewData["AccountAvatarUrl"] as string ?? greetingAvatarUrl;
+    var accountPhone = ViewData["AccountPhone"] as string ?? ViewData["Sidebar:Phone"] as string;
+    var accountEmail = ViewData["AccountEmail"] as string ?? ViewData["Sidebar:Email"] as string;
+    var titleSuffix = ViewData["TitleSuffix"] as string ?? "پنل کاربری";
+    var persianYear = DateTime.Now.ToPersianDateString().Split('/')[0];
+
+    var request = ViewContext?.HttpContext?.Request;
+    string? logoutReturnUrl = null;
+
+    if (request is not null && HttpMethods.IsGet(request.Method))
+    {
+        var candidate = request.Path.Value ?? string.Empty;
+
+        if (request.QueryString.HasValue)
+        {
+            candidate += request.QueryString.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(candidate) && Url.IsLocalUrl(candidate))
+        {
+            logoutReturnUrl = candidate;
+        }
+    }
+
+    if (string.IsNullOrEmpty(greetingInitial))
+    {
+        greetingInitial = "ک";
+    }
+
+    if (string.IsNullOrEmpty(accountInitial))
+    {
+        accountInitial = greetingInitial;
+    }
+
+    var greetingAvatar = !string.IsNullOrWhiteSpace(greetingAvatarUrl) ? greetingAvatarUrl : accountAvatarUrl;
+    var hasGreetingSubtitle = !string.IsNullOrWhiteSpace(greetingSubtitle);
+    var hasAccountAvatar = !string.IsNullOrWhiteSpace(accountAvatarUrl);
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title - @titleSuffix</title>
+    @{
+        var faviconPath = ViewData["SiteFaviconPath"] as string;
+    }
+    @if (!string.IsNullOrWhiteSpace(faviconPath))
+    {
+        <link rel="icon" type="image/x-icon" href="@Url.Content(faviconPath)" />
+        <link rel="shortcut icon" type="image/x-icon" href="@Url.Content(faviconPath)" />
+    }
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+	<link href="~/css/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/user.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    <link href="/font/iransans/style.css" rel="stylesheet" asp-append-version="true" />
+    <link href="/font/iransans/fontiran.css" rel="stylesheet" asp-append-version="true" />
+    @RenderSection("Head", required: false)
+</head>
+<body class="app-body app-body--user">
+    <div class="app-shell" id="appShell">
+        @await Component.InvokeAsync("UserSidebar", new { currentArea, currentController, currentAction })
+       
+        @{
+            // Re-read account data after ViewComponent execution
+            var updatedAccountName = ViewData["AccountName"] as string ?? accountName;
+            var updatedAccountInitial = (ViewData["AccountInitial"] as string)?.Trim() ?? accountInitial;
+            var updatedAccountAvatarUrl = ViewData["AccountAvatarUrl"] as string ?? accountAvatarUrl;
+            var updatedAccountPhone = ViewData["AccountPhone"] as string ?? ViewData["Sidebar:Phone"] as string ?? accountPhone;
+            var updatedAccountEmail = ViewData["AccountEmail"] as string ?? ViewData["Sidebar:Email"] as string ?? accountEmail;
+            
+            var updatedGreetingAvatar = !string.IsNullOrWhiteSpace(greetingAvatarUrl) ? greetingAvatarUrl : updatedAccountAvatarUrl;
+            var updatedGreetingInitial = !string.IsNullOrWhiteSpace(greetingInitial) ? greetingInitial : updatedAccountInitial;
+            var hasUpdatedAccountAvatar = !string.IsNullOrWhiteSpace(updatedAccountAvatarUrl);
+        }
+        
+        <div class="app-aside__overlay" id="appAsideOverlay" data-app-aside-close></div>
+        <div class="app-content">
+            <header class="app-header" id="appHeader">
+                <div class="container-xxl">
+                    <div class="app-header__inner">
+                        <div class="app-header__start">
+                            <button class="btn btn-icon btn-ghost d-lg-none" id="appAsideToggle" type="button" aria-controls="appAside" aria-expanded="false" aria-label="باز کردن منو">
+                                <i class="bi bi-list"></i>
+                            </button>
+                            <div class="app-greeting d-none d-lg-flex">
+                                @if (hasUpdatedAccountAvatar)
+                                {
+                                    <span class="avatar avatar-lg">
+                                        <img src="@updatedAccountAvatarUrl" alt="@updatedAccountName" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="avatar avatar-lg text-bg-primary">@updatedAccountInitial</span>
+                                }
+                                <div>
+                                    <div class="app-greeting__title">@greetingTitle</div>
+                                    @if (hasGreetingSubtitle)
+                                    {
+                                        <div class="app-greeting__subtitle">@greetingSubtitle</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-header__center">
+                            @if (showSearch)
+                            {
+                                <label class="app-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="search" class="form-control" placeholder="@searchPlaceholder" aria-label="@searchPlaceholder" />
+                                </label>
+                            }
+                        </div>
+                        <div class="app-header__end">
+                            @await Component.InvokeAsync("NotificationsDropdown")
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @if (hasUpdatedAccountAvatar)
+                                    {
+                                        <span class="avatar avatar-sm">
+                                            <img src="@updatedAccountAvatarUrl" alt="@updatedAccountName" style="width: 100%; height: 100%; object-fit: cover;" />
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar avatar-sm text-bg-primary">@updatedAccountInitial</span>
+                                    }
+                                    <span class="d-none d-sm-inline">@(!string.IsNullOrWhiteSpace(updatedAccountPhone) ? updatedAccountPhone : updatedAccountName)</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <div class="px-3 py-2 border-bottom">
+                                            <div class="fw-semibold">@updatedAccountName</div>
+                                            @if (!string.IsNullOrWhiteSpace(updatedAccountPhone))
+                                            {
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-phone"></i>
+                                                    @updatedAccountPhone
+                                                </small>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(updatedAccountEmail))
+                                            {
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-envelope"></i>
+                                                    @updatedAccountEmail
+                                                </small>
+                                            }
+                                        </div>
+                                    </li>
+                                    <li><a class="dropdown-item" asp-area="User" asp-controller="Profile" asp-action="Index">پروفایل</a></li>
+                                    <li><a class="dropdown-item" asp-area="User" asp-controller="Wallet" asp-action="Index">کیف پول</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="dropdown-item-form">
+                                            @Html.AntiForgeryToken()
+                                            @if (!string.IsNullOrEmpty(logoutReturnUrl))
+                                            {
+                                                <input type="hidden" name="returnUrl" value="@logoutReturnUrl" />
+                                            }
+                                            <button type="submit" class="dropdown-item text-danger">خروج</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="app-toolbar" id="appToolbar">
+                <div class="container-xxl">
+                    <div class="app-toolbar__inner">
+                        <div>
+                            @{
+                                var isInvoicePage = string.Equals(currentController, "Invoice", StringComparison.OrdinalIgnoreCase);
+                            }
+                            @if (IsSectionDefined("Breadcrumb") && !isInvoicePage)
+                            {
+                                <nav aria-label="مسیر دسترسی" class="app-breadcrumb">
+                                    <ol class="breadcrumb mb-0">
+                                        @RenderSection("Breadcrumb", required: false)
+                                    </ol>
+                                </nav>
+                            }
+                        </div>
+                        @if (IsSectionDefined("Toolbar"))
+                        {
+                            <div class="app-toolbar__actions">
+                                @RenderSection("Toolbar", required: false)
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <main class="app-main" id="appMain">
+                <div class="app-container container-xxl">
+                    @RenderBody()
+                </div>
+            </main>
+            <footer class="app-footer">
+                <div class="container-xxl">
+                    <div class="app-footer__inner">
+                        <span>&copy; @persianYear @(ViewData["SiteName"] as string ?? "عطاری آنلاین")</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    @await Html.PartialAsync("_AlertModal")
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const shell = document.getElementById('appShell');
+            const aside = document.getElementById('appAside');
+            const overlay = document.getElementById('appAsideOverlay');
+            const toggle = document.getElementById('appAsideToggle');
+            const dismissors = document.querySelectorAll('[data-app-aside-close]');
+            const menuGroups = aside ? aside.querySelectorAll('[data-menu-group]') : [];
+
+            const setGroupState = (group, expanded) => {
+                group.classList.toggle('is-open', expanded);
+                const button = group.querySelector('[data-menu-toggle]');
+                const submenu = group.querySelector('.app-submenu');
+                if (button) {
+                    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                }
+                if (submenu) {
+                    submenu.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+                    submenu.style.maxHeight = expanded ? `${submenu.scrollHeight}px` : '0px';
+                }
+            };
+
+            const openAside = () => {
+                if (!shell || !aside || !overlay) {
+                    return;
+                }
+                shell.classList.add('app-shell--aside-open');
+                aside.classList.add('is-open');
+                overlay.classList.add('is-active');
+            };
+
+            const closeAside = () => {
+                if (!shell || !aside || !overlay) {
+                    return;
+                }
+                shell.classList.remove('app-shell--aside-open');
+                aside.classList.remove('is-open');
+                overlay.classList.remove('is-active');
+            };
+
+            if (toggle) {
+                toggle.addEventListener('click', openAside);
+            }
+
+            dismissors.forEach(btn => btn.addEventListener('click', closeAside));
+
+            menuGroups.forEach(group => {
+                const button = group.querySelector('[data-menu-toggle]');
+                if (!button) {
+                    return;
+                }
+
+                const initialState = group.classList.contains('is-open');
+                setGroupState(group, initialState);
+
+                button.addEventListener('click', () => {
+                    const willOpen = !group.classList.contains('is-open');
+                    menuGroups.forEach(other => {
+                        if (other !== group) {
+                            setGroupState(other, false);
+                        }
+                    });
+                    setGroupState(group, willOpen);
+                });
+            });
+
+            if (aside) {
+                aside.querySelectorAll('a.app-menu__link, a.app-submenu__link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (window.innerWidth < 992) {
+                            closeAside();
+                        }
+                    });
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
+                    closeAside();
+                }
+
+                menuGroups.forEach(group => {
+                    if (group.classList.contains('is-open')) {
+                        const submenu = group.querySelector('.app-submenu');
+                        if (submenu) {
+                            submenu.style.maxHeight = `${submenu.scrollHeight}px`;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    @if (hasAlert && !string.IsNullOrEmpty(alertJson))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.AppAlert) {
+                    window.AppAlert.show(@Html.Raw(alertJson));
+                }
+            });
+        </script>
+    }
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

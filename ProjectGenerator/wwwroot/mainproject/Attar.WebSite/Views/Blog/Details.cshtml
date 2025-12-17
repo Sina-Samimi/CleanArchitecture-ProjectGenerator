@@ -1,0 +1,235 @@
+﻿@using System.Text.Json
+@using System.Globalization
+@model BlogDetailViewModel
+@{
+    var seoTitle = string.IsNullOrWhiteSpace(Model.Post.SeoTitle) ? Model.Post.Title : Model.Post.SeoTitle;
+    var seoDescription = string.IsNullOrWhiteSpace(Model.Post.SeoDescription) ? Model.Post.Summary : Model.Post.SeoDescription;
+    var seoKeywords = Model.Post.SeoKeywords;
+    var robots = string.IsNullOrWhiteSpace(Model.Post.RobotsDirective) ? "index,follow" : Model.Post.RobotsDirective;
+    var canonicalUrl = Url.Action("Details", "Blog", new { slug = Model.Post.Slug }, Context.Request.Scheme) ?? string.Empty;
+
+    Layout = "_HomeTemplateLayout";
+    ViewData["Title"] = seoTitle;
+    ViewData["MetaDescription"] = seoDescription;
+    ViewData["MetaKeywords"] = seoKeywords;
+    ViewData["MetaRobots"] = robots;
+    ViewData["CanonicalUrl"] = canonicalUrl;
+    ViewData["MetaOgTitle"] = seoTitle;
+    ViewData["MetaOgDescription"] = seoDescription;
+    ViewData["MetaOgImage"] = Model.Post.HeroImageUrl;
+    ViewData["MetaOgType"] = "article";
+    ViewData["MetaOgUrl"] = canonicalUrl;
+    ViewData["MetaArticleAuthor"] = Model.Post.AuthorName;
+    ViewData["MetaArticlePublished"] = Model.Post.PublishedAt.ToString("o");
+}
+<!-- Blog Post Section -->
+<section class="blog-post-section">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">خانه</a> /
+            <a asp-controller="Blog" asp-action="Index">وبلاگ</a> /
+            <span>@Model.Post.Title</span>
+        </div>
+
+        <!-- Main Content Wrapper -->
+        <div class="post-wrapper">
+            <!-- Main Article Content -->
+            <div class="post-content">
+                <!-- Article Header -->
+                <div class="post-header-section">
+                    <div class="post-category">@(Model.Post.Tags.FirstOrDefault() ?? "مقالات")</div>
+                    <h1 class="post-title">@Model.Post.Title</h1>
+                    
+                    <div class="post-meta">
+                        <div class="post-author">
+                            <div class="post-author-avatar">👤</div>
+                            <div class="post-author-details">
+                                <div class="post-author-name">@Model.Post.AuthorName</div>
+                                @if (!string.IsNullOrWhiteSpace(Model.Post.AuthorRole))
+                                {
+                                    <div class="post-author-role">@Model.Post.AuthorRole</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="post-date-time">
+                            <span>📅 <span>@Model.Post.GetFormattedPublishDate()</span></span>
+                            <span>⏰ <span>@Model.Post.PublishedAt.ToString("HH:mm")</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Image -->
+                <div class="post-hero-image">
+                    <img src="@Model.Post.HeroImageUrl" alt="@Model.Post.Title" style="width: 100%; height: 100%; object-fit: cover;" />
+                </div>
+
+                <!-- Article Introduction -->
+                @if (!string.IsNullOrWhiteSpace(Model.Post.Summary))
+                {
+                    <div class="post-intro-box">
+                        <p>@Model.Post.Summary</p>
+                    </div>
+                }
+
+                <!-- Article Body -->
+                <div class="post-body-content">
+                    @if (Model.Post.ContentSections.Any())
+                    {
+                        @foreach (var section in Model.Post.ContentSections)
+                        {
+                            @if (!string.IsNullOrWhiteSpace(section.Heading))
+                            {
+                                <h2>@(section.Heading)</h2>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(section.Body))
+                            {
+                                <p>@(section.Body)</p>
+                            }
+                        }
+                    }
+                    else if (!string.IsNullOrWhiteSpace(Model.Post.ContentHtml))
+                    {
+                        @Html.Raw(Model.Post.ContentHtml)
+                    }
+                </div>
+
+                <!-- Article Footer (Tags & Share) -->
+                @if (Model.Post.Tags.Any())
+                {
+                    <div class="post-footer-section">
+                        <div class="post-tags">
+                            <span class="tags-title">برچسب‌ها:</span>
+                            <div class="tags-container">
+                                @foreach (var tag in Model.Post.Tags)
+                                {
+                                    <a href="#" class="post-tag">@tag</a>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="post-share">
+                            <span class="share-title">اشتراک‌گذاری:</span>
+                            <div class="share-icons">
+                                <button class="share-icon-btn" onclick="shareOnTelegram()">📱</button>
+                                <button class="share-icon-btn" onclick="shareOnWhatsApp()">💬</button>
+                                <button class="share-icon-btn" onclick="copyLink()">🔗</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="post-sidebar">
+                <!-- Author Widget -->
+                <div class="sidebar-widget author-widget">
+                    <div class="author-widget-avatar">👤</div>
+                    <div class="author-widget-name">@Model.Post.AuthorName</div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Post.AuthorRole))
+                    {
+                        <p class="author-widget-bio">@Model.Post.AuthorRole</p>
+                    }
+                </div>
+
+                <!-- Related Posts -->
+                @if (Model.RelatedPosts.Any())
+                {
+                    <div class="sidebar-widget">
+                        <h3 class="widget-title">مقالات مرتبط</h3>
+                        <div class="related-posts-list">
+                            @foreach (var relatedPost in Model.RelatedPosts.Take(3))
+                            {
+                                <a asp-controller="Blog" asp-action="Details" asp-route-slug="@relatedPost.Slug" class="related-post-item">
+                                    <div class="related-post-thumb">
+                                        <img src="@relatedPost.HeroImageUrl" alt="@relatedPost.Title" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    </div>
+                                    <div class="related-post-info">
+                                        <h4>@relatedPost.Title</h4>
+                                        <time>@relatedPost.GetFormattedPublishDate()</time>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </aside>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="post-comments" id="comments">
+            <h2 class="comments-section-title">نظرات (@Model.Post.CommentCount.ToString("N0", new CultureInfo("fa-IR")))</h2>
+
+            <!-- Comment Form -->
+            <div class="comment-form-container">
+                <h3>نظر خود را بنویسید</h3>
+                <form asp-action="AddComment" asp-route-slug="@Model.Post.Slug" method="post" class="comment-form-fields">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="NewComment.BlogId" />
+                    <input type="hidden" asp-for="NewComment.ParentId" />
+                    
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="comment-form-row">
+                        <div class="comment-form-field">
+                            <label asp-for="NewComment.AuthorName">نام *</label>
+                            <input asp-for="NewComment.AuthorName" required />
+                            <span asp-validation-for="NewComment.AuthorName" class="text-danger"></span>
+                        </div>
+                        <div class="comment-form-field">
+                            <label asp-for="NewComment.AuthorEmail">ایمیل *</label>
+                            <input asp-for="NewComment.AuthorEmail" type="email" required />
+                            <span asp-validation-for="NewComment.AuthorEmail" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="comment-form-field">
+                        <label asp-for="NewComment.Content">نظر شما *</label>
+                        <textarea asp-for="NewComment.Content" rows="5" required></textarea>
+                        <span asp-validation-for="NewComment.Content" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="comment-submit-button">ارسال نظر</button>
+                </form>
+            </div>
+
+            <!-- Comments List -->
+            @if (Model.Comments.Any())
+            {
+                <div class="comments-container">
+                    @foreach (var comment in Model.Comments)
+                    {
+                        <div class="comment-entry">
+                            <div class="comment-avatar-wrapper">👤</div>
+                            <div class="comment-details">
+                                <div class="comment-meta">
+                                    <span class="commenter-name">@comment.AuthorName</span>
+                                    <span class="comment-date">@comment.GetFormattedCreateDate()</span>
+                                </div>
+                                <p class="comment-body">@comment.Content</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        function shareOnTelegram() {
+            const url = encodeURIComponent(window.location.href);
+            window.open('https://t.me/share/url?url=' + url, '_blank');
+        }
+
+        function shareOnWhatsApp() {
+            const url = encodeURIComponent(window.location.href);
+            window.open('https://wa.me/?text=' + url, '_blank');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('لینک مقاله کپی شد!');
+        }
+    </script>
+}

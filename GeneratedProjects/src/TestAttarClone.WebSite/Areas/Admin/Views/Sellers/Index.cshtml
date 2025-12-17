@@ -1,0 +1,332 @@
+﻿@using TestAttarClone.WebSite.Areas.Admin.Models
+@model SellerProfilesIndexViewModel
+@{
+    var sellers = Model.Sellers?.ToList() ?? new List<SellerProfileListItemViewModel>();
+    string FormatDate(DateTimeOffset value) => value.ToPersianDateTimeString();
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">مدیریت فروشندگان</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">لیست فروشندگان</h1>
+            <p class="text-muted mb-0">ثبت و مدیریت اطلاعات فروشندگان برای نمایش در محصولات و اتصال به کاربران</p>
+        </div>
+        <a class="btn btn-primary" asp-area="Admin" asp-controller="Sellers" asp-action="Create">
+            <i class="bi bi-plus-lg me-1"></i>
+            فروشنده جدید
+        </a>
+    </div>
+</div>
+
+<div class="modal fade" id="deactivateSellerModal" tabindex="-1" aria-labelledby="deactivateSellerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deactivateSellerModalLabel">غیرفعال‌سازی فروشنده</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>با غیرفعال کردن <strong data-seller-deactivate-name></strong> دسترسی او به پنل فروشنده مسدود خواهد شد.</p>
+                <p class="text-muted small mb-0">در صورت نیاز می‌توانید هر زمان از همین بخش دوباره حساب او را فعال کنید.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form asp-area="Admin" asp-controller="Sellers" asp-action="Deactivate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" data-seller-deactivate-id />
+                    <button type="submit" class="btn btn-warning">تایید غیرفعال‌سازی</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="activateSellerModal" tabindex="-1" aria-labelledby="activateSellerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activateSellerModalLabel">فعال‌سازی فروشنده</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>با فعال‌سازی مجدد <strong data-seller-activate-name></strong> امکان ورود و دسترسی به محصولات برای او باز می‌شود.</p>
+                <p class="text-muted small mb-0">پس از تایید، فروشنده باید مجدداً وارد سیستم شود.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form asp-area="Admin" asp-controller="Sellers" asp-action="Activate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" data-seller-activate-id />
+                    <button type="submit" class="btn btn-success">تایید فعال‌سازی</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script>jalaliDatepicker.startWatch();</script>
+    <script src="~/js/admin/sellers-index.js" asp-append-version="true"></script>
+}
+
+@section Head {
+    <link href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" rel="stylesheet" />
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill me-2"><i class="bi bi-people"></i></span>
+                    <span class="fw-semibold">کل فروشندگان</span>
+                </div>
+                <h2 class="h4 mb-1">@sellers.Count</h2>
+                <p class="text-muted small mb-0">تمام پروفایل‌های ثبت شده</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-success-subtle text-success rounded-pill me-2"><i class="bi bi-check-circle"></i></span>
+                    <span class="fw-semibold">فعال</span>
+                </div>
+                <h2 class="h4 mb-1">@Model.ActiveCount</h2>
+                <p class="text-muted small mb-0">قابل انتخاب در فرم‌های محصول</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill me-2"><i class="bi bi-pause-circle"></i></span>
+                    <span class="fw-semibold">غیرفعال</span>
+                </div>
+                <h2 class="h4 mb-1">@Model.InactiveCount</h2>
+                <p class="text-muted small mb-0">در دسترس برای انتساب نیستند</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 mb-1">فروشندگان ثبت شده</h2>
+                <p class="text-muted small mb-0">@Model.TotalCount فروشنده در سیستم وجود دارد.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterSellersModal">
+                    <i class="bi bi-funnel"></i> فیلتر
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Modal -->
+        <div class="modal fade" id="filterSellersModal" tabindex="-1" aria-labelledby="filterSellersModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="filterSellersModalLabel">فیلتر فروشندگان</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                    </div>
+                    <form method="get" asp-action="Index" asp-area="Admin">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">نام فروشنده</label>
+                                <input name="name" class="form-control" value="@Model.SelectedName" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">شماره تماس</label>
+                                <input name="phone" class="form-control" value="@Model.SelectedPhone" />
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label">از تاریخ (ایجاد)</label>
+                                    <input type="text" name="dateFrom" class="form-control" data-jdp data-jdp-only-date value="@Model.SelectedDateFromPersian" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">تا تاریخ (ایجاد)</label>
+                                    <input type="text" name="dateTo" class="form-control" data-jdp data-jdp-only-date value="@Model.SelectedDateToPersian" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <a class="btn btn-light" asp-action="Index" asp-area="Admin">پاکسازی</a>
+                            <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @if (sellers.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-person-video3 display-5 d-block mb-3"></i>
+                <h3 class="h5">هنوز فروشنده‌ای ثبت نشده است</h3>
+                <p class="mb-0">برای شروع روی دکمه «فروشنده جدید» کلیک کنید و اطلاعات فروشنده را تکمیل نمایید.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive" style="min-height:500px;">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">فروشنده</th>
+                            <th scope="col">مجوز و تجربه</th>
+                            <th scope="col">اطلاعات تماس</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">آخرین بروزرسانی</th>
+                            <th scope="col" class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var seller in Model.Sellers)
+                        {
+                            var statusBadge = seller.IsActive ? "badge bg-success-subtle text-success" : "badge bg-secondary-subtle text-secondary";
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@seller.DisplayName</div>
+                                    @if (!string.IsNullOrWhiteSpace(seller.Bio))
+                                    {
+                                        <div class="text-muted small">@seller.Bio</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1 small">
+                                        @if (!string.IsNullOrWhiteSpace(seller.LicenseNumber))
+                                        {
+                                            <div>
+                                                <span class="text-muted">مجوز:</span>
+                                                <span class="fw-semibold">@seller.LicenseNumber</span>
+                                            </div>
+                                        }
+                                        @if (seller.ExperienceYears.HasValue)
+                                        {
+                                            <div>
+                                                <span class="text-muted">تجربه:</span>
+                                                <span>@seller.ExperienceYears سال</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(seller.ShopAddress))
+                                        {
+                                            <div class="text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@seller.ShopAddress">
+                                                @seller.ShopAddress
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1 small">
+                                        @if (!string.IsNullOrWhiteSpace(seller.ContactEmail))
+                                        {
+                                            <span><i class="bi bi-envelope-open me-1"></i>@seller.ContactEmail</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(seller.ContactPhone))
+                                        {
+                                            <span><i class="bi bi-telephone me-1"></i>@seller.ContactPhone</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="@statusBadge">@(seller.IsActive ? "فعال" : "غیرفعال")</span>
+                                </td>
+                                <td>
+                                    <div class="small text-muted">
+                                        <div>ویرایش: @FormatDate(seller.UpdatedAt)</div>
+                                        <div>ایجاد: @FormatDate(seller.CreatedAt)</div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-sliders"></i>
+                                            مدیریت
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Admin" asp-controller="Sellers" asp-action="Profile" asp-route-id="@seller.Id">
+                                                    <i class="bi bi-person-circle"></i>
+                                                    پروفایل فروشنده
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2" asp-area="Admin" asp-controller="Sellers" asp-action="Edit" asp-route-id="@seller.Id">
+                                                    <i class="bi bi-pencil"></i>
+                                                    ویرایش پروفایل
+                                                </a>
+                                            </li>
+                                            @if (seller.IsActive)
+                                            {
+                                                <li>
+                                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-warning" data-bs-toggle="modal" data-bs-target="#deactivateSellerModal" data-seller-id="@seller.Id" data-seller-name="@seller.DisplayName">
+                                                        <i class="bi bi-pause-circle"></i>
+                                                        غیرفعال‌سازی فروشنده
+                                                    </button>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 text-success" data-bs-toggle="modal" data-bs-target="#activateSellerModal" data-seller-id="@seller.Id" data-seller-name="@seller.DisplayName">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        فعال‌سازی فروشنده
+                                                    </button>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @* Pagination *@
+        @if (Model.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="text-muted small">نمایش صفحه @Model.PageNumber از @Model.TotalPages</div>
+                <nav aria-label="صفحه‌بندی">
+                    <ul class="pagination mb-0">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)" asp-route-name="@Model.SelectedName" asp-route-phone="@Model.SelectedPhone" asp-route-dateFrom="@Model.SelectedDateFromPersian" asp-route-dateTo="@Model.SelectedDateToPersian">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+                        <li class="page-item active">
+                            <span class="page-link">@Model.PageNumber</span>
+                        </li>
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)" asp-route-name="@Model.SelectedName" asp-route-phone="@Model.SelectedPhone" asp-route-dateFrom="@Model.SelectedDateFromPersian" asp-route-dateTo="@Model.SelectedDateToPersian">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>

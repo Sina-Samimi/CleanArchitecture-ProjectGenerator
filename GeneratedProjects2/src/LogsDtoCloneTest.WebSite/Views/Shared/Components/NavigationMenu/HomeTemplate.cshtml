@@ -1,0 +1,41 @@
+﻿@model IReadOnlyCollection<LogsDtoCloneTest.Application.DTOs.Navigation.NavigationMenuItemDto>
+@using System.Linq
+
+@if (Model is not null && Model.Any())
+{
+    @foreach (var item in Model.Where(i => i.ParentId == null).OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+    {
+        <li class="nav-item @(item.Children.Any() ? "nav-item--has-children" : "")">
+            <a href="@item.Url" class="nav-link" @(item.OpenInNewTab ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                {
+                    <span class="nav-icon nav-icon--image">
+                        <img src="@item.ImageUrl" alt="@item.Title" />
+                    </span>
+                }
+                else if (!string.IsNullOrWhiteSpace(item.Icon))
+                {
+                    <span class="nav-icon">@Html.Raw(item.Icon)</span>
+                }
+                else if (item.Title == "دسته‌بندی")
+                {
+                    <span class="nav-icon"><i class="bi bi-list"></i></span>
+                }
+                @item.Title
+                @if (item.Children.Any())
+                {
+                    <span class="nav-arrow"><i class="bi bi-chevron-compact-down"></i></span>
+                }
+            </a>
+            @if (item.Children.Any())
+            {
+                <ul class="nav-submenu">
+                    @foreach (var child in item.Children.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Title))
+                    {
+                        @await Html.PartialAsync("~/Views/Shared/Components/NavigationMenu/_NavMenuItem.cshtml", child)
+                    }
+                </ul>
+            }
+        </li>
+    }
+}

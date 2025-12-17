@@ -1,0 +1,31 @@
+﻿@model LogsDtoCloneTest.Application.DTOs.Navigation.NavigationMenuItemDto
+@using System.Linq
+
+<li class="nav-submenu-item @(Model.Children.Any() ? "nav-submenu-item--has-children" : "")">
+    <a href="@Model.Url" class="nav-submenu-link" @(Model.OpenInNewTab ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <span class="nav-submenu-icon nav-submenu-icon--image">
+                <img src="@Model.ImageUrl" alt="@Model.Title" />
+            </span>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.Icon))
+        {
+            <span class="nav-submenu-icon">@Html.Raw(Model.Icon)</span>
+        }
+        @Model.Title
+        @if (Model.Children.Any())
+        {
+            <span class="nav-submenu-arrow"><i class="bi bi-chevron-compact-left"></i></span>
+        }
+    </a>
+    @if (Model.Children.Any())
+    {
+        <ul class="nav-submenu nav-submenu--nested">
+            @foreach (var child in Model.Children.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Title))
+            {
+                @await Html.PartialAsync("~/Views/Shared/Components/NavigationMenu/_NavMenuItem.cshtml", child)
+            }
+        </ul>
+    }
+</li>

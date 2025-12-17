@@ -1,0 +1,230 @@
+﻿@using LogsDtoCloneTest.SharedKernel.Authorization
+@model LogsDtoCloneTest.WebSite.ViewComponents.SellerSidebarViewModel
+@{
+    var displayName = Model.AccountName;
+    var email = Model.AccountEmail ?? "ایمیل ثبت نشده";
+    var phone = Model.AccountPhone ?? "شماره ثبت نشده";
+    var profilePercent = Model.ProfileCompletionPercent ?? 0;
+    var avatarUrl = Model.AccountAvatarUrl;
+    var initial = Model.AccountInitial;
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+
+    bool IsActive(string area, string controller, string? action = null)
+    {
+        var areaMatch = string.Equals(Model.CurrentArea, area, StringComparison.OrdinalIgnoreCase);
+        var controllerMatch = string.Equals(Model.CurrentController, controller, StringComparison.OrdinalIgnoreCase);
+        var actionMatch = action == null || string.Equals(Model.CurrentAction, action, StringComparison.OrdinalIgnoreCase);
+        return areaMatch && controllerMatch && actionMatch;
+    }
+}
+
+<aside class="app-aside" id="appAside" aria-label="منوی اصلی">
+    <div class="app-aside__inner">
+        <div class="app-aside__brand">
+            <a class="app-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="بازگشت به خانه">
+                @{
+                    var logoPath = ViewData["SiteLogoPath"] as string;
+                }
+                @if (!string.IsNullOrWhiteSpace(logoPath))
+                {
+                    <span class="app-brand__logo">
+                        <img src="@Url.Content(logoPath)" alt="@(ViewData["SiteName"] as string ?? "عطاری آنلاین")" class="app-brand__logo-img" />
+                    </span>
+                }
+                else
+                {
+                    <span class="app-brand__logo">آ</span>
+                }
+                <span class="app-brand__text">
+                    <span class="app-brand__name">@(ViewData["SiteName"] as string ?? "عطاری آنلاین")</span>
+                    <span class="app-brand__subtitle">پنل فروشنده</span>
+                </span>
+            </a>
+            <button class="btn btn-icon btn-ghost d-lg-none" data-app-aside-close type="button" aria-label="بستن منو">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="app-aside__body">
+            <div class="app-user app-user--profile">
+                <div class="app-user__avatar">
+                    @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                    {
+                        <span class="avatar">
+                            <img src="@avatarUrl" alt="@displayName" />
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="avatar text-bg-primary">@initial</span>
+                    }
+                </div>
+                <div class="app-user__details">
+                    <div class="app-user__name">@displayName</div>
+                    <div class="app-user__subtitle">@Model.GreetingSubtitle</div>
+                    <div class="app-user__status">
+                        <span class="status-dot status-dot--success"></span>
+                        <span>آنلاین</span>
+                    </div>
+                </div>
+                <ul class="app-user__meta">
+                    @if (!string.IsNullOrWhiteSpace(phone) && phone != "شماره ثبت نشده")
+                    {
+                        <li>
+                            <i class="bi bi-phone"></i>
+                            <span>@phone</span>
+                        </li>
+                    }
+                 
+                </ul>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">داشبورد</div>
+                <nav class="app-menu" aria-label="Dashboard">
+                    <a class="app-menu__link @(IsActive("Seller", "Dashboard") ? "is-active" : "")"
+                       asp-area="Seller"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-speedometer2"></i>
+                        </span>
+                        <span class="app-menu__title">داشبورد</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">فروشگاه</div>
+                <nav class="app-menu" aria-label="فروشگاه">
+                    @{
+                        var sellerStoreManagementNewCount = Model.NewOrdersCount + 
+                                                            Model.UnpublishedProductOffersCount;
+                    }
+                    <div class="app-menu__group @(IsActive("Seller", "Products") || IsActive("Seller", "ProductRequests") || IsActive("Seller", "ProductOffers") || IsActive("Seller", "Orders") || IsActive("Seller", "Statistics") || IsActive("Seller", "Payments") || IsActive("Seller", "WithdrawalRequests") ? "is-open" : "")" data-menu-group>
+                        <button class="app-menu__link app-menu__link--parent @(IsActive("Seller", "Products") || IsActive("Seller", "ProductRequests") || IsActive("Seller", "ProductOffers") || IsActive("Seller", "Orders") || IsActive("Seller", "Statistics") || IsActive("Seller", "Payments") || IsActive("Seller", "WithdrawalRequests") ? "is-active" : "")" type="button" data-menu-toggle aria-expanded="@(IsActive("Seller", "Products") || IsActive("Seller", "ProductRequests") || IsActive("Seller", "ProductOffers") || IsActive("Seller", "Orders") || IsActive("Seller", "Statistics") || IsActive("Seller", "Payments") || IsActive("Seller", "WithdrawalRequests") ? "true" : "false")" aria-controls="storeMenu">
+                            <span class="app-menu__icon">
+                                <i class="bi bi-shop"></i>
+                            </span>
+                            <span class="app-menu__title">فروشگاه</span>
+                            @if (sellerStoreManagementNewCount > 0)
+                            {
+                                <span class="badge bg-danger ms-2">@sellerStoreManagementNewCount</span>
+                            }
+                            <span class="app-menu__caret bi bi-chevron-down" aria-hidden="true"></span>
+                        </button>
+                        <div class="app-submenu" id="storeMenu" role="group" aria-hidden="@(IsActive("Seller", "Products") || IsActive("Seller", "ProductRequests") || IsActive("Seller", "ProductOffers") || IsActive("Seller", "Orders") || IsActive("Seller", "Statistics") || IsActive("Seller", "Payments") || IsActive("Seller", "WithdrawalRequests") ? "false" : "true")">
+                            <a class="app-submenu__link @(IsActive("Seller", "Products", "Index") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="Products"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-grid"></i></span>
+                                <span class="app-submenu__title">لیست محصولات</span>
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "ProductRequests") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="ProductRequests"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-file-earmark-plus"></i></span>
+                                <span class="app-submenu__title">درخواست‌های محصول</span>
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "ProductOffers") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="ProductOffers"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-tags"></i></span>
+                                <span class="app-submenu__title">پیشنهادات محصولات</span>
+                                @if (Model.UnpublishedProductOffersCount > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@Model.UnpublishedProductOffersCount</span>
+                                }
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "Orders") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="Orders"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-cart-check"></i></span>
+                                <span class="app-submenu__title">سفارشات</span>
+                                @if (Model.NewOrdersCount > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@Model.NewOrdersCount</span>
+                                }
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "Statistics") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="Statistics"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-clipboard-data"></i></span>
+                                <span class="app-submenu__title">آمار و گزارشات</span>
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "Payments") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="Payments"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-cash-stack"></i></span>
+                                <span class="app-submenu__title">درآمدها و پرداخت‌ها</span>
+                            </a>
+                            <a class="app-submenu__link @(IsActive("Seller", "WithdrawalRequests") ? "is-active" : "")"
+                               asp-area="Seller"
+                               asp-controller="WithdrawalRequests"
+                               asp-action="Index">
+                                <span class="app-submenu__icon" aria-hidden="true"><i class="bi bi-wallet2"></i></span>
+                                <span class="app-submenu__title">درخواست برداشت</span>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">حساب کاربری</div>
+                <nav class="app-menu" aria-label="حساب کاربری">
+                    <a class="app-menu__link @(IsActive("Seller", "Profile") ? "is-active" : "")"
+                       asp-area="Seller"
+                       asp-controller="Profile"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <span class="app-menu__title">پروفایل فروشنده</span>
+                    </a>
+                    <a class="app-menu__link @(IsActive("Seller", "Notifications") ? "is-active" : "")"
+                       asp-area="Seller"
+                       asp-controller="Notifications"
+                       asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-bell"></i>
+                        </span>
+                        <span class="app-menu__title">اعلان ها</span>
+                        @if (Model.UnreadNotificationsCount > 0)
+                        {
+                            <span class="badge bg-danger ms-2">@Model.UnreadNotificationsCount</span>
+                        }
+                    </a>
+                </nav>
+            </div>
+
+            <div class="app-aside__section">
+                <div class="app-aside__section-title">جابجایی پنل</div>
+                <nav class="app-menu" aria-label="Panel switching">
+                    <a class="app-menu__link" asp-area="User" asp-controller="Profile" asp-action="Index">
+                        <span class="app-menu__icon">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <span class="app-menu__title">پنل کاربری</span>
+                    </a>
+                    @if (isAdmin)
+                    {
+                        <a class="app-menu__link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <span class="app-menu__icon">
+                                <i class="bi bi-shield-check"></i>
+                            </span>
+                            <span class="app-menu__title">پنل مدیریت</span>
+                        </a>
+                    }
+                </nav>
+            </div>
+        </div>
+
+    </div>
+</aside>

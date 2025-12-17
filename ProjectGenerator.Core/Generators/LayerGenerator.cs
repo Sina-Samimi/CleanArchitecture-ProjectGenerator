@@ -253,7 +253,7 @@ public class LayerGenerator
         var csprojContent = _templateProvider.GetBasicCsprojTemplate(layerName);
         File.WriteAllText(Path.Combine(layerPath, $"{layerName}.csproj"), csprojContent);
 
-        var dirs = new[] { "Interfaces", "Guards", "Results" };
+        var dirs = new[] { "Interfaces", "Guards", "Results", "BaseTypes" };
         foreach (var dir in dirs)
         {
             Directory.CreateDirectory(Path.Combine(layerPath, dir));
@@ -266,11 +266,18 @@ public class LayerGenerator
             _templateProvider.GetIRepositoryTemplate()
         );
 
-        // Create Result pattern
+        // Create Result pattern in Results folder (for backward compatibility)
         var resultsPath = Path.Combine(layerPath, "Results");
         File.WriteAllText(
             Path.Combine(resultsPath, "Result.cs"),
             _templateProvider.GetResultTemplate()
+        );
+
+        // Create Result pattern in BaseTypes folder (new location)
+        var baseTypesPath = Path.Combine(layerPath, "BaseTypes");
+        File.WriteAllText(
+            Path.Combine(baseTypesPath, "Result.cs"),
+            _templateProvider.GetSharedKernelResultTemplate()
         );
     }
 

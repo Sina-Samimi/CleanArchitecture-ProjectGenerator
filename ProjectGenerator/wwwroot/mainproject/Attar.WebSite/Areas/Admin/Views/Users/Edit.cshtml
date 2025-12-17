@@ -1,0 +1,177 @@
+﻿@model EditUserViewModel
+@{
+    ViewData["Title"] = "ویرایش کاربر";
+    var roleOptions = Model.AvailableRoles?.ToList() ?? new List<RoleOptionViewModel>();
+    var selectedRoles = new HashSet<string>(Model.SelectedRoles ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+}
+
+<h1 class="mb-4">ویرایش کاربر</h1>
+
+@await Html.PartialAsync("_StatusMessage")
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="card">
+    <div class="card-body">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="AvatarPath" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="mb-3">
+            <label class="form-label">تصویر فعلی</label>
+            @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+            {
+                <div class="mb-2">
+                    <img src="@Model.AvatarPath" alt="@($"آواتار {Model.FullName}")" class="img-thumbnail" style="max-width: 160px;" />
+                </div>
+            }
+            <label asp-for="Avatar" class="form-label"></label>
+            <input asp-for="Avatar" class="form-control" type="file" accept=".png,.jpg,.jpeg,.webp" />
+            <span asp-validation-for="Avatar" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label"></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="PhoneNumber" class="form-label"></label>
+            <input asp-for="PhoneNumber" class="form-control" type="tel" inputmode="tel" data-user-phone />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" type="password" placeholder="در صورت نیاز به تغییر رمز عبور وارد کنید" />
+            <small class="text-muted">در صورت خالی بودن، رمز عبور تغییر نخواهد کرد.</small>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SelectedRoles" class="form-label"></label>
+            <div class="role-select" data-role-select>
+                <div class="role-select__options">
+                    @if (roleOptions.Count == 0)
+                    {
+                        <div class="text-muted small">نقشی برای انتخاب موجود نیست. ابتدا سطح دسترسی ایجاد کنید.</div>
+                    }
+                    else
+                    {
+                        for (var index = 0; index < roleOptions.Count; index++)
+                        {
+                            var option = roleOptions[index];
+                            var optionId = $"edit-role-inline-{index}";
+                            var isSelected = selectedRoles.Contains(option.Value);
+                            <label class="role-select__option @(isSelected ? "is-selected" : string.Empty)" for="@optionId">
+                                <input type="checkbox"
+                                       id="@optionId"
+                                       name="SelectedRoles"
+                                       value="@option.Value"
+                                       class="form-check-input"
+                                       @(isSelected ? "checked" : null)
+                                       data-role-option>
+                                <span>@option.Label</span>
+                            </label>
+                        }
+                    }
+                </div>
+            </div>
+            <span asp-validation-for="SelectedRoles" class="text-danger"></span>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+
+        <input type="hidden" asp-for="IsDeleted" />
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" asp-action="Index">بازگشت</a>
+        <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-role-select]').forEach(function (root) {
+                var inputs = Array.from(root.querySelectorAll('[data-role-option]'));
+
+                var refresh = function () {
+                    inputs.forEach(function (input) {
+                        var option = input.closest('.role-select__option');
+                        if (option) {
+                            option.classList.toggle('is-selected', input.checked);
+                        }
+                    });
+                };
+
+                inputs.forEach(function (input) {
+                    input.addEventListener('change', refresh);
+                });
+
+                refresh();
+            });
+
+            var phoneInput = document.querySelector('[data-user-phone]');
+            if (phoneInput) {
+                var normalisePhone = function (value) {
+                    if (!value) {
+                        return '';
+                    }
+
+                    var digits = value.replace(/\D+/g, '');
+
+                    if (digits.startsWith('0098')) {
+                        digits = digits.substring(4);
+                    }
+
+                    if (digits.startsWith('98') && digits.length >= 12) {
+                        digits = digits.substring(2);
+                    }
+
+                    if (digits.startsWith('9') && digits.length === 10) {
+                        digits = "0" + digits;
+                    }
+
+                    if (digits.length > 11 && digits.startsWith('0')) {
+                        digits = digits.slice(-11);
+                    }
+
+                    if (digits.length === 11 && digits.startsWith('09')) {
+                        return digits;
+                    }
+
+                    return value.replace(/\D+/g, '');
+                };
+
+                var sanitiseInput = function () {
+                    var digits = phoneInput.value.replace(/\D+/g, '');
+                    if (phoneInput.value !== digits) {
+                        var caret = phoneInput.selectionStart;
+                        phoneInput.value = digits;
+                        if (typeof phoneInput.setSelectionRange === 'function' && typeof caret === 'number') {
+                            var next = Math.min(caret, digits.length);
+                            phoneInput.setSelectionRange(next, next);
+                        }
+                    }
+                };
+
+                phoneInput.addEventListener('input', sanitiseInput);
+                phoneInput.addEventListener('blur', function () {
+                    phoneInput.value = normalisePhone(phoneInput.value);
+                });
+
+                phoneInput.value = normalisePhone(phoneInput.value);
+            }
+        });
+    </script>
+}

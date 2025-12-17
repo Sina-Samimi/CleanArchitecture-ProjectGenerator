@@ -1,0 +1,407 @@
+﻿@using System.Globalization
+@using LogTableRenameTest.SharedKernel.Extensions
+@using LogTableRenameTest.WebSite.Areas.Admin.Models
+@model ProductViolationReportListViewModel
+@{
+    ViewData["Title"] = "مدیریت گزارش‌های تخلف محصولات";
+    ViewData["Subtitle"] = "رسیدگی به گزارش‌های تخلف کاربران";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">گزارش‌های تخلف</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="violation-reports-page">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">گزارش‌های تخلف محصولات</h1>
+                    <p class="text-muted mb-0">مدیریت و رسیدگی به گزارش‌های تخلف کاربران</p>
+                </div>
+                <div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="bi bi-funnel"></i>
+                            فیلتر
+                        </button>
+                        <a asp-action="Index" asp-route-isReviewed="@null" class="btn btn-sm @(Model.SelectedIsReviewed == null ? "btn-primary" : "btn-outline-primary")">
+                            همه
+                        </a>
+                        <a asp-action="Index" asp-route-isReviewed="false" class="btn btn-sm @(Model.SelectedIsReviewed == false ? "btn-warning" : "btn-outline-warning")">
+                            بررسی نشده
+                        </a>
+                        <a asp-action="Index" asp-route-isReviewed="true" class="btn btn-sm @(Model.SelectedIsReviewed == true ? "btn-success" : "btn-outline-success")">
+                            بررسی شده
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!Model.Reports.Any())
+            {
+                <div class="alert alert-info-subtle border-0 text-center py-4 mb-0" role="alert">
+                    <i class="bi bi-inbox fs-3 mb-2 d-block"></i>
+                    <h2 class="h5 mb-1">هنوز گزارش تخلفی ثبت نشده است.</h2>
+                    <p class="mb-0">به محض ثبت گزارش جدید، در این بخش نمایش داده خواهد شد.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">محصول</th>
+                                <th scope="col">فروشنده</th>
+                                <th scope="col">موضوع</th>
+                                <th scope="col">گزارش دهنده</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">تاریخ ثبت</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var report in Model.Reports)
+                            {
+                                <tr class="@(!report.IsReviewed ? "table-warning" : "")">
+                                    <td>
+                                        <a asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@report.ProductId" class="text-decoration-none">
+                                            @report.ProductName
+                                        </a>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(report.SellerName))
+                                        {
+                                            <div class="fw-semibold">@report.SellerName</div>
+                                            @if (!string.IsNullOrWhiteSpace(report.SellerId))
+                                            {
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-person-badge me-1"></i>
+                                                    <code>@report.SellerId</code>
+                                                </small>
+                                            }
+                                            @if (report.ProductOfferId.HasValue)
+                                            {
+                                                <small class="text-muted d-block">پیشنهاد: @report.ProductOfferId.Value.ToString("N")[..8]...</small>
+                                            }
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(report.ProductSellerId))
+                                        {
+                                            <div class="fw-semibold text-muted">فروشنده محصول</div>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person-badge me-1"></i>
+                                                <code>@report.ProductSellerId</code>
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@report.Subject</div>
+                                        <small class="text-muted">@(report.Message.Length > 50 ? report.Message.Substring(0, 50) + "..." : report.Message)</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="bi bi-telephone me-1"></i>
+                                            <span>@report.ReporterPhone</span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(report.ReporterId) && report.ReporterId != "anonymous")
+                                        {
+                                            <small class="text-muted">کاربر ثبت‌نام شده</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (report.IsReviewed)
+                                        {
+                                            <span class="badge bg-success-subtle text-success-emphasis">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                بررسی شده
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning-emphasis">
+                                                <i class="bi bi-exclamation-circle me-1"></i>
+                                                بررسی نشده
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <span>@FormatDateTime(report.CreatedAt)</span>
+                                        </div>
+                                        @if (report.ReviewedAt.HasValue)
+                                        {
+                                            <small class="text-muted">
+                                                بررسی: @FormatDateTime(report.ReviewedAt.Value)
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reportModal-@report.Id">
+                                                <i class="bi bi-eye"></i>
+                                                مشاهده
+                                            </button>
+                                            @if (!report.IsReviewed)
+                                            {
+                                                <form method="post" asp-action="MarkAsReviewed" asp-route-id="@report.Id" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('آیا مطمئن هستید که این گزارش بررسی شده است؟')">
+                                                        <i class="bi bi-check"></i>
+                                                        بررسی شد
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form method="post" asp-action="UnmarkAsReviewed" asp-route-id="@report.Id" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('آیا مطمئن هستید که می‌خواهید این گزارش را به عنوان بررسی نشده علامت‌گذاری کنید؟')">
+                                                        <i class="bi bi-x"></i>
+                                                        بررسی نشده
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Modal for report details -->
+                                <div class="modal fade" id="reportModal-@report.Id" tabindex="-1" aria-labelledby="reportModalLabel-@report.Id" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="reportModalLabel-@report.Id">جزئیات گزارش تخلف</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">محصول</label>
+                                                        <div>
+                                                            <a asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@report.ProductId" class="text-decoration-none">
+                                                                @report.ProductName
+                                                            </a>
+                                                        </div>
+                                                        @if (!string.IsNullOrWhiteSpace(report.ProductSellerId))
+                                                        {
+                                                            <small class="text-muted d-block mt-1">
+                                                                <i class="bi bi-person-badge me-1"></i>
+                                                                شناسه فروشنده محصول: <code>@report.ProductSellerId</code>
+                                                            </small>
+                                                        }
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(report.SellerName))
+                                                    {
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">فروشنده پیشنهاد</label>
+                                                            <div>@report.SellerName</div>
+                                                            @if (!string.IsNullOrWhiteSpace(report.SellerId))
+                                                            {
+                                                                <small class="text-muted d-block mt-1">
+                                                                    <i class="bi bi-person-badge me-1"></i>
+                                                                    شناسه فروشنده: <code>@report.SellerId</code>
+                                                                </small>
+                                                            }
+                                                            @if (report.ProductOfferId.HasValue)
+                                                            {
+                                                                <small class="text-muted d-block mt-1">
+                                                                    شناسه پیشنهاد: <code>@report.ProductOfferId.Value.ToString("N")[..8]...</code>
+                                                                </small>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else if (!string.IsNullOrWhiteSpace(report.ProductSellerId))
+                                                    {
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">فروشنده محصول</label>
+                                                            <div>
+                                                                <i class="bi bi-person-badge me-1"></i>
+                                                                <code>@report.ProductSellerId</code>
+                                                            </div>
+                                                            <small class="text-muted">این محصول متعلق به این فروشنده است</small>
+                                                        </div>
+                                                    }
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">وضعیت</label>
+                                                        <div>
+                                                            @if (report.IsReviewed)
+                                                            {
+                                                                <span class="badge bg-success-subtle text-success-emphasis">
+                                                                    <i class="bi bi-check-circle me-1"></i>
+                                                                    بررسی شده
+                                                                </span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis">
+                                                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                                                    بررسی نشده
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">شماره تماس گزارش دهنده</label>
+                                                        <div>
+                                                            <i class="bi bi-telephone me-1"></i>
+                                                            @report.ReporterPhone
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">تاریخ ثبت</label>
+                                                        <div>
+                                                            <i class="bi bi-calendar-event me-1"></i>
+                                                            @FormatDateTime(report.CreatedAt)
+                                                        </div>
+                                                    </div>
+                                                    @if (report.ReviewedAt.HasValue)
+                                                    {
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">تاریخ بررسی</label>
+                                                            <div>
+                                                                <i class="bi bi-check-circle me-1"></i>
+                                                                @FormatDateTime(report.ReviewedAt.Value)
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">موضوع تخلف</label>
+                                                        <div class="p-3 bg-light rounded fw-semibold">@report.Subject</div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">پیام و جزئیات</label>
+                                                        <div class="p-3 bg-light rounded">@report.Message</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                @if (!report.IsReviewed)
+                                                {
+                                                    <form method="post" asp-action="MarkAsReviewed" asp-route-id="@report.Id" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-success" onclick="return confirm('آیا مطمئن هستید که این گزارش بررسی شده است؟')">
+                                                            <i class="bi bi-check"></i>
+                                                            علامت‌گذاری به عنوان بررسی شده
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form method="post" asp-action="UnmarkAsReviewed" asp-route-id="@report.Id" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-warning" onclick="return confirm('آیا مطمئن هستید که می‌خواهید این گزارش را به عنوان بررسی نشده علامت‌گذاری کنید؟')">
+                                                            <i class="bi bi-x"></i>
+                                                            علامت‌گذاری به عنوان بررسی نشده
+                                                        </button>
+                                                    </form>
+                                                }
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.TotalCount > Model.PageSize)
+                {
+                    <nav aria-label="صفحه‌بندی گزارش‌ها" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @{
+                                var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                                var currentPage = Model.PageNumber;
+                            }
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-isReviewed="@Model.SelectedIsReviewed" asp-route-productId="@Model.SelectedProductId" asp-route-sellerId="@Model.SelectedSellerId" asp-route-reporterPhone="@Model.SelectedReporterPhone" asp-route-subject="@Model.SelectedSubject" asp-route-dateFrom="@(Model.SelectedDateFromPersian ?? string.Empty)" asp-route-dateTo="@(Model.SelectedDateToPersian ?? string.Empty)">قبلی</a>
+                                </li>
+                            }
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-isReviewed="@Model.SelectedIsReviewed" asp-route-productId="@Model.SelectedProductId" asp-route-sellerId="@Model.SelectedSellerId" asp-route-reporterPhone="@Model.SelectedReporterPhone" asp-route-subject="@Model.SelectedSubject" asp-route-dateFrom="@(Model.SelectedDateFromPersian ?? string.Empty)" asp-route-dateTo="@(Model.SelectedDateToPersian ?? string.Empty)">@i</a>
+                                </li>
+                            }
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-isReviewed="@Model.SelectedIsReviewed" asp-route-productId="@Model.SelectedProductId" asp-route-sellerId="@Model.SelectedSellerId" asp-route-reporterPhone="@Model.SelectedReporterPhone" asp-route-subject="@Model.SelectedSubject" asp-route-dateFrom="@(Model.SelectedDateFromPersian ?? string.Empty)" asp-route-dateTo="@(Model.SelectedDateToPersian ?? string.Empty)">بعدی</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="get" asp-action="Index">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">فیلتر گزارش‌ها</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="sellerId" class="form-label">شناسه فروشنده</label>
+                        <input type="text" class="form-control" id="sellerId" name="sellerId" value="@Model.SelectedSellerId" />
+                        <div class="form-text">شناسه کاربری فروشنده را وارد کنید (اختیاری).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reporterPhone" class="form-label">شماره تماس گزارش‌دهنده</label>
+                        <input type="text" class="form-control" id="reporterPhone" name="reporterPhone" value="@Model.SelectedReporterPhone" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">موضوع</label>
+                        <input type="text" class="form-control" id="subject" name="subject" value="@Model.SelectedSubject" />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="dateFrom" class="form-label">از تاریخ</label>
+                            <input type="text" class="form-control" id="dateFrom" name="dateFrom" placeholder="YYYY/MM/DD" data-jdp data-jdp-only-date value="@(Model.SelectedDateFromPersian ?? string.Empty)" />
+                        </div>
+                        <div class="col-6">
+                            <label for="dateTo" class="form-label">تا تاریخ</label>
+                            <input type="text" class="form-control" id="dateTo" name="dateTo" placeholder="YYYY/MM/DD" data-jdp data-jdp-only-date value="@(Model.SelectedDateToPersian ?? string.Empty)" />
+                        </div>
+                    </div>
+                    <input type="hidden" name="isReviewed" value="@(Model.SelectedIsReviewed.HasValue ? Model.SelectedIsReviewed.ToString() : String.Empty)" />
+                    <input type="hidden" name="productId" value="@(Model.SelectedProductId?.ToString() ?? String.Empty)" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script>
+        jalaliDatepicker.startWatch();
+    </script>
+}

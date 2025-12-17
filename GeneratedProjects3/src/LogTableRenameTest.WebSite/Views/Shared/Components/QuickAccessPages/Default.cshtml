@@ -1,0 +1,16 @@
+﻿@model IReadOnlyCollection<LogTableRenameTest.Domain.Entities.Pages.Page>
+
+@if (Model is not null && Model.Any())
+{
+    @foreach (var pageItem in Model)
+    {
+        <a class="app-quick-link" href="/Page/@pageItem.Slug">
+            <span class="app-quick-link__icon"><i class="bi bi-file-text"></i></span>
+            <div class="app-quick-link__text">
+                <strong>@pageItem.Title</strong>
+                <small>مشاهده صفحه</small>
+            </div>
+        </a>
+    }
+}
+

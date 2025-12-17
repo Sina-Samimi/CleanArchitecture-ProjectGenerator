@@ -1,0 +1,118 @@
+﻿@model LogsDtoCloneTest.WebSite.Areas.User.Models.UserAddressesViewModel
+@{
+    ViewData["Title"] ??= "مدیریت آدرس‌ها";
+    Layout = "_UserLayout";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">مدیریت آدرس‌ها</h1>
+                    <p class="text-muted mb-0">آدرس‌های خود را مدیریت کنید</p>
+                </div>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle ms-1"></i>
+                    افزودن آدرس جدید
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @await Html.PartialAsync("_StatusMessage")
+
+    @if (Model.Addresses.Count == 0)
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-geo-alt display-1 text-muted mb-3"></i>
+                <h3 class="h5 mb-2">هنوز آدرسی ثبت نشده است</h3>
+                <p class="text-muted mb-4">برای افزودن آدرس جدید، روی دکمه بالا کلیک کنید.</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle ms-1"></i>
+                    افزودن اولین آدرس
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var address in Model.Addresses)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 h-100 @(address.IsDefault ? "border-primary" : "")">
+                        <div class="card-body">
+                            @if (address.IsDefault)
+                            {
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="badge bg-primary">پیش‌فرض</span>
+                                </div>
+                            }
+                            <h5 class="card-title mb-3">@address.Title</h5>
+                            <div class="address-details">
+                                <p class="mb-2">
+                                    <i class="bi bi-person ms-1 text-muted"></i>
+                                    <strong>گیرنده:</strong> @address.RecipientName
+                                </p>
+                                <p class="mb-2">
+                                    <i class="bi bi-telephone ms-1 text-muted"></i>
+                                    <strong>تلفن:</strong> @address.RecipientPhone
+                                </p>
+                                <p class="mb-2">
+                                    <i class="bi bi-geo-alt ms-1 text-muted"></i>
+                                    <strong>آدرس:</strong> @address.Province، @address.City
+                                </p>
+                                <p class="mb-2">
+                                    @address.AddressLine
+                                    @if (!string.IsNullOrWhiteSpace(address.Plaque))
+                                    {
+                                        <span>، پلاک @address.Plaque</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(address.Unit))
+                                    {
+                                        <span>، واحد @address.Unit</span>
+                                    }
+                                </p>
+                                <p class="mb-0">
+                                    <i class="bi bi-mailbox ms-1 text-muted"></i>
+                                    <strong>کد پستی:</strong> @address.PostalCode
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0">
+                            <div class="btn-group w-100" role="group">
+                                <a asp-action="Edit" asp-route-id="@address.Id" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil ms-1"></i>
+                                    ویرایش
+                                </a>
+                                @if (!address.IsDefault)
+                                {
+                                    <form asp-action="SetDefault" asp-route-id="@address.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-star ms-1"></i>
+                                            پیش‌فرض
+                                        </button>
+                                    </form>
+                                }
+                                <form asp-action="Delete" asp-route-id="@address.Id" method="post" class="d-inline" onsubmit="return confirm('آیا از حذف این آدرس اطمینان دارید؟');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash ms-1"></i>
+                                        حذف
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

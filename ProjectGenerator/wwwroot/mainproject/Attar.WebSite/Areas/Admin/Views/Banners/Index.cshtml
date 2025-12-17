@@ -1,0 +1,235 @@
+@using Attar.SharedKernel.Extensions
+@using Attar.WebSite.Areas.Admin.Models.Banners
+@model BannerListViewModel
+@{
+    ViewData["Title"] = "مدیریت بنرها";
+    ViewData["Subtitle"] = "افزودن، ویرایش و حذف بنرهای سایت";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">بنرها</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="banners-page">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">مدیریت بنرها</h1>
+                    <p class="text-muted mb-0">افزودن، ویرایش و حذف بنرهای سایت</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#banner-filter-modal">
+                        <i class="bi bi-funnel"></i>
+                        فیلتر
+                    </button>
+                    <a asp-area="Admin" asp-controller="Banners" asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i>
+                        افزودن بنر
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!Model.Banners.Any())
+            {
+                <div class="alert alert-info-subtle border-0 text-center py-4 mb-0" role="alert">
+                    <i class="bi bi-inbox fs-3 mb-2 d-block"></i>
+                    <h2 class="h5 mb-1">هنوز بنری ثبت نشده است.</h2>
+                    <p class="mb-0">برای افزودن بنر جدید، روی دکمه "افزودن بنر" کلیک کنید.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">تصویر</th>
+                                <th scope="col">عنوان</th>
+                                <th scope="col">لینک</th>
+                                <th scope="col">ترتیب</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">نمایش در صفحه اصلی</th>
+                                <th scope="col">تاریخ ثبت</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var banner in Model.Banners)
+                            {
+                                <tr>
+                                    <td>
+                                        <img src="@Url.Content(banner.ImagePath)" alt="@banner.AltText" class="img-thumbnail" style="width: 80px; height: 60px; object-fit: cover;" />
+                                    </td>
+                                    <td>
+                                        <strong>@banner.Title</strong>
+                                        @if (!string.IsNullOrWhiteSpace(banner.AltText))
+                                        {
+                                            <br />
+                                            <small class="text-muted">@banner.AltText</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(banner.LinkUrl))
+                                        {
+                                            <a href="@banner.LinkUrl" target="_blank" class="text-decoration-none">
+                                                <i class="bi bi-link-45deg"></i>
+                                                مشاهده لینک
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>@banner.DisplayOrder</td>
+                                    <td>
+                                        @if (banner.IsActive)
+                                        {
+                                            <span class="badge bg-success">فعال</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">غیرفعال</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (banner.ShowOnHomePage)
+                                        {
+                                            <span class="badge bg-info">بله</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">خیر</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@banner.CreateDate.ToPersianDateTimeString()</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <a asp-area="Admin" asp-controller="Banners" asp-action="Edit" asp-route-id="@banner.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                                ویرایش
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteBanner('@banner.Id', '@banner.Title')">
+                                                <i class="bi bi-trash"></i>
+                                                حذف
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.TotalCount > Model.PageSize)
+                {
+                    <nav aria-label="صفحه‌بندی بنرها" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @{
+                                var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                                var currentPage = Model.PageNumber;
+                            }
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-isActive="@Model.IsActive" asp-route-showOnHomePage="@Model.ShowOnHomePage">قبلی</a>
+                                </li>
+                            }
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-isActive="@Model.IsActive" asp-route-showOnHomePage="@Model.ShowOnHomePage">@i</a>
+                                </li>
+                            }
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-isActive="@Model.IsActive" asp-route-showOnHomePage="@Model.ShowOnHomePage">بعدی</a>
+                                </li>
+                            }
+                        </ul>
+                        <div class="text-center text-muted small mt-2">
+                            نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) از @Model.TotalCount بنر
+                        </div>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="banner-filter-modal" tabindex="-1" aria-labelledby="banner-filter-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="banner-filter-modal-label">فیلتر بنرها</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <input type="hidden" name="page" value="1" />
+                    <div class="mb-3">
+                        <label class="form-label">وضعیت</label>
+                        <select name="isActive" class="form-select">
+                            <option value="">همه</option>
+                            <option value="true" selected="@(Model.IsActive == true)">فعال</option>
+                            <option value="false" selected="@(Model.IsActive == false)">غیرفعال</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">نمایش در صفحه اصلی</label>
+                        <select name="showOnHomePage" class="form-select">
+                            <option value="">همه</option>
+                            <option value="true" selected="@(Model.ShowOnHomePage == true)">بله</option>
+                            <option value="false" selected="@(Model.ShowOnHomePage == false)">خیر</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    <a class="btn btn-outline-secondary" asp-action="Index">بازنشانی</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteBanner(id, title) {
+            if (!confirm('آیا از حذف بنر "' + title + '" اطمینان دارید؟')) {
+                return;
+            }
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Delete", "Banners")?id=' + id;
+            
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}
+

@@ -1,0 +1,101 @@
+﻿@model LogTableRenameTest.WebSite.Models.Cart.CartPreviewViewModel
+@using System.Globalization
+@{
+    var culture = new CultureInfo("fa-IR");
+}
+@if (Model.IsMenu)
+{
+    <section class="cart-preview cart-preview--menu @(Model.HasItems ? "cart-preview--has-items" : "cart-preview--empty")" aria-label="خلاصه سبد خرید">
+        <header class="cart-preview__menu-header">
+            <span class="cart-preview__icon" aria-hidden="true">
+                <i class="bi bi-bag-check"></i>
+            </span>
+            <div class="cart-preview__menu-meta">
+                <span class="cart-preview__label">سبد خرید</span>
+                <span class="cart-preview__menu-count">@Model.ItemCount مورد</span>
+            </div>
+        </header>
+        @if (Model.HasItems)
+        {
+            <div class="cart-preview__menu-body">
+                <div class="cart-preview__menu-total">مبلغ قابل پرداخت: @Model.GrandTotal.ToString("N0", culture) تومان</div>
+                @if (Model.HasDiscount)
+                {
+                    <div class="cart-preview__menu-discount">تخفیف: @Model.DiscountTotal.ToString("N0", culture) تومان</div>
+                }
+            </div>
+            <a class="cart-preview__menu-cta" asp-controller="Cart" asp-action="Index" data-site-menu-dismiss>مدیریت سبد خرید</a>
+        }
+        else
+        {
+            <p class="cart-preview__menu-empty">سبد خرید شما خالی است.</p>
+            <a class="cart-preview__menu-cta" asp-controller="Product" asp-action="Index" data-site-menu-dismiss>شروع خرید</a>
+        }
+    </section>
+}
+else
+{
+    <div class="cart-preview cart-preview--navbar @(Model.HasItems ? "cart-preview--has-items" : "cart-preview--empty")">
+        <a class="cart-preview__toggle" asp-controller="Cart" asp-action="Index">
+            <span class="cart-preview__icon" aria-hidden="true">
+                <i class="bi bi-bag"></i>
+            </span>
+            <span class="cart-preview__meta">
+                <span class="cart-preview__label">سبد خرید</span>
+                <span class="cart-preview__count" aria-live="polite">@Model.ItemCount</span>
+            </span>
+        </a>
+        <div class="cart-preview__dropdown" role="dialog" aria-label="نمایش سریع سبد خرید">
+            @if (Model.HasItems)
+            {
+                <ul class="cart-preview__items">
+                    @foreach (var item in Model.Items)
+                    {
+                        <li class="cart-preview__item">
+                            <img class="cart-preview__thumb" src="@(!string.IsNullOrWhiteSpace(item.ThumbnailUrl) ? item.ThumbnailUrl : "https://placehold.co/64x64?text=Arsis")" alt="" loading="lazy" />
+                            <div class="cart-preview__item-body">
+                                <a class="cart-preview__item-name" asp-controller="Product" asp-action="Details" asp-route-slug="@item.Slug">@item.Name</a>
+                                <div class="cart-preview__item-meta">
+                                    <span class="cart-preview__item-qty">تعداد: @item.Quantity</span>
+                                    <span class="cart-preview__item-total">جمع: @item.LineTotal.ToString("N0", culture) تومان</span>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                @if (Model.RemainingItemCount > 0)
+                {
+                    <p class="cart-preview__more">@Model.RemainingItemCount مورد دیگر در سبد موجود است.</p>
+                }
+                <div class="cart-preview__totals">
+                    <div class="cart-preview__total-row">
+                        <span>جمع جزء</span>
+                        <strong>@Model.Subtotal.ToString("N0", culture) تومان</strong>
+                    </div>
+                    @if (Model.HasDiscount)
+                    {
+                        <div class="cart-preview__total-row cart-preview__total-row--discount">
+                            <span>تخفیف</span>
+                            <strong>@Model.DiscountTotal.ToString("N0", culture) تومان</strong>
+                        </div>
+                    }
+                    <div class="cart-preview__total-row cart-preview__total-row--grand">
+                        <span>مبلغ نهایی</span>
+                        <strong>@Model.GrandTotal.ToString("N0", culture) تومان</strong>
+                    </div>
+                </div>
+                <div class="cart-preview__actions">
+                    <a class="cart-preview__action" asp-controller="Cart" asp-action="Index">مشاهده سبد خرید</a>
+                    <a class="cart-preview__action cart-preview__action--accent" asp-controller="Account" asp-action="PhoneLogin" asp-route-returnUrl="@Url.Action("Index", "Cart")">تسویه حساب</a>
+                </div>
+            }
+            else
+            {
+                <div class="cart-preview__empty">
+                    <p>سبد خرید شما خالی است.</p>
+                    <a class="cart-preview__action" asp-controller="Product" asp-action="Index">محصولات را ببینید</a>
+                </div>
+            }
+        </div>
+    </div>
+}

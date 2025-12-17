@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لیست محصولات - عطاری آنلاین</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">عطاری آنلاین</div>
+            <ul class="nav-links">
+                <li><a href="index.html">خانه</a></li>
+                <li><a href="products-archive.html">محصولات</a></li>
+                <li><a href="index.html#blog">وبلاگ</a></li>
+                <li><a href="index.html#about">درباره ما</a></li>
+                <li><a href="index.html#contact">تماس با ما</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Products Archive Section -->
+    <section class="products-archive-section">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="index.html">خانه</a> / 
+                <span>لیست محصولات</span>
+            </div>
+
+            <!-- Page Header -->
+            <div class="archive-header">
+                <h1 class="archive-title">لیست محصولات</h1>
+                <p class="archive-subtitle">تمام محصولات گیاهان دارویی و طبیعی</p>
+            </div>
+
+            <div class="archive-layout">
+                <!-- Sidebar Filters -->
+                <aside class="filters-sidebar">
+                    <div class="filters-card">
+                        <h3 class="filters-title">🔍 جستجو</h3>
+                        <div class="search-filter">
+                            <input type="text" id="search-input" placeholder="جستجو در محصولات..." class="search-input">
+                            <button class="search-btn" onclick="performSearch()">🔍</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">📂 دسته‌بندی</h3>
+                        <div class="filter-group">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="all" checked onchange="filterProducts()">
+                                <span>همه محصولات</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="herbs" onchange="filterProducts()">
+                                <span>گیاهان دارویی</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="tea" onchange="filterProducts()">
+                                <span>چای و دمنوش</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="honey" onchange="filterProducts()">
+                                <span>عسل و محصولات زنبور</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="spices" onchange="filterProducts()">
+                                <span>ادویه‌جات</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" value="oils" onchange="filterProducts()">
+                                <span>روغن‌های طبیعی</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">💰 محدوده قیمت</h3>
+                        <div class="price-filter">
+                            <div class="price-inputs" style="display:grid !important">
+                                <input type="number" id="min-price" placeholder="حداقل" min="0" onchange="filterProducts()">
+                                <input type="number" id="max-price" placeholder="حداکثر" min="0" onchange="filterProducts()">
+                            </div>
+                            <button class="apply-price-btn" onclick="filterProducts()">اعمال</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">⭐ امتیاز</h3>
+                        <div class="filter-group">
+                            <label class="filter-checkbox">
+                                <input type="radio" name="rating" value="all" checked onchange="filterProducts()">
+                                <span>همه</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="radio" name="rating" value="5" onchange="filterProducts()">
+                                <span>⭐⭐⭐⭐⭐ (۵ ستاره)</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="radio" name="rating" value="4" onchange="filterProducts()">
+                                <span>⭐⭐⭐⭐ (۴ ستاره به بالا)</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="radio" name="rating" value="3" onchange="filterProducts()">
+                                <span>⭐⭐⭐ (۳ ستاره به بالا)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <button class="reset-filters-btn" onclick="resetFilters()">🔄 بازنشانی فیلترها</button>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="archive-main">
+                    <!-- Sort and View Options -->
+                    <div class="archive-toolbar">
+                        <div class="results-info">
+                            <span id="results-count">۲۴ محصول یافت شد</span>
+                        </div>
+                        <div class="sort-options">
+                            <label>مرتب‌سازی:</label>
+                            <select id="sort-select" onchange="sortProducts()" class="sort-select">
+                                <option value="default">پیش‌فرض</option>
+                                <option value="price-low">قیمت: کم به زیاد</option>
+                                <option value="price-high">قیمت: زیاد به کم</option>
+                                <option value="name">نام: الفبایی</option>
+                                <option value="newest">جدیدترین</option>
+                                <option value="popular">محبوب‌ترین</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="archive-products-grid" id="products-grid">
+                        <!-- Products will be loaded here by JavaScript -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container">
+                        <div class="pagination" id="pagination">
+                            <!-- Pagination will be generated by JavaScript -->
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; ۱۴۰۳ عطاری آنلاین. تمام حقوق محفوظ است.</p>
+            <div class="social-links">
+                <a href="#">📱</a>
+                <a href="#">📧</a>
+                <a href="#">💬</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Products Data
+        const allProducts = [
+            { id: 1, name: "زعفران اصل", category: "spices", price: 250000, rating: 5, image: "🌿", description: "زعفران درجه یک قائنات - بسته ۵ گرمی", new: true },
+            { id: 2, name: "گل گاوزبان", category: "herbs", price: 85000, rating: 4, image: "🌺", description: "گل گاوزبان خشک شده - بسته ۱۰۰ گرمی", new: false },
+            { id: 3, name: "چای سبز", category: "tea", price: 120000, rating: 5, image: "🍃", description: "چای سبز با کیفیت - بسته ۲۰۰ گرمی", new: false },
+            { id: 4, name: "عسل طبیعی", category: "honey", price: 350000, rating: 5, image: "🌰", description: "عسل کوهستان خالص - شیشه ۱ کیلویی", new: true },
+            { id: 5, name: "بابونه", category: "herbs", price: 75000, rating: 4, image: "🌼", description: "گل بابونه خشک - بسته ۱۰۰ گرمی", new: false },
+            { id: 6, name: "نعناع فلفلی", category: "herbs", price: 65000, rating: 4, image: "🌿", description: "برگ نعناع فلفلی خشک - بسته ۱۰۰ گرمی", new: false },
+            { id: 7, name: "آویشن", category: "herbs", price: 95000, rating: 5, image: "🌿", description: "آویشن کوهی - بسته ۱۰۰ گرمی", new: true },
+            { id: 8, name: "چای سیاه", category: "tea", price: 110000, rating: 4, image: "🍃", description: "چای سیاه ممتاز - بسته ۵۰۰ گرمی", new: false },
+            { id: 9, name: "عسل گون", category: "honey", price: 320000, rating: 5, image: "🌰", description: "عسل گون طبیعی - شیشه ۱ کیلویی", new: false },
+            { id: 10, name: "زنجبیل", category: "spices", price: 180000, rating: 4, image: "🌿", description: "زنجبیل تازه - بسته ۲۰۰ گرمی", new: false },
+            { id: 11, name: "دارچین", category: "spices", price: 140000, rating: 5, image: "🌿", description: "دارچین سیلان - بسته ۱۰۰ گرمی", new: true },
+            { id: 12, name: "هل سبز", category: "spices", price: 220000, rating: 4, image: "🌿", description: "هل سبز درجه یک - بسته ۵۰ گرمی", new: false },
+            { id: 13, name: "روغن زیتون", category: "oils", price: 280000, rating: 5, image: "🫒", description: "روغن زیتون بکر - بطری ۵۰۰ میلی", new: true },
+            { id: 14, name: "روغن کنجد", category: "oils", price: 190000, rating: 4, image: "🫒", description: "روغن کنجد خالص - بطری ۵۰۰ میلی", new: false },
+            { id: 15, name: "چای ترش", category: "tea", price: 95000, rating: 4, image: "🍃", description: "چای ترش قرمز - بسته ۱۰۰ گرمی", new: false },
+            { id: 16, name: "گل محمدی", category: "herbs", price: 150000, rating: 5, image: "🌹", description: "گل محمدی خشک - بسته ۱۰۰ گرمی", new: true },
+            { id: 17, name: "مریم‌گلی", category: "herbs", price: 88000, rating: 4, image: "🌿", description: "مریم‌گلی خشک - بسته ۱۰۰ گرمی", new: false },
+            { id: 18, name: "رزماری", category: "herbs", price: 92000, rating: 4, image: "🌿", description: "رزماری خشک - بسته ۱۰۰ گرمی", new: false },
+            { id: 19, name: "عسل آویشن", category: "honey", price: 380000, rating: 5, image: "🌰", description: "عسل آویشن طبیعی - شیشه ۱ کیلویی", new: true },
+            { id: 20, name: "چای اولانگ", category: "tea", price: 160000, rating: 5, image: "🍃", description: "چای اولانگ ممتاز - بسته ۲۰۰ گرمی", new: false },
+            { id: 21, name: "زعفران درجه دو", category: "spices", price: 200000, rating: 4, image: "🌿", description: "زعفران درجه دو - بسته ۵ گرمی", new: false },
+            { id: 22, name: "روغن بادام", category: "oils", price: 250000, rating: 5, image: "🫒", description: "روغن بادام شیرین - بطری ۲۵۰ میلی", new: true },
+            { id: 23, name: "گل ختمی", category: "herbs", price: 72000, rating: 4, image: "🌺", description: "گل ختمی خشک - بسته ۱۰۰ گرمی", new: false },
+            { id: 24, name: "چای سفید", category: "tea", price: 180000, rating: 5, image: "🍃", description: "چای سفید ممتاز - بسته ۱۰۰ گرمی", new: true }
+        ];
+
+        let currentProducts = [...allProducts];
+        let currentPage = 1;
+        const productsPerPage = 9;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for search query in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
+            if (searchQuery) {
+                document.getElementById('search-input').value = searchQuery;
+                performSearch();
+            } else {
+                displayProducts();
+            }
+        });
+
+        // Display Products
+        function displayProducts() {
+            const grid = document.getElementById('products-grid');
+            const startIndex = (currentPage - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const productsToShow = currentProducts.slice(startIndex, endIndex);
+
+            grid.innerHTML = productsToShow.map(product => `
+                <div class="archive-product-card">
+                    ${product.new ? '<span class="product-badge">جدید</span>' : ''}
+                    <div class="archive-product-image">${product.image}</div>
+                    <div class="archive-product-info">
+                        <h3 class="archive-product-name">${product.name}</h3>
+                        <p class="archive-product-desc">${product.description}</p>
+                        <div class="archive-product-rating">
+                            ${'⭐'.repeat(product.rating)} ${product.rating}.۰
+                        </div>
+                        <div class="archive-product-price">${formatPrice(product.price)} تومان</div>
+                        <a href="product-details.html" class="archive-product-btn">مشاهده جزئیات</a>
+                    </div>
+                </div>
+            `).join('');
+
+            updateResultsCount();
+            displayPagination();
+        }
+
+        // Format Price
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Update Results Count
+        function updateResultsCount() {
+            const count = currentProducts.length;
+            document.getElementById('results-count').textContent = `${count} محصول یافت شد`;
+        }
+
+        // Display Pagination
+        function displayPagination() {
+            const totalPages = Math.ceil(currentProducts.length / productsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            // Previous Button
+            if (currentPage > 1) {
+                html += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})">❮ قبلی</button>`;
+            }
+
+            // Page Numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="pagination-dots">...</span>`;
+                }
+            }
+
+            // Next Button
+            if (currentPage < totalPages) {
+                html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})">بعدی ❯</button>`;
+            }
+
+            pagination.innerHTML = html;
+        }
+
+        // Go to Page
+        function goToPage(page) {
+            currentPage = page;
+            displayProducts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Filter Products
+        function filterProducts() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const checkedCategories = Array.from(document.querySelectorAll('.filter-checkbox input[type="checkbox"]:checked')).map(cb => cb.value);
+            const minPrice = parseInt(document.getElementById('min-price').value) || 0;
+            const maxPrice = parseInt(document.getElementById('max-price').value) || Infinity;
+            const selectedRating = document.querySelector('input[name="rating"]:checked').value;
+
+            currentProducts = allProducts.filter(product => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm);
+
+                // Category filter
+                const matchesCategory = checkedCategories.includes('all') || checkedCategories.includes(product.category);
+
+                // Price filter
+                const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
+
+                // Rating filter
+                const matchesRating = selectedRating === 'all' || product.rating >= parseInt(selectedRating);
+
+                return matchesSearch && matchesCategory && matchesPrice && matchesRating;
+            });
+
+            currentPage = 1;
+            displayProducts();
+        }
+
+        // Perform Search
+        function performSearch() {
+            filterProducts();
+        }
+
+        // Sort Products
+        function sortProducts() {
+            const sortValue = document.getElementById('sort-select').value;
+
+            switch(sortValue) {
+                case 'price-low':
+                    currentProducts.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-high':
+                    currentProducts.sort((a, b) => b.price - a.price);
+                    break;
+                case 'name':
+                    currentProducts.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'newest':
+                    currentProducts.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0));
+                    break;
+                case 'popular':
+                    currentProducts.sort((a, b) => b.rating - a.rating);
+                    break;
+                default:
+                    currentProducts = [...allProducts];
+                    filterProducts();
+                    return;
+            }
+
+            currentPage = 1;
+            displayProducts();
+        }
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.querySelectorAll('.filter-checkbox input[type="checkbox"]').forEach(cb => {
+                if (cb.value === 'all') cb.checked = true;
+                else cb.checked = false;
+            });
+            document.getElementById('min-price').value = '';
+            document.getElementById('max-price').value = '';
+            document.querySelector('input[name="rating"][value="all"]').checked = true;
+            document.getElementById('sort-select').value = 'default';
+            
+            currentProducts = [...allProducts];
+            currentPage = 1;
+            displayProducts();
+        }
+
+        // Enter key search
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
+

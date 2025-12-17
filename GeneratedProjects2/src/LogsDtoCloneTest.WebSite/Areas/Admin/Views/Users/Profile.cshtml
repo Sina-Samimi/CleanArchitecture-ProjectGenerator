@@ -1,0 +1,190 @@
+﻿@using System.Globalization
+@using LogsDtoCloneTest.SharedKernel.Extensions
+@model UserProfileViewModel
+@{
+    ViewData["Title"] ??= "پروفایل کاربر";
+    ViewData["Subtitle"] ??= "اطلاعات کامل کاربر";
+
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDate(DateTimeOffset? value) => value is null ? "—" : value.Value.ToPersianDateTimeString();
+    string FormatCurrency(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    
+    string StatusBadgeClass(bool isActive, bool isDeleted) 
+    {
+        if (isDeleted) return "badge bg-danger-subtle text-danger-emphasis";
+        if (!isActive) return "badge bg-warning-subtle text-warning-emphasis";
+        return "badge bg-success-subtle text-success-emphasis";
+    }
+    
+    string StatusText(bool isActive, bool isDeleted) 
+    {
+        if (isDeleted) return "حذف شده";
+        if (!isActive) return "غیرفعال";
+        return "فعال";
+    }
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Users" asp-action="Index">کاربران</a></li>
+    <li class="breadcrumb-item active" aria-current="page">پروفایل کاربر</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="user-profile-page">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h4 mb-1">پروفایل کاربر</h1>
+                            <p class="text-muted mb-0">@ViewData["Subtitle"]</p>
+                        </div>
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-right"></i>
+                                بازگشت به لیست
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- User Avatar and Basic Info -->
+                        <div class="col-md-4 mb-4">
+                            <div class="text-center">
+                                @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+                                {
+                                    <img src="@Model.AvatarPath" alt="@Model.FullName" class="img-thumbnail rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                                        <span class="text-white" style="font-size: 4rem;">@(Model.FullName.Length > 0 ? Model.FullName[0].ToString().ToUpperInvariant() : "?")</span>
+                                    </div>
+                                }
+                                <h3 class="mb-2">@Model.FullName</h3>
+                                <span class="@StatusBadgeClass(Model.IsActive, Model.IsDeleted)">@StatusText(Model.IsActive, Model.IsDeleted)</span>
+                                @if (Model.IsOnline)
+                                {
+                                    <div class="mt-2">
+                                        <span class="badge bg-success-subtle text-success-emphasis">
+                                            <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+                                            آنلاین
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- User Details -->
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-12 mb-4">
+                                    <h4 class="mb-3">اطلاعات شخصی</h4>
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">نام و نام خانوادگی:</dt>
+                                        <dd class="col-sm-8">@Model.FullName</dd>
+
+                                        <dt class="col-sm-4">ایمیل:</dt>
+                                        <dd class="col-sm-8">@Model.Email</dd>
+
+                                        <dt class="col-sm-4">شماره تماس:</dt>
+                                        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</dd>
+
+                                        <dt class="col-sm-4">نقش‌ها:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.Roles.Any())
+                                            {
+                                                @foreach (var role in Model.Roles)
+                                                {
+                                                    <span class="badge bg-primary-subtle text-primary-emphasis me-1">@role.DisplayName</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">بدون نقش</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                                <div class="col-12 mb-4">
+                                    <h4 class="mb-3">وضعیت حساب</h4>
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">وضعیت:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="@StatusBadgeClass(Model.IsActive, Model.IsDeleted)">@StatusText(Model.IsActive, Model.IsDeleted)</span>
+                                        </dd>
+
+                                        <dt class="col-sm-4">تاریخ ثبت‌نام:</dt>
+                                        <dd class="col-sm-8">@FormatDate(Model.CreatedOn)</dd>
+
+                                        <dt class="col-sm-4">آخرین تغییرات:</dt>
+                                        <dd class="col-sm-8">@FormatDate(Model.LastModifiedOn)</dd>
+
+                                        @if (Model.DeactivatedOn.HasValue)
+                                        {
+                                            <dt class="col-sm-4">تاریخ غیرفعال‌سازی:</dt>
+                                            <dd class="col-sm-8">@FormatDate(Model.DeactivatedOn)</dd>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(Model.DeactivationReason))
+                                        {
+                                            <dt class="col-sm-4">دلیل غیرفعال‌سازی:</dt>
+                                            <dd class="col-sm-8">@Model.DeactivationReason</dd>
+                                        }
+
+                                        @if (Model.DeletedOn.HasValue)
+                                        {
+                                            <dt class="col-sm-4">تاریخ حذف:</dt>
+                                            <dd class="col-sm-8">@FormatDate(Model.DeletedOn)</dd>
+                                        }
+
+                                        @if (Model.LastSeenAt.HasValue)
+                                        {
+                                            <dt class="col-sm-4">آخرین بازدید:</dt>
+                                            <dd class="col-sm-8">@FormatDate(Model.LastSeenAt)</dd>
+                                        }
+                                    </dl>
+                                </div>
+
+                                <div class="col-12">
+                                    <h4 class="mb-3">آمار و اطلاعات مالی</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title text-muted mb-2">تعداد فاکتورها</h5>
+                                                    <h2 class="mb-0">@Model.TotalInvoices</h2>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title text-muted mb-2">تعداد سفارشات</h5>
+                                                    <h2 class="mb-0">@Model.TotalOrders</h2>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title text-muted mb-2">مجموع خریدها</h5>
+                                                    <h2 class="mb-0">@FormatCurrency(Model.TotalSpent)</h2>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

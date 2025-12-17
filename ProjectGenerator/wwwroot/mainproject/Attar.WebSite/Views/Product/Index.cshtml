@@ -1,0 +1,192 @@
+@model ProductListViewModel
+@{
+    Layout = "_HomeTemplateLayout";
+    ViewData["Title"] = "لیست محصولات - عطاری آنلاین";
+    ViewData["MetaDescription"] = "تمام محصولات گیاهان دارویی و طبیعی";
+}
+
+<!-- Products Archive Section -->
+<section class="products-archive-section">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">خانه</a> / 
+            <span>لیست محصولات</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="archive-header">
+            <h1 class="archive-title">لیست محصولات</h1>
+            <p class="archive-subtitle">تمام محصولات گیاهان دارویی و طبیعی</p>
+        </div>
+
+        <div class="archive-layout">
+            <!-- Sidebar Filters -->
+            <aside class="filters-sidebar">
+                <form method="get" id="productFilterForm">
+                    <div class="filters-card">
+                        <h3 class="filters-title">🔍 جستجو</h3>
+                        <div class="search-filter">
+                            <input type="text" name="search" id="search-input" value="@Model.Filters.SearchTerm" placeholder="جستجو در محصولات..." class="search-input">
+                            <button type="button" id="search-submit-btn" class="search-btn">🔍</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">📂 دسته‌بندی</h3>
+                        <div class="filter-group">
+                            <label class="filter-checkbox">
+                                <input type="radio" name="category" value="" @(string.IsNullOrWhiteSpace(Model.Filters.SelectedCategory) ? "checked" : "") onchange="this.form.submit()">
+                                <span>همه محصولات</span>
+                            </label>
+                            @foreach (var category in Model.Filters.Categories)
+                            {
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="category" value="@category.Value" @(category.IsSelected ? "checked" : "") onchange="this.form.submit()">
+                                    <span>@category.Label (@category.Count)</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">💰 محدوده قیمت</h3>
+                        <div class="price-filter">
+                            <div class="price-inputs" style="display:grid !important">
+                                <input type="number" name="minPrice" id="minPrice" value="@(Model.Filters.MinPrice?.ToString("0"))" placeholder="حداقل" min="0">
+                                <input type="number" name="maxPrice" id="maxPrice" value="@(Model.Filters.MaxPrice?.ToString("0"))" placeholder="حداکثر" min="0">
+                            </div>
+                            <button type="button" id="price-filter-btn" class="price-filter-btn">اعمال فیلتر قیمت</button>
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <h3 class="filters-title">⭐ امتیاز</h3>
+                        <div class="filter-group">
+                            <label class="filter-checkbox">
+                                <input type="radio" name="rating" value="" @(!Model.Filters.MinRating.HasValue ? "checked" : "") onchange="this.form.submit()">
+                                <span>همه</span>
+                            </label>
+                            @foreach (var ratingOption in Model.Filters.RatingOptions)
+                            {
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="rating" value="@ratingOption.Value" @(ratingOption.IsSelected ? "checked" : "") onchange="this.form.submit()">
+                                    <span>@ratingOption.Label (@ratingOption.Count)</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filters-card">
+                        <a asp-controller="Product" asp-action="Index" class="reset-filters-btn" style="display: block; text-align: center; text-decoration: none;">🔄 بازنشانی فیلترها</a>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="archive-main">
+                <!-- Sort and View Options -->
+                <div class="archive-toolbar">
+                    <div class="results-info">
+                        <span>@Model.TotalCount.ToString("N0", new System.Globalization.CultureInfo("fa-IR")) محصول یافت شد</span>
+                    </div>
+                    <div class="sort-options">
+                        <label>مرتب‌سازی:</label>
+                        <form method="get" style="display: inline;">
+                            @if (!string.IsNullOrWhiteSpace(Model.Filters.SearchTerm))
+                            {
+                                <input type="hidden" name="search" value="@Model.Filters.SearchTerm" />
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Filters.SelectedCategory))
+                            {
+                                <input type="hidden" name="category" value="@Model.Filters.SelectedCategory" />
+                            }
+                            <select name="sort" class="sort-select" onchange="this.form.submit()">
+                                @foreach (var option in Model.Filters.SortOptions)
+                                {
+                                    <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                }
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                @if (Model.Products.Any())
+                {
+                    <div class="archive-products-grid">
+                        @foreach (var product in Model.Products)
+                        {
+                            <div class="archive-product-card">
+                                @if (!string.IsNullOrWhiteSpace(product.Badge))
+                                {
+                                    <span class="product-badge">@product.Badge</span>
+                                }
+                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug" style="text-decoration: none; color: inherit;">
+                                    <div class="archive-product-image">
+                                        <img src="@product.ThumbnailUrl" alt="@product.Name" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    </div>
+                                    <div class="archive-product-info">
+                                        <h3 class="archive-product-name">@StringHelper.TruncateName(product.Name)</h3>
+                                        <p class="archive-product-desc">@StringHelper.TruncateDescription(product.ShortDescription)</p>
+                                        <div class="archive-product-rating">
+                                            @for (int i = 0; i < (int)product.Rating; i++)
+                                            {
+                                                <span>⭐</span>
+                                            }
+                                            @product.GetRatingLabel()
+                                        </div>
+                                        <div class="archive-product-price">@product.GetFormattedPrice() تومان</div>
+                                        <span class="archive-product-btn">مشاهده جزئیات</span>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="archive-empty">
+                        <p>محصولی یافت نشد.</p>
+                    </div>
+                }
+            </main>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('productFilterForm');
+            const searchInput = document.getElementById('search-input');
+            const searchSubmitBtn = document.getElementById('search-submit-btn');
+            const priceFilterBtn = document.getElementById('price-filter-btn');
+            
+            // Handle search button click
+            if (searchSubmitBtn && searchForm) {
+                searchSubmitBtn.addEventListener('click', function() {
+                    searchForm.submit();
+                });
+                
+                // Handle Enter key in search input
+                if (searchInput) {
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchForm.submit();
+                        }
+                    });
+                }
+            }
+            
+            // Handle price filter button click
+            if (priceFilterBtn && searchForm) {
+                priceFilterBtn.addEventListener('click', function() {
+                    searchForm.submit();
+                });
+            }
+        });
+    </script>
+}
+

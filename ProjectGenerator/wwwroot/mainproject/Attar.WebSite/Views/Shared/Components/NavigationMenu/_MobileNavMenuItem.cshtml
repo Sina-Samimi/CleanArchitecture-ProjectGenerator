@@ -1,0 +1,62 @@
+@model Attar.Application.DTOs.Navigation.NavigationMenuItemDto
+@using System.Linq
+
+@{
+    var isTopLevel = Model.ParentId == null;
+    var itemClass = isTopLevel ? "mobile-sidebar__menu-item" : "mobile-sidebar__submenu-item";
+    var linkClass = isTopLevel ? "mobile-sidebar__link" : "mobile-sidebar__submenu-link";
+    var hasChildren = Model.Children.Any();
+}
+
+<li class="@itemClass @(hasChildren ? "mobile-sidebar__menu-item--has-children" : "")">
+    @if (hasChildren)
+    {
+        <button type="button" class="@linkClass @(isTopLevel ? "mobile-sidebar__link--parent" : "")" data-toggle-submenu>
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <span class="mobile-sidebar__icon mobile-sidebar__icon--image">
+                    <img src="@Model.ImageUrl" alt="@Model.Title" />
+                </span>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Icon))
+            {
+                <span class="mobile-sidebar__icon">@Html.Raw(Model.Icon)</span>
+            }
+            else if (Model.Title == "دسته‌بندی")
+            {
+                <span class="mobile-sidebar__icon"><i class="bi bi-list"></i></span>
+            }
+
+            <span class="mobile-sidebar__title">@Model.Title</span>
+            <span class="mobile-sidebar__arrow"><i class="bi bi-chevron-compact-down"></i></span>
+        </button>
+        <ul class="mobile-sidebar__submenu @(isTopLevel ? "" : "mobile-sidebar__submenu--nested")">
+            @foreach (var child in Model.Children.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Title))
+            {
+                @await Html.PartialAsync("~/Views/Shared/Components/NavigationMenu/_MobileNavMenuItem.cshtml", child)
+            }
+        </ul>
+    }
+    else
+    {
+        <a href="@Model.Url" class="@linkClass" @(Model.OpenInNewTab ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <span class="mobile-sidebar__icon mobile-sidebar__icon--image">
+                    <img src="@Model.ImageUrl" alt="@Model.Title" />
+                </span>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.Icon))
+            {
+                <span class="mobile-sidebar__icon">@Html.Raw(Model.Icon)</span>
+            }
+            else if (Model.Title == "دسته‌بندی")
+            {
+                <span class="mobile-sidebar__icon"><i class="bi bi-list"></i></span>
+            }
+
+            <span class="mobile-sidebar__title">@Model.Title</span>
+        </a>
+    }
+</li>
+

@@ -1,0 +1,462 @@
+﻿@model NavigationMenuPageViewModel
+@using System.Linq
+@{
+    ViewData["Title"] ??= "مدیریت منوهای سایت";
+    ViewData["Subtitle"] ??= "تعریف ساختار منوی اصلی و زیرمنوها";
+
+    void RenderMenuItem(NavigationMenuItemViewModel item, int level = 0)
+    {
+        var indent = level * 20;
+        var hasChildren = item.Children?.Any() ?? false;
+        var parentIdAttr = item.ParentId?.ToString() ?? "";
+        <tr data-item-id="@item.Id" data-parent-id="@parentIdAttr" data-level="@level" style="display: @(level == 0 ? "table-row" : "none");">
+            <td style="padding-right: @(indent)px;">
+                <div class="d-flex align-items-center gap-2">
+                    @if (hasChildren)
+                    {
+                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="toggleChildren('@item.Id')" style="min-width: 20px;">
+                            <i class="bi bi-chevron-down" id="icon-@item.Id"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <span style="min-width: 20px; display: inline-block;"></span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" alt="@item.Title" class="rounded" style="width: 32px; height: 32px; object-fit: cover;" />
+                    }
+                    else if (!string.IsNullOrWhiteSpace(item.Icon))
+                    {
+                        <span>@Html.Raw(item.Icon)</span>
+                    }
+                    <span class="fw-semibold">@item.Title</span>
+                    @if (hasChildren)
+                    {
+                        <span class="badge bg-info">@item.Children.Count زیرمنو</span>
+                    }
+                </div>
+            </td>
+            <td>
+                @if (!string.IsNullOrWhiteSpace(item.Url))
+                {
+                    <a href="@item.Url" target="_blank" class="text-decoration-none" dir="ltr">
+                        <i class="bi bi-link-45deg"></i> @(item.Url.Length > 40 ? item.Url.Substring(0, 40) + "..." : item.Url)
+                    </a>
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </td>
+            <td>
+                @if (item.ParentId.HasValue)
+                {
+                    var parent = Model.TreeItems.SelectMany(i => i.Flatten()).FirstOrDefault(p => p.Id == item.ParentId.Value);
+                    <span>@(parent?.Title ?? "-")</span>
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </td>
+            <td>@item.DisplayOrder</td>
+            <td>
+                <span class="badge @(item.IsVisible ? "bg-success" : "bg-secondary")">
+                    @(item.IsVisible ? "فعال" : "غیرفعال")
+                </span>
+                @if (item.OpenInNewTab)
+                {
+                    <span class="badge bg-info text-dark ms-1">تب جدید</span>
+                }
+            </td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="loadFormModal('@item.Id'); return false;">
+                                <i class="bi bi-pencil me-2"></i>ویرایش
+                            </a>
+                        </li>
+                        @if (hasChildren)
+                        {
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="toggleChildren('@item.Id'); return false;">
+                                    <i class="bi bi-list-nested me-2"></i>زیرمجموعه‌ها
+                                </a>
+                            </li>
+                        }
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="deleteItem('@item.Id', '@item.Title'); return false;">
+                                <i class="bi bi-trash me-2"></i>حذف
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        @if (hasChildren)
+        {
+            foreach (var child in item.Children.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Title))
+            {
+                RenderMenuItem(child, level + 1);
+            }
+        }
+    }
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="card-title h4 mb-1">لیست منوها</h2>
+            <p class="card-subtitle text-muted mb-0">مدیریت آیتم‌های منوی اصلی سایت</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="bi bi-funnel"></i> فیلتر
+            </button>
+            <button type="button" class="btn btn-primary" onclick="loadFormModal()">
+                <i class="bi bi-plus-lg"></i> افزودن آیتم جدید
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (!Model.TreeItems.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-list-ul display-5 d-block mb-3"></i>
+                <p class="mb-0">هیچ آیتمی یافت نشد.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive" style="min-height:200px;">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>عنوان</th>
+                            <th>لینک</th>
+                            <th>والد</th>
+                            <th>ترتیب</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.TreeItems.OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+                        {
+                            RenderMenuItem(item, 0);
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="صفحه‌بندی">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(Model.PageNumber - 1)&@BuildQueryString()">قبلی</a>
+                            </li>
+                        }
+                        @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                <a class="page-link" href="?page=@i&@BuildQueryString()">@i</a>
+                            </li>
+                        }
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(Model.PageNumber + 1)&@BuildQueryString()">بعدی</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+
+            <div class="text-muted text-center mt-3">
+                نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.FilteredCount)) از @Model.FilteredCount آیتم
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="get" action="@Url.Action("Index")">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">فیلتر منوها</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="filterSearch" class="form-label">جستجو</label>
+                        <input type="text" class="form-control" id="filterSearch" name="filter.Search" value="@Model.Filter.Search" placeholder="عنوان یا لینک...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterParentId" class="form-label">والد</label>
+                        <select class="form-select" id="filterParentId" name="filter.ParentId">
+                            <option value="">همه</option>
+                            <option value="@Guid.Empty">فقط ریشه</option>
+                            @foreach (var option in Model.ParentOptions.Skip(1))
+                            {
+                                <option value="@option.Value" selected="@(Model.Filter.ParentId?.ToString() == option.Value)">@option.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterIsVisible" class="form-label">وضعیت</label>
+                        <select class="form-select" id="filterIsVisible" name="filter.IsVisible">
+                            <option value="">همه</option>
+                            <option value="true" selected="@(Model.Filter.IsVisible == true)">فعال</option>
+                            <option value="false" selected="@(Model.Filter.IsVisible == false)">غیرفعال</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="filterPageSize" class="form-label">تعداد در صفحه</label>
+                        <select class="form-select" id="filterPageSize" name="filter.PageSize">
+                            <option value="10" selected="@(Model.Filter.PageSize == 10)">۱۰</option>
+                            <option value="20" selected="@(Model.Filter.PageSize == 20)">۲۰</option>
+                            <option value="50" selected="@(Model.Filter.PageSize == 50)">۵۰</option>
+                            <option value="100" selected="@(Model.Filter.PageSize == 100)">۱۰۰</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">پاک کردن فیلتر</a>
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalLabel">افزودن آیتم جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="formModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">در حال بارگذاری...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string BuildQueryString()
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(Model.Filter.Search))
+            query.Add($"filter.Search={Uri.EscapeDataString(Model.Filter.Search)}");
+        if (Model.Filter.ParentId.HasValue)
+            query.Add($"filter.ParentId={Model.Filter.ParentId}");
+        if (Model.Filter.IsVisible.HasValue)
+            query.Add($"filter.IsVisible={Model.Filter.IsVisible}");
+        query.Add($"filter.PageSize={Model.Filter.PageSize}");
+        return string.Join("&", query);
+    }
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        function toggleChildren(itemId) {
+            const currentRow = document.querySelector(`tr[data-item-id="${itemId}"]`);
+            if (!currentRow) return;
+            
+            const allRows = Array.from(document.querySelectorAll('tbody tr'));
+            const currentIndex = allRows.indexOf(currentRow);
+            const currentLevel = parseInt(currentRow.getAttribute('data-level') || '0');
+            const icon = document.getElementById(`icon-${itemId}`);
+            
+            // Find all direct children (rows with parent-id matching this item-id)
+            const children = [];
+            for (let i = currentIndex + 1; i < allRows.length; i++) {
+                const row = allRows[i];
+                const rowParentId = row.getAttribute('data-parent-id');
+                const rowLevel = parseInt(row.getAttribute('data-level') || '0');
+                
+                // If we hit a row at same or lower level, it's not a child
+                if (rowLevel <= currentLevel && rowParentId !== itemId) {
+                    break;
+                }
+                
+                if (rowParentId === itemId) {
+                    children.push(row);
+                }
+            }
+            
+            if (children.length === 0) return;
+            
+            const isExpanded = children[0].style.display !== 'none';
+            
+            children.forEach(row => {
+                if (isExpanded) {
+                    row.style.display = 'none';
+                    // Hide all nested children recursively
+                    const childId = row.getAttribute('data-item-id');
+                    if (childId) {
+                        hideChildrenRecursive(childId);
+                    }
+                } else {
+                    row.style.display = 'table-row';
+                }
+            });
+            
+            if (icon) {
+                if (isExpanded) {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                } else {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                }
+            }
+        }
+        
+        function hideChildrenRecursive(itemId) {
+            const allRows = Array.from(document.querySelectorAll('tbody tr'));
+            const currentRow = allRows.find(r => r.getAttribute('data-item-id') === itemId);
+            if (!currentRow) return;
+            
+            const currentIndex = allRows.indexOf(currentRow);
+            const currentLevel = parseInt(currentRow.getAttribute('data-level') || '0');
+            
+            for (let i = currentIndex + 1; i < allRows.length; i++) {
+                const row = allRows[i];
+                const rowParentId = row.getAttribute('data-parent-id');
+                const rowLevel = parseInt(row.getAttribute('data-level') || '0');
+                
+                if (rowLevel <= currentLevel && rowParentId !== itemId) {
+                    break;
+                }
+                
+                if (rowParentId === itemId) {
+                    row.style.display = 'none';
+                    const icon = document.getElementById(`icon-${itemId}`);
+                    if (icon) {
+                        icon.classList.remove('bi-chevron-up');
+                        icon.classList.add('bi-chevron-down');
+                    }
+                    const childId = row.getAttribute('data-item-id');
+                    if (childId) {
+                        hideChildrenRecursive(childId);
+                    }
+                }
+            }
+        }
+
+        function loadFormModal(id) {
+            const url = id ? `@Url.Action("GetForm")?id=${id}` : '@Url.Action("GetForm")';
+            const modal = new bootstrap.Modal(document.getElementById('formModal'));
+            const title = document.getElementById('formModalLabel');
+            title.textContent = id ? 'ویرایش آیتم' : 'افزودن آیتم جدید';
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('formModalBody').innerHTML = html;
+                    modal.show();
+                    initializeForm();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('خطا در بارگذاری فرم');
+                });
+        }
+
+        function initializeForm() {
+            const form = document.querySelector('#formModal form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const action = form.getAttribute('action');
+                    const method = form.getAttribute('method') || 'POST';
+
+                    fetch(action, {
+                        method: method,
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': formData.get('__RequestVerificationToken')
+                        }
+                    })
+                    .then(response => {
+                        if (response.headers.get('content-type')?.includes('application/json')) {
+                            return response.json().then(data => {
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    return response.text();
+                                }
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        if (typeof html === 'string') {
+                            document.getElementById('formModalBody').innerHTML = html;
+                            initializeForm();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('خطا در ارسال فرم');
+                    });
+                });
+            }
+        }
+
+        function deleteItem(id, title) {
+            if (!confirm(`آیا از حذف "${title}" مطمئن هستید؟`)) {
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Delete")';
+            
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = id;
+            form.appendChild(idInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

@@ -1,0 +1,16 @@
+﻿@model IReadOnlyCollection<TestAttarClone.Application.DTOs.Navigation.NavigationMenuItemDto>
+@using System.Linq
+
+@if (Model is not null && Model.Any())
+{
+    @foreach (var item in Model.Where(i => i.ParentId == null).OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title))
+    {
+        @await Html.PartialAsync("~/Views/Shared/Components/NavigationMenu/_DefaultNavMenuItem.cshtml", item)
+    }
+}
+<li class="nav-item">
+    <a class="nav-link" asp-controller="Cart" asp-action="Index">
+        <span class="nav-link-icon"><i class="bi bi-cart3"></i></span>
+        <span>سبد خرید</span>
+    </a>
+</li>

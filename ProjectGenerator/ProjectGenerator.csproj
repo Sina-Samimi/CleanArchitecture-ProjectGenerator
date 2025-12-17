@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <Compile Remove="refrence\**\*.cs" />
+    <!-- Do NOT compile the template solution under wwwroot/mainproject; it is only used as a file-based source -->
+    <Compile Remove="wwwroot\mainproject\**\*.cs" />
     <EmbeddedResource Remove="refrence\**\*" />
     <None Remove="refrence\**\*" />
   </ItemGroup>

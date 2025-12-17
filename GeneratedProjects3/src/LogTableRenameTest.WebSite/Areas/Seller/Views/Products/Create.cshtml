@@ -1,0 +1,593 @@
+﻿@model SellerProductFormViewModel
+@{
+    ViewData["Sidebar:ActiveTab"] = "create";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/seller/product-form.css" asp-append-version="true" />
+}
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-2">درخواست افزودن محصول</h1>
+                <p class="text-muted mb-4">اطلاعات محصول را تکمیل کنید تا پس از بررسی ادمین در فروشگاه منتشر شود.</p>
+
+                <form asp-area="Seller"
+                      asp-controller="Products"
+                      asp-action="Create"
+                      method="post"
+                      enctype="multipart/form-data"
+                      data-seller-product-form>
+                    @Html.AntiForgeryToken()
+                    <input asp-for="WasPreviouslyPublished" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Request Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">نوع درخواست</label>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <div class="form-check form-check-card">
+                                    <input class="form-check-input" type="radio" asp-for="RequestType" value="@((int)ProductRequestType.NewProduct)" id="requestTypeNew" checked>
+                                    <label class="form-check-label w-100" for="requestTypeNew">
+                                        <div class="card border-2 h-100 @(Model.RequestType == ProductRequestType.NewProduct ? "border-primary" : "")" style="cursor: pointer;">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-plus-circle fs-3 d-block mb-2"></i>
+                                                <strong>محصول جدید</strong>
+                                                <p class="text-muted small mb-0">درخواست ثبت محصول کاملاً جدید</p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-check form-check-card">
+                                    <input class="form-check-input" type="radio" asp-for="RequestType" value="@((int)ProductRequestType.OfferForExistingProduct)" id="requestTypeOffer">
+                                    <label class="form-check-label w-100" for="requestTypeOffer">
+                                        <div class="card border-2 h-100 @(Model.RequestType == ProductRequestType.OfferForExistingProduct ? "border-primary" : "")" style="cursor: pointer;">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-tags fs-3 d-block mb-2"></i>
+                                                <strong>پیشنهاد برای محصول موجود</strong>
+                                                <p class="text-muted small mb-0">پیشنهاد قیمت و موجودی برای محصول موجود در سایت</p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Product Selection (shown when OfferForExistingProduct is selected) -->
+                    <div class="mb-4" data-existing-product-section style="display: none;">
+                        <label asp-for="ExistingProductId" class="form-label">انتخاب محصول موجود</label>
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="productSearchInput" 
+                                   placeholder="نام محصول را جستجو کنید..." 
+                                   autocomplete="off">
+                            <input type="hidden" asp-for="ExistingProductId" id="selectedProductId" />
+                            <input type="hidden" asp-for="ExistingProductName" id="selectedProductName" />
+                            <input type="hidden" id="selectedProductType" />
+                            <button class="btn btn-outline-secondary" type="button" id="clearProductSelection">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <div id="productSearchResults" class="list-group mt-2" style="display: none; max-height: 300px; overflow-y: auto;"></div>
+                        <span asp-validation-for="ExistingProductId" class="text-danger"></span>
+                        <div id="selectedProductInfo" class="alert alert-info mt-2" style="display: none;">
+                            <strong>محصول انتخاب شده:</strong> <span id="selectedProductNameDisplay"></span>
+                        </div>
+                        <div id="selectedProductVariants" class="alert alert-warning mt-2" style="display: none;">
+                            <h6 class="mb-2"><i class="bi bi-info-circle"></i> ویژگی‌ها و گزینه‌های این محصول:</h6>
+                            <div id="variantAttributesInfo"></div>
+                            <div id="variantsInfo" class="mt-2"></div>
+                            <small class="text-muted d-block mt-2">
+                                <strong>نکته:</strong> این ویژگی‌ها و گزینه‌ها متعلق به محصول اصلی هستند و شما نمی‌توانید آن‌ها را تغییر دهید. پس از تایید درخواست، اگر صاحب محصول باشید می‌توانید آن‌ها را مدیریت کنید.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Fields for new product (hidden when OfferForExistingProduct is selected) -->
+                    <div data-new-product-fields>
+                        <div class="mb-4">
+                            <label asp-for="FeaturedImagePath" class="form-label"></label>
+                            <div class="featured-image-picker" data-featured-picker>
+                                <div class="featured-image-picker__preview" data-featured-preview>
+                                    <img src="@Model.FeaturedImagePath"
+                                         alt="تصویر شاخص"
+                                         class="featured-image-picker__image @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? "d-none" : string.Empty)"
+                                         data-featured-image />
+                                    <div class="featured-image-picker__placeholder @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? string.Empty : "d-none")"
+                                         data-featured-placeholder>
+                                        <i class="bi bi-image"></i>
+                                        <span>هنوز تصویری انتخاب نشده است</span>
+                                    </div>
+                                </div>
+                                <div class="featured-image-picker__controls">
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                        <input asp-for="FeaturedImagePath"
+                                               class="form-control"
+                                               data-featured-path
+                                               placeholder="آدرس تصویر شاخص یا لینک فایل آپلود شده" />
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <input asp-for="FeaturedImageUpload"
+                                               type="file"
+                                               class="d-none"
+                                               accept="image/*"
+                                               capture="environment"
+                                               data-featured-file />
+                                        <label class="btn btn-outline-primary" for="FeaturedImageUpload">
+                                            <i class="bi bi-camera"></i>
+                                            گرفتن عکس یا انتخاب تصویر
+                                        </label>
+                                        <button type="button" class="btn btn-outline-secondary" data-featured-clear>
+                                            <i class="bi bi-x-circle"></i>
+                                            حذف تصویر
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="form-text d-block mt-2">برای نمایش بهتر در سایت از تصویری با نسبت ۴:۳ و حجم کمتر از 200 کیلوبایت استفاده کنید.</span>
+                            <span asp-validation-for="FeaturedImagePath" class="text-danger"></span>
+                            <span asp-validation-for="FeaturedImageUpload" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Name" class="form-label"></label>
+                                <input asp-for="Name" class="form-control" placeholder="مانند: دوره جامع تحلیل استعداد" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Summary" class="form-label"></label>
+                                <textarea asp-for="Summary" class="form-control" rows="2" placeholder="چند جمله کوتاه درباره محصول"></textarea>
+                                <span asp-validation-for="Summary" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label"></label>
+                                <div class="teacher-editor" data-editor-field>
+                                    <div id="teacherProductDescriptionEditor"
+                                         class="teacher-editor__surface d-none"
+                                         data-editor-wrapper
+                                         data-upload-url="">
+                                    </div>
+                                    <textarea asp-for="Description"
+                                              class="form-control d-none"
+                                              rows="6"
+                                              placeholder="جزئیات کامل محصول، سرفصل‌ها و دستاوردها"
+                                              data-content-input
+                                              data-editor-textarea></textarea>
+                                    <div class="form-text d-none text-warning" data-editor-fallback>
+                                        در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Type" class="form-label"></label>
+                                <select asp-for="Type"
+                                        asp-items="Model.TypeOptions"
+                                        class="form-select"
+                                        id="Type"
+                                        data-seller-product-type>
+                                    <option value="">نوع محصول را انتخاب کنید</option>
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Brand" class="form-label"></label>
+                                <input asp-for="Brand" class="form-control" placeholder="نام برند محصول" />
+                                <span class="text-muted small d-block mt-1">برای محصولات رایگان نیز می‌توانید برند را وارد کنید.</span>
+                                <span asp-validation-for="Brand" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12" data-category-field>
+                                <label asp-for="CategoryId" class="form-label"></label>
+                                <select asp-for="CategoryId" asp-items="Model.CategoryOptions" class="form-select">
+                                    <option value="">یک دسته‌بندی انتخاب کنید</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Price" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="Price" class="form-control" type="number" min="0" placeholder="قیمت به تومان" />
+                                    <span class="input-group-text">تومان</span>
+                                </div>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12" data-digital-section>
+                                <label asp-for="DigitalDownloadPath" class="form-label"></label>
+                                <input asp-for="DigitalDownloadPath"
+                                       class="form-control"
+                                       placeholder="لینک مستقیم فایل یا صفحه دانلود"
+                                       data-digital-input />
+                                <span class="text-muted small d-block mt-1">در محصولات دانلودی وارد کردن لینک فایل الزامی است.</span>
+                                <span asp-validation-for="DigitalDownloadPath" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12" data-inventory-section>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input asp-for="TrackInventory"
+                                                   class="form-check-input"
+                                                   type="checkbox"
+                                                   id="TrackInventory"
+                                                   data-inventory-toggle />
+                                            <label class="form-check-label" asp-for="TrackInventory"></label>
+                                        </div>
+                                        <span asp-validation-for="TrackInventory" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <label asp-for="StockQuantity" class="form-label"></label>
+                                        <input asp-for="StockQuantity"
+                                               class="form-control"
+                                               type="number"
+                                               min="0"
+                                               id="StockQuantity"
+                                               data-inventory-quantity />
+                                        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Tags" class="form-label"></label>
+                                <div class="tag-input" data-tag-input>
+                                    <div class="tag-input__chips" data-tag-chips>
+                                        @foreach (var tag in Model.TagItems)
+                                        {
+                                            <span class="tag-chip" data-tag-chip>
+                                                <span class="tag-chip__text">@tag</span>
+                                                <button type="button" class="tag-chip__remove" data-tag-remove aria-label="حذف @tag">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="tag-input__control">
+                                        <input type="text"
+                                               class="form-control tag-input__entry"
+                                               placeholder="هر برچسب را تایپ و با اینتر یا دکمه + اضافه کنید"
+                                               data-tag-entry />
+                                        <button type="button" class="btn btn-outline-primary tag-input__add" data-tag-add>
+                                            <i class="bi bi-plus-lg"></i>
+                                            <span class="visually-hidden">افزودن برچسب</span>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" asp-for="Tags" data-tag-storage />
+                                </div>
+                                <span class="text-muted small d-block mt-1">مثال: استعداد، توسعه فردی، آزمون</span>
+                                <span asp-validation-for="Tags" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fields for offer (shown when OfferForExistingProduct is selected) -->
+                    <div class="row g-3" data-offer-fields style="display: none;">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Price" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Price" class="form-control" type="number" min="0" placeholder="قیمت به تومان" />
+                                <span class="input-group-text">تومان</span>
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12" data-offer-digital-section style="display: none;">
+                            <label asp-for="DigitalDownloadPath" class="form-label"></label>
+                            <input asp-for="DigitalDownloadPath"
+                                   class="form-control"
+                                   placeholder="لینک مستقیم فایل یا صفحه دانلود"
+                                   data-offer-digital-input />
+                            <span class="text-muted small d-block mt-1">در محصولات دانلودی وارد کردن لینک فایل الزامی است.</span>
+                            <span asp-validation-for="DigitalDownloadPath" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12" data-offer-inventory-section>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="TrackInventory"
+                                               class="form-check-input"
+                                               type="checkbox"
+                                               id="OfferTrackInventory"
+                                               data-offer-inventory-toggle />
+                                        <label class="form-check-label" asp-for="TrackInventory"></label>
+                                    </div>
+                                    <span asp-validation-for="TrackInventory" class="text-danger"></span>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label asp-for="StockQuantity" class="form-label"></label>
+                                    <input asp-for="StockQuantity"
+                                           class="form-control"
+                                           type="number"
+                                           min="0"
+                                           id="OfferStockQuantity"
+                                           data-offer-inventory-quantity />
+                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i>
+                            ثبت درخواست برای تایید
+                        </button>
+                        <a class="btn btn-outline-secondary" asp-area="Seller" asp-controller="Products" asp-action="Index">بازگشت</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">راهنمای تایید محصول</h2>
+                <ul class="list-unstyled text-muted small mb-4">
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        اطلاعات محصول باید کامل و دقیق باشد تا سریع‌تر تایید شود.
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        قیمت‌گذاری شفاف و متناسب با محتوای آموزشی انجام دهید.
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check2-circle text-success"></i>
+                        پس از تایید ادمین، وضعیت محصول به صورت خودکار به «منتشر شده» تغییر می‌کند.
+                    </li>
+                </ul>
+
+                @if (Model.TagSuggestions.Count > 0)
+                {
+                    <h3 class="h6">برچسب‌های پیشنهادی</h3>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        @foreach (var tag in Model.TagSuggestions.Take(12))
+                        {
+                            <span class="badge bg-light text-dark border">@tag</span>
+                        }
+                    </div>
+                }
+
+                <div class="alert alert-info border-0" role="alert">
+                    <h3 class="h6 mb-2">مدارک تکمیلی</h3>
+                    <p class="mb-2">در صورت نیاز می‌توانید فایل‌های جانبی یا نمونه محتوای آموزشی را از طریق پشتیبانی ارسال کنید.</p>
+                    <a class="btn btn-sm btn-outline-primary" href="mailto:support@arsis.app">
+                        <i class="bi bi-envelope"></i>
+                        ارتباط با پشتیبانی
+                    </a>
+                </div>
+
+                <div class="alert alert-warning border-0 mt-3" role="alert">
+                    <h3 class="h6 mb-2">مدیریت ویژگی‌ها و گزینه‌ها</h3>
+                    <p class="mb-2">پس از تایید محصول توسط مدیریت، می‌توانید ویژگی‌های گزینه‌ها (مثلاً: سایز، رنگ) و گزینه‌های محصول را از صفحه ویرایش محصول مدیریت کنید.</p>
+                    <small class="text-muted d-block">
+                        <strong>نکته:</strong> در صورتی که برای محصول موجود درخواست ثبت می‌دهید، ویژگی‌ها و گزینه‌های محصول اصلی نمایش داده می‌شود و شما نمی‌توانید آن‌ها را تغییر دهید. ویژگی‌ها و گزینه‌ها برای محصول اصلی تنظیم می‌شوند و همه فروشنده‌ها از همان ویژگی‌ها و گزینه‌ها استفاده می‌کنند.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/admin/rich-editor.js" asp-append-version="true"></script>
+    <script src="~/js/seller/product-form.js" asp-append-version="true"></script>
+    <script>
+        (function() {
+            const requestTypeInputs = document.querySelectorAll('input[name="RequestType"]');
+            const existingProductSection = document.querySelector('[data-existing-product-section]');
+            const newProductFields = document.querySelector('[data-new-product-fields]');
+            const offerFields = document.querySelector('[data-offer-fields]');
+            const categoryField = document.querySelector('[data-category-field]');
+            const productSearchInput = document.getElementById('productSearchInput');
+            const productSearchResults = document.getElementById('productSearchResults');
+            const selectedProductId = document.getElementById('selectedProductId');
+            const selectedProductName = document.getElementById('selectedProductName');
+            const selectedProductType = document.getElementById('selectedProductType');
+            const selectedProductInfo = document.getElementById('selectedProductInfo');
+            const selectedProductNameDisplay = document.getElementById('selectedProductNameDisplay');
+            const clearProductSelection = document.getElementById('clearProductSelection');
+            const offerDigitalSection = document.querySelector('[data-offer-digital-section]');
+            
+            let searchTimeout;
+
+            function toggleFormFields() {
+                const checkedInput = document.querySelector('input[name="RequestType"]:checked');
+                if (!checkedInput) return;
+                
+                const isOfferType = checkedInput.value === '@((int)ProductRequestType.OfferForExistingProduct)';
+                
+                if (isOfferType) {
+                    existingProductSection.style.display = 'block';
+                    newProductFields.style.display = 'none';
+                    if (offerFields) offerFields.style.display = 'block';
+                    if (categoryField) categoryField.style.display = 'none';
+                } else {
+                    existingProductSection.style.display = 'none';
+                    newProductFields.style.display = 'block';
+                    if (offerFields) offerFields.style.display = 'none';
+                    if (categoryField) categoryField.style.display = 'block';
+                    clearProductSelectionFunc();
+                }
+            }
+
+            function updateDigitalDownloadField() {
+                if (!offerDigitalSection || !selectedProductType) return;
+                
+                const productType = selectedProductType.value;
+                if (productType === 'Digital') {
+                    offerDigitalSection.style.display = 'block';
+                } else {
+                    offerDigitalSection.style.display = 'none';
+                }
+            }
+
+            function clearProductSelectionFunc() {
+                selectedProductId.value = '';
+                selectedProductName.value = '';
+                if (selectedProductType) selectedProductType.value = '';
+                selectedProductNameDisplay.textContent = '';
+                selectedProductInfo.style.display = 'none';
+                productSearchInput.value = '';
+                productSearchResults.style.display = 'none';
+                productSearchResults.innerHTML = '';
+                if (offerDigitalSection) offerDigitalSection.style.display = 'none';
+                hideProductVariants();
+            }
+
+            function displayProductVariants(variantsData) {
+                const variantsContainer = document.getElementById('selectedProductVariants');
+                const attributesInfo = document.getElementById('variantAttributesInfo');
+                const variantsInfo = document.getElementById('variantsInfo');
+                
+                if (!variantsData.hasVariants || !variantsContainer || !attributesInfo || !variantsInfo) {
+                    if (variantsContainer) variantsContainer.style.display = 'none';
+                    return;
+                }
+
+                // Display variant attributes
+                if (variantsData.variantAttributes && variantsData.variantAttributes.length > 0) {
+                    attributesInfo.innerHTML = '<div class="mb-2"><strong>ویژگی‌های گزینه‌ها:</strong><ul class="mb-0">' +
+                        variantsData.variantAttributes.map(attr => 
+                            `<li>${attr.name}: ${Array.isArray(attr.options) ? attr.options.join(', ') : ''}</li>`
+                        ).join('') + '</ul></div>';
+                } else {
+                    attributesInfo.innerHTML = '';
+                }
+
+                // Display variants
+                if (variantsData.variants && variantsData.variants.length > 0) {
+                    variantsInfo.innerHTML = '<div><strong>گزینه‌های موجود:</strong><ul class="mb-0">' +
+                        variantsData.variants.map(v => {
+                            const optionsText = v.options && Array.isArray(v.options) 
+                                ? v.options.map(opt => opt.value).join(', ')
+                                : '';
+                            return `<li>${optionsText} - موجودی: ${v.stockQuantity} - ${v.price ? v.price.toLocaleString('fa-IR') + ' تومان' : 'قیمت محصول'}</li>`;
+                        }).join('') + '</ul></div>';
+                } else {
+                    variantsInfo.innerHTML = '';
+                }
+
+                variantsContainer.style.display = 'block';
+            }
+
+            function hideProductVariants() {
+                const variantsContainer = document.getElementById('selectedProductVariants');
+                if (variantsContainer) {
+                    variantsContainer.style.display = 'none';
+                }
+            }
+
+            requestTypeInputs.forEach(input => {
+                input.addEventListener('change', toggleFormFields);
+                input.addEventListener('change', function() {
+                    document.querySelectorAll('.form-check-card .card').forEach(c => c.classList.remove('border-primary'));
+                    const card = this.closest('.form-check-card')?.querySelector('.card');
+                    if (card) card.classList.add('border-primary');
+                });
+            });
+
+            if (clearProductSelection) {
+                clearProductSelection.addEventListener('click', clearProductSelectionFunc);
+            }
+
+            if (productSearchInput) {
+                productSearchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const term = this.value.trim();
+
+                    if (term.length < 2) {
+                        productSearchResults.style.display = 'none';
+                        return;
+                    }
+
+                    searchTimeout = setTimeout(async () => {
+                        try {
+                            const response = await fetch('@Url.Action("SearchProducts", "Products")?term=' + encodeURIComponent(term));
+                            const products = await response.json();
+
+                            if (products.length === 0) {
+                                productSearchResults.innerHTML = '<div class="list-group-item text-muted">محصولی یافت نشد</div>';
+                                productSearchResults.style.display = 'block';
+                                return;
+                            }
+
+                            productSearchResults.innerHTML = products.map(p => 
+                                `<a href="#" class="list-group-item list-group-item-action" data-product-id="${p.id}" data-product-name="${p.name || ''}">
+                                    ${p.name || ''}
+                                </a>`
+                            ).join('');
+                            productSearchResults.style.display = 'block';
+
+                            productSearchResults.querySelectorAll('a').forEach(item => {
+                                item.addEventListener('click', async function(e) {
+                                    e.preventDefault();
+                                    const productId = this.getAttribute('data-product-id');
+                                    const productName = this.getAttribute('data-product-name');
+                                    
+                                    selectedProductId.value = productId;
+                                    selectedProductName.value = productName;
+                                    selectedProductNameDisplay.textContent = productName;
+                                    selectedProductInfo.style.display = 'block';
+                                    productSearchInput.value = productName;
+                                    productSearchResults.style.display = 'none';
+
+                                    // Fetch product info to get type and variants
+                                    try {
+                                        const infoResponse = await fetch('@Url.Action("GetProductInfo", "Products")?id=' + encodeURIComponent(productId));
+                                        if (infoResponse.ok) {
+                                            const productInfo = await infoResponse.json();
+                                            if (selectedProductType) {
+                                                selectedProductType.value = productInfo.type || '';
+                                            }
+                                            updateDigitalDownloadField();
+                                        }
+
+                                        // Fetch product variants
+                                        const variantsResponse = await fetch('@Url.Action("GetProductVariants", "Products")?id=' + encodeURIComponent(productId));
+                                        if (variantsResponse.ok) {
+                                            const variantsData = await variantsResponse.json();
+                                            displayProductVariants(variantsData);
+                                        }
+                                    } catch (error) {
+                                        console.error('Error fetching product info:', error);
+                                        hideProductVariants();
+                                    }
+                                });
+                            });
+                        } catch (error) {
+                            console.error('Error searching products:', error);
+                        }
+                    }, 300);
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (productSearchResults && !productSearchResults.contains(e.target) && e.target !== productSearchInput) {
+                    productSearchResults.style.display = 'none';
+                }
+            });
+
+            toggleFormFields();
+        })();
+    </script>
+}

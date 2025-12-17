@@ -1,0 +1,207 @@
+﻿@using LogTableRenameTest.WebSite.Areas.Seller.Models
+@using LogTableRenameTest.SharedKernel.Extensions
+@model SellerProfileFormViewModel
+
+@{
+    ViewData["Title"] = "ویرایش پروفایل فروشنده";
+    ViewData["Subtitle"] = "به‌روزرسانی اطلاعات و مشخصات";
+    ViewData["Sidebar:ActiveTab"] = "profile";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h4 mb-1">ویرایش اطلاعات پروفایل</h1>
+            <p class="text-muted mb-0">اطلاعات فروشنده و مجوزهای کسب و کار را به‌روزرسانی کنید.</p>
+        </div>
+        <a class="btn btn-outline-secondary" asp-area="Seller" asp-controller="Profile" asp-action="Index">
+            <i class="bi bi-arrow-right-short"></i>
+            بازگشت به پروفایل
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="post" asp-action="Edit" id="seller-profile-form" enctype="multipart/form-data" data-seller-form>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <label class="form-label" asp-for="AvatarFile"></label>
+                    <div class="border rounded p-3" data-avatar-uploader>
+                        <div class="d-flex flex-column flex-md-row align-items-center gap-3">
+                            <div class="ratio ratio-1x1 seller-avatar-preview border rounded overflow-hidden bg-light" data-avatar-preview data-avatar-current="@Model.AvatarUrl" style="max-width: 200px;">
+                                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                                {
+                                    <img src="@Url.Content(Model.AvatarUrl)" alt="@Model.DisplayName" class="w-100 h-100 object-fit-cover" data-avatar-img />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted flex-column" data-avatar-placeholder>
+                                        <i class="bi bi-camera" aria-hidden="true"></i>
+                                        <small>تصویر معرفی انتخاب نشده است</small>
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-grow-1 w-100">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <label class="btn btn-outline-primary mb-0">
+                                        <i class="bi bi-camera-fill me-1"></i>
+                                        انتخاب تصویر
+                                        <input class="visually-hidden" asp-for="AvatarFile" accept="image/*" data-avatar-input />
+                                    </label>
+                                    <button type="button" class="btn btn-outline-secondary" data-avatar-clear>
+                                        <i class="bi bi-x-lg me-1"></i>
+                                        حذف تصویر
+                                    </button>
+                                </div>
+                                <div class="form-text mt-2">
+                                    می‌توانید تصویر فروشنده را از گالری انتخاب نمایید. حداکثر حجم تصویر ۲ مگابایت است.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-danger" asp-validation-for="AvatarFile"></span>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" asp-for="AvatarUrl"></label>
+                    <input class="form-control" asp-for="AvatarUrl" placeholder="در صورت نیاز آدرس تصویر را وارد کنید" data-avatar-url-input />
+                    <span class="text-danger" asp-validation-for="AvatarUrl"></span>
+                </div>
+                <input type="hidden" asp-for="OriginalAvatarUrl" data-avatar-original />
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="DisplayName"></label>
+                    <input class="form-control" asp-for="DisplayName" />
+                    <span class="text-danger" asp-validation-for="DisplayName"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="LicenseNumber"></label>
+                    <input class="form-control" asp-for="LicenseNumber" placeholder="مثال: 123456789" />
+                    <span class="text-danger" asp-validation-for="LicenseNumber"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="ExperienceYears"></label>
+                    <input type="number" class="form-control" asp-for="ExperienceYears" min="0" max="100" placeholder="مثال: 5" />
+                    <span class="text-danger" asp-validation-for="ExperienceYears"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="LicenseIssueDate"></label>
+                    <div class="jalali-picker" data-jalali-picker>
+                        <div class="jalali-picker__controls">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="انتخاب تاریخ"
+                                   value="@(Model.LicenseIssueDate.HasValue ? Model.LicenseIssueDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToPersianDateString() : "")"
+                                   data-jalali-input
+                                   data-jdp
+                                   data-jdp-only-date
+                                   data-jdp-init-date="@(Model.LicenseIssueDate.HasValue ? Model.LicenseIssueDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToPersianDateString() : "")"
+                                   autocomplete="off"
+                                   dir="ltr" />
+                        </div>
+                        <input type="hidden" asp-for="LicenseIssueDate" data-jalali-target />
+                    </div>
+                    <span class="text-danger" asp-validation-for="LicenseIssueDate"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="LicenseExpiryDate"></label>
+                    <div class="jalali-picker" data-jalali-picker>
+                        <div class="jalali-picker__controls">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="انتخاب تاریخ"
+                                   value="@(Model.LicenseExpiryDate.HasValue ? Model.LicenseExpiryDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToPersianDateString() : "")"
+                                   data-jalali-input
+                                   data-jdp
+                                   data-jdp-only-date
+                                   data-jdp-init-date="@(Model.LicenseExpiryDate.HasValue ? Model.LicenseExpiryDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local).ToPersianDateString() : "")"
+                                   autocomplete="off"
+                                   dir="ltr" />
+                        </div>
+                        <input type="hidden" asp-for="LicenseExpiryDate" data-jalali-target />
+                    </div>
+                    <span class="text-danger" asp-validation-for="LicenseExpiryDate"></span>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" asp-for="ShopAddress"></label>
+                    <textarea class="form-control" asp-for="ShopAddress" rows="2" placeholder="آدرس کامل فروشگاه یا محل کار"></textarea>
+                    <span class="text-danger" asp-validation-for="ShopAddress"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="WorkingHours"></label>
+                    <input class="form-control" asp-for="WorkingHours" placeholder="مثال: شنبه تا پنجشنبه ۹ صبح تا ۶ عصر" />
+                    <span class="text-danger" asp-validation-for="WorkingHours"></span>
+                </div>
+                <div class="col-12" data-editor-field>
+                    <label class="form-label" asp-for="Bio"></label>
+                    <div class="seller-bio-editor d-none" data-editor-wrapper></div>
+                    <textarea class="form-control" asp-for="Bio" rows="6" placeholder="سوابق، تجربه و معرفی کامل فروشنده" data-content-input data-editor-textarea></textarea>
+                    <div class="form-text d-none text-warning" data-editor-fallback>
+                        در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن بیوگرافی را در این بخش وارد کنید.
+                    </div>
+                    <span class="text-danger" asp-validation-for="Bio"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="ContactEmail"></label>
+                    <input type="email" class="form-control" asp-for="ContactEmail" />
+                    <span class="text-danger" asp-validation-for="ContactEmail"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="ContactPhone"></label>
+                    <input class="form-control" asp-for="ContactPhone" />
+                    <span class="text-danger" asp-validation-for="ContactPhone"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end gap-2">
+                <a class="btn btn-light" asp-area="Seller" asp-controller="Profile" asp-action="Index">انصراف</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>
+                    ذخیره تغییرات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/rich-editor.js" asp-append-version="true"></script>
+    <script src="~/js/admin/seller-profile-form.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Jalali Date Pickers
+            jalaliDatepicker.init({
+                "selector": "[data-jdp]",
+                "autoHide": true,
+                "persianDigits": true,
+                "format": "YYYY/MM/DD",
+                "minDate": "1300/01/01",
+                "maxDate": "1500/12/29",
+                "showTodayBtn": true,
+                "showEmptyBtn": true,
+                "showCloseBtn": true,
+                "todayBtnText": "امروز",
+                "emptyBtnText": "خالی",
+                "closeBtnText": "بستن",
+                "onSelect": function (date, datepicker) {
+                    const targetInput = datepicker.el.closest('[data-jalali-picker]').querySelector('[data-jalali-target]');
+                    if (targetInput) {
+                        const [year, month, day] = date.split('/').map(Number);
+                        const gregorianDate = jalaliDatepicker.gregorianDate([year, month, day]);
+                        const dateValue = new Date(gregorianDate[0], gregorianDate[1] - 1, gregorianDate[2]);
+                        targetInput.value = dateValue.toISOString().split('T')[0];
+                    }
+                }
+            });
+        });
+    </script>
+}
+

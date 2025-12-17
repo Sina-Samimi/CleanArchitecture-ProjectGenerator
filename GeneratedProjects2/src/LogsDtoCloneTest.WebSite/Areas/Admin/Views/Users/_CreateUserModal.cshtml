@@ -1,0 +1,107 @@
+﻿@model CreateUserViewModel
+@{
+    Layout = null;
+    var roleOptions = Model.AvailableRoles?.ToList() ?? new List<RoleOptionViewModel>();
+    var selectedRoles = new HashSet<string>(Model.SelectedRoles ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
+}
+
+<div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content user-form-modal">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">افزودن کاربر</h5>
+                <p class="modal-subtitle">اطلاعات زیر را تکمیل کنید تا کاربر جدید با دسترسی‌های مورد نظر ایجاد شود.</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <form asp-action="Create" method="post" enctype="multipart/form-data" class="user-form" data-user-form="true">
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <div class="row g-4">
+                    <div class="col-12 col-lg-4">
+                        <div class="user-form__avatar" data-avatar-wrapper>
+                            <div class="user-form__avatar-preview" data-avatar-preview>
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="user-form__avatar-actions">
+                                <label class="btn btn-light w-100 mb-2">
+                                    انتخاب تصویر
+                                    <input asp-for="Avatar" class="d-none" type="file" accept=".png,.jpg,.jpeg,.webp" data-avatar-input />
+                                </label>
+                                <small class="text-muted d-block">حداکثر ۲ مگابایت | فرمت‌های PNG, JPG, WEBP</small>
+                                <span asp-validation-for="Avatar" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label asp-for="FullName" class="form-label"></label>
+                                <input asp-for="FullName" class="form-control" placeholder="مثلاً: مریم نیازی" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label"></label>
+                                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="09121234567" data-user-phone />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Password" class="form-label"></label>
+                                <input asp-for="Password" class="form-control" type="password" placeholder="رمز عبور موقت (اختیاری)" />
+                                <small class="text-muted">در صورت خالی بودن، رمز عبور به صورت تصادفی تولید می‌شود.</small>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="SelectedRoles" class="form-label"></label>
+                                <div class="role-select" data-role-select>
+                                    <div class="role-select__options">
+                                        @if (roleOptions.Count == 0)
+                                        {
+                                            <div class="text-muted small">نقشی برای انتخاب موجود نیست. ابتدا سطح دسترسی ایجاد کنید.</div>
+                                        }
+                                        else
+                                        {
+                                            for (var index = 0; index < roleOptions.Count; index++)
+                                            {
+                                                var option = roleOptions[index];
+                                                var optionId = $"create-role-{index}";
+                                                var isSelected = selectedRoles.Contains(option.Value);
+                                                <label class="role-select__option @(isSelected ? "is-selected" : string.Empty)" for="@optionId">
+                                                    <input type="checkbox"
+                                                           id="@optionId"
+                                                           name="SelectedRoles"
+                                                           value="@option.Value"
+                                                           class="form-check-input"
+                                                           @(isSelected ? "checked" : null)
+                                                           data-role-option>
+                                                    <span>@option.Label</span>
+                                                </label>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <span asp-validation-for="SelectedRoles" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-switch user-form__switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" data-user-active-toggle />
+                                    <label asp-for="IsActive" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-12" data-deactivation-container>
+                                <label asp-for="DeactivationReason" class="form-label"></label>
+                                <textarea asp-for="DeactivationReason" class="form-control" rows="3" placeholder="در صورت غیرفعال بودن، دلیل را وارد کنید." data-user-deactivation></textarea>
+                                <span asp-validation-for="DeactivationReason" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">انصراف</button>
+                <button type="submit" class="btn btn-primary">ثبت کاربر</button>
+            </div>
+        </form>
+    </div>
+</div>

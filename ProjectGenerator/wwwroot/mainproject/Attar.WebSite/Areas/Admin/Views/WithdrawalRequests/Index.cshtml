@@ -1,0 +1,306 @@
+@using System.Globalization
+@using Attar.Domain.Enums
+@using Attar.SharedKernel.Extensions
+@model WithdrawalRequestsViewModel
+@{
+    ViewData["Title"] = "درخواست‌های برداشت";
+    ViewData["Subtitle"] = "مدیریت و پردازش درخواست‌های برداشت";
+
+    var culture = new CultureInfo("fa-IR");
+    var statusOptions = ViewData["StatusOptions"] as IReadOnlyCollection<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? Array.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatDate(DateTimeOffset value) => value.ToPersianDateString();
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+
+    string StatusBadgeClass(WithdrawalRequestStatus status) => status switch
+    {
+        WithdrawalRequestStatus.Pending => "badge bg-warning-subtle text-warning-emphasis",
+        WithdrawalRequestStatus.Approved => "badge bg-info-subtle text-info-emphasis",
+        WithdrawalRequestStatus.Processed => "badge bg-success-subtle text-success-emphasis",
+        WithdrawalRequestStatus.Rejected => "badge bg-danger-subtle text-danger-emphasis",
+        WithdrawalRequestStatus.Cancelled => "badge bg-secondary-subtle text-secondary-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+
+    string StatusLabel(WithdrawalRequestStatus status) => status switch
+    {
+        WithdrawalRequestStatus.Pending => "در انتظار بررسی",
+        WithdrawalRequestStatus.Approved => "تایید شده",
+        WithdrawalRequestStatus.Processed => "پرداخت شده",
+        WithdrawalRequestStatus.Rejected => "رد شده",
+        WithdrawalRequestStatus.Cancelled => "لغو شده",
+        _ => status.ToString()
+    };
+
+    string RequestTypeLabel(WithdrawalRequestType type) => type switch
+    {
+        WithdrawalRequestType.SellerRevenue => "برداشت سهم فروشنده",
+        WithdrawalRequestType.Wallet => "برداشت از کیف پول",
+        _ => type.ToString()
+    };
+
+    var hasActiveFilters = Model.FilterStatus.HasValue;
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">درخواست‌های برداشت</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="withdrawal-requests-admin">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">@ViewData["Title"]</h1>
+            <p class="text-muted mb-0">@ViewData["Subtitle"]</p>
+        </div>
+        <div>
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#withdrawal-filter-modal">
+                <i class="bi bi-funnel"></i>
+                فیلترها
+            </button>
+        </div>
+    </div>
+
+    @if (hasActiveFilters)
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <i class="bi bi-info-circle"></i>
+                <span>فیلترهای فعال:</span>
+                @if (Model.FilterStatus.HasValue)
+                {
+                    <span class="badge bg-primary ms-2">@StatusLabel(Model.FilterStatus.Value)</span>
+                }
+            </div>
+            <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.PageSize" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x-circle"></i>
+                حذف فیلترها
+            </a>
+        </div>
+    }
+
+    <!-- جدول درخواست‌ها -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul text-primary"></i>
+                لیست درخواست‌های برداشت
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Requests.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>نوع درخواست</th>
+                                <th>فروشنده / کاربر</th>
+                                <th>مبلغ</th>
+                                <th>اطلاعات بانکی</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ ثبت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.Requests)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                                            @RequestTypeLabel(request.RequestType)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (request.RequestType == WithdrawalRequestType.SellerRevenue && !string.IsNullOrWhiteSpace(request.SellerId))
+                                        {
+                                            <div><strong>@(request.SellerName ?? "نامشخص")</strong></div>
+                                            @if (!string.IsNullOrWhiteSpace(request.SellerPhoneNumber))
+                                            {
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-telephone"></i> @request.SellerPhoneNumber
+                                                </div>
+                                            }
+                                            <div class="small text-muted font-monospace">@request.SellerId</div>
+                                        }
+                                        else if (request.RequestType == WithdrawalRequestType.Wallet && !string.IsNullOrWhiteSpace(request.UserId))
+                                        {
+                                            <div><strong>@(request.UserName ?? "نامشخص")</strong></div>
+                                            @if (!string.IsNullOrWhiteSpace(request.UserPhoneNumber))
+                                            {
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-telephone"></i> @request.UserPhoneNumber
+                                                </div>
+                                            }
+                                            <div class="small text-muted font-monospace">@request.UserId</div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="fw-semibold">@FormatMoney(request.Amount)</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(request.BankName))
+                                        {
+                                            <div><strong>@request.BankName</strong></div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(request.AccountHolderName))
+                                        {
+                                            <div class="small text-muted">@request.AccountHolderName</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(request.BankAccountNumber))
+                                        {
+                                            <div class="small text-muted font-monospace">شماره حساب: @request.BankAccountNumber</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(request.CardNumber))
+                                        {
+                                            <div class="small text-muted font-monospace">شماره کارت: @request.CardNumber</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(request.Iban))
+                                        {
+                                            <div class="small text-muted font-monospace">شبا: @request.Iban</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="@StatusBadgeClass(request.Status)">
+                                            @StatusLabel(request.Status)
+                                        </span>
+                                        @if (request.ProcessedAt.HasValue)
+                                        {
+                                            <div class="small text-muted mt-1">
+                                                <i class="bi bi-calendar-check"></i> @FormatDateTime(request.ProcessedAt.Value)
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="small">@FormatDateTime(request.CreateDate)</div>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                            جزئیات
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="صفحه‌بندی درخواست‌های برداشت" class="mt-4">
+                        <ul class="pagination justify-content-center mb-0">
+                            @if (Model.PageNumber > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-status="@Model.FilterStatus"
+                                       asp-route-page="@(Model.PageNumber - 1)"
+                                       asp-route-pageSize="@Model.PageSize">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </span>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-status="@Model.FilterStatus"
+                                       asp-route-page="@i"
+                                       asp-route-pageSize="@Model.PageSize">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.PageNumber < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-status="@Model.FilterStatus"
+                                       asp-route-page="@(Model.PageNumber + 1)"
+                                       asp-route-pageSize="@Model.PageSize">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                        <div class="text-center text-muted small mt-2">
+                            نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) از @Model.TotalCount درخواست
+                        </div>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                    <p class="mt-3">درخواست برداشتی برای نمایش وجود ندارد</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="withdrawal-filter-modal" tabindex="-1" aria-labelledby="withdrawal-filter-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawal-filter-modal-label">فیلتر درخواست‌های برداشت</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">وضعیت</label>
+                        <select name="status" class="form-select">
+                            <option value="">همه وضعیت‌ها</option>
+                            @foreach (var option in statusOptions)
+                            {
+                                <option value="@option.Value" selected="@option.Selected">@option.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel-fill"></i>
+                        اعمال فیلترها
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <a class="btn btn-link text-danger ms-auto" asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.PageSize">
+                        <i class="bi bi-x-circle"></i> حذف فیلترها
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

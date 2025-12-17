@@ -1,0 +1,180 @@
+@using System.Globalization
+@model SellerAllCommentsViewModel
+@{
+    ViewData["Title"] ??= "تمام نظرات";
+    ViewData["Subtitle"] ??= "مشاهده و مدیریت نظرات محصولات شما";
+    ViewData["Sidebar:ActiveTab"] = "products";
+
+    var culture = new CultureInfo("fa-IR");
+    string FormatNumber(int value) => value.ToString("N0", culture);
+    string FormatDate(DateTimeOffset date) => date.ToPersianDateTimeString();
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="seller-comments-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">تمام نظرات</h1>
+            <p class="text-muted mb-0">مشاهده و مدیریت نظرات محصولات شما</p>
+        </div>
+    </div>
+
+    <!-- نظرات جدید -->
+    @if (Model.NewComments.Any())
+    {
+        <div class="mb-5">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                <h4 class="mb-0">نظرات جدید (تایید نشده)</h4>
+                <span class="badge bg-warning ms-2">@FormatNumber(Model.NewComments.Count)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%;">محصول</th>
+                            <th style="width: 25%;">نام کاربر</th>
+                            <th style="width: 30%;">متن نظر</th>
+                            <th style="width: 10%;">امتیاز</th>
+                            <th style="width: 20%;">تاریخ</th>
+                            <th style="width: 10%;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comment in Model.NewComments)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="@Url.Action("Index", "ProductComments", new { area = "Seller", productId = comment.ProductId })" class="text-decoration-none">
+                                        @comment.ProductName
+                                    </a>
+                                </td>
+                                <td>@comment.AuthorName</td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 300px;" title="@comment.Content">
+                                        @comment.Content
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (comment.Rating.HasValue)
+                                    {
+                                        <span class="text-warning">
+                                            @for (int i = 0; i < comment.Rating.Value; i++)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-muted small">@FormatDate(comment.CreatedAt)</td>
+                                <td>
+                                    <a href="@Url.Action("Index", "ProductComments", new { area = "Seller", productId = comment.ProductId })" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>
+                                        مشاهده
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mb-5" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>نظرات جدید نداریم</strong> - تمام نظرات شما مورد بررسی و تایید قرار گرفته‌اند.
+        </div>
+    }
+
+    <!-- نظرات تایید شده -->
+    @if (Model.ApprovedComments.Any())
+    {
+        <div class="mb-5">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-check-circle text-success me-2"></i>
+                <h4 class="mb-0">نظرات تایید شده</h4>
+                <span class="badge bg-success ms-2">@FormatNumber(Model.ApprovedComments.Count)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%;">محصول</th>
+                            <th style="width: 25%;">نام کاربر</th>
+                            <th style="width: 30%;">متن نظر</th>
+                            <th style="width: 10%;">امتیاز</th>
+                            <th style="width: 20%;">تاریخ</th>
+                            <th style="width: 10%;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comment in Model.ApprovedComments)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="@Url.Action("Index", "ProductComments", new { area = "Seller", productId = comment.ProductId })" class="text-decoration-none">
+                                        @comment.ProductName
+                                    </a>
+                                </td>
+                                <td>@comment.AuthorName</td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 300px;" title="@comment.Content">
+                                        @comment.Content
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (comment.Rating.HasValue)
+                                    {
+                                        <span class="text-warning">
+                                            @for (int i = 0; i < comment.Rating.Value; i++)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-muted small">@FormatDate(comment.CreatedAt)</td>
+                                <td>
+                                    <a href="@Url.Action("Index", "ProductComments", new { area = "Seller", productId = comment.ProductId })" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>
+                                        مشاهده
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>نظرات تایید شده‌ای وجود ندارد</strong> - هنوز هیچ نظری برای محصولات شما تایید نشده‌است.
+        </div>
+    }
+</div>
+
+@section Head {
+    <style>
+        .seller-comments-container {
+            padding: 1rem 0;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+}

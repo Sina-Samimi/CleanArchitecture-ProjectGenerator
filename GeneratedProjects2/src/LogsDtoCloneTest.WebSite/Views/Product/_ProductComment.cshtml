@@ -1,0 +1,82 @@
+﻿@model ProductCommentViewModel
+@{
+    var productSlug = ViewData["ProductSlug"] as string ?? "";
+    var isReply = Model.ParentId.HasValue;
+}
+<li class="blog-comment product-comment @(isReply ? "product-comment--reply" : "")" id="comment-@Model.Id">
+    <article class="blog-comment__card product-comment__card">
+        <header class="product-comment__header">
+            <div class="product-comment__identity">
+                <div class="product-comment__meta">
+                    <span class="blog-comment__author-name">@Model.AuthorName</span>
+                    <div class="product-comment__meta-bottom">
+                        <time datetime="@Model.CreatedAt.ToString("yyyy-MM-dd")" class="blog-comment__date">@Model.GetFormattedDate()</time>
+                        @if (!isReply)
+                        {
+                            <button type="button"
+                                    class="product-comment__reply-btn"
+                                    onclick="toggleReplyForm('reply-form-@Model.Id', this)"
+                                    aria-expanded="false"
+                                    aria-controls="reply-form-@Model.Id">
+                                <i class="bi bi-reply"></i>
+                                پاسخ به این نظر
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+            @if (!isReply && Model.Rating > 0)
+            {
+                <div class="product-comment__rating" aria-label="امتیاز @Model.Rating.ToString("0.0")">
+                    @for (int i = 0; i < (int)Model.Rating; i++)
+                    {
+                        <span class="product-comment__rating-star">★</span>
+                    }
+                </div>
+            }
+        </header>
+        <p class="blog-comment__content">@Model.Content</p>
+    </article>
+    
+    @if (!isReply)
+    {
+        <div class="collapse product-comment__reply-form" id="reply-form-@Model.Id" style="display: none;">
+            <div class="product-comment__reply-form-wrapper">
+                <h6 class="product-comment__reply-form-title">
+                    <i class="bi bi-reply"></i>
+                    پاسخ به نظر @Model.AuthorName
+                </h6>
+                <form asp-action="AddComment" asp-route-slug="@productSlug" method="post" class="blog-comment-form product-comment__reply-form-content" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" name="NewComment.ProductId" value="@ViewData["ProductId"]" />
+                    <input type="hidden" name="NewComment.ParentId" value="@Model.Id" />
+                    <input type="hidden" name="NewComment.Rating" value="0" />
+                    <div class="blog-comment-form__field">
+                        <label for="reply-author-@Model.Id" class="form-label">نام و نام خانوادگی</label>
+                        <input id="reply-author-@Model.Id" name="NewComment.AuthorName" class="form-control" autocomplete="name" required />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="NewComment.AuthorName" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="blog-comment-form__field">
+                        <label for="reply-content-@Model.Id" class="form-label">متن پاسخ</label>
+                        <textarea id="reply-content-@Model.Id" name="NewComment.Content" class="form-control" rows="4" required></textarea>
+                        <span class="text-danger field-validation-valid" data-valmsg-for="NewComment.Content" data-valmsg-replace="true"></span>
+                    </div>
+                    <button type="submit" class="blog-comment-form__submit">ثبت پاسخ</button>
+                </form>
+            </div>
+        </div>
+    }
+    
+    @if (Model.Replies.Any())
+    {
+        <ol class="blog-comment__replies product-comment__replies" aria-label="پاسخ‌ها">
+            @foreach (var reply in Model.Replies)
+            {
+                ViewData["ProductSlug"] = productSlug;
+                ViewData["ProductId"] = ViewData["ProductId"];
+                @await Html.PartialAsync("_ProductComment", reply)
+            }
+        </ol>
+    }
+</li>

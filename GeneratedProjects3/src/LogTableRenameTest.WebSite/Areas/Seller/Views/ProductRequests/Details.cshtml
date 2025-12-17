@@ -1,0 +1,262 @@
+﻿@using System.Globalization
+@using LogTableRenameTest.Domain.Enums
+@using LogTableRenameTest.SharedKernel.Extensions
+@using LogTableRenameTest.WebSite.Areas.Seller.Models
+@model SellerProductRequestDetailViewModel
+@{
+    ViewData["Sidebar:ActiveTab"] = "product-requests";
+    ViewData["Title"] = "جزئیات درخواست محصول";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string StatusLabel(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "در انتظار بررسی",
+        ProductRequestStatus.Approved => "تایید شده",
+        ProductRequestStatus.Rejected => "رد شده",
+        _ => "نامشخص"
+    };
+    string StatusBadgeClass(ProductRequestStatus status) => status switch
+    {
+        ProductRequestStatus.Pending => "badge bg-warning-subtle text-warning-emphasis",
+        ProductRequestStatus.Approved => "badge bg-success-subtle text-success-emphasis",
+        ProductRequestStatus.Rejected => "badge bg-danger-subtle text-danger-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+    string TypeLabel(ProductType type) => type switch
+    {
+        ProductType.Physical => "فیزیکی",
+        ProductType.Digital => "دانلودی",
+        _ => "نامشخص"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/seller/product-index.css" asp-append-version="true" />
+}
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1">@Model.Name</h1>
+                <p class="text-muted mb-0">جزئیات درخواست محصول</p>
+            </div>
+            <div>
+                <span class="@StatusBadgeClass(Model.Status) fs-6">@StatusLabel(Model.Status)</span>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="col-12">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">اطلاعات اصلی</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">نام محصول</label>
+                        <div>@Model.Name</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">نوع محصول</label>
+                        <div>
+                            <span class="badge bg-info-subtle text-info-emphasis">@TypeLabel(Model.Type)</span>
+                            @if (Model.IsCustomOrder)
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis ms-2">سفارشی</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">دسته‌بندی</label>
+                        <div>@Model.CategoryName</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">قیمت</label>
+                        <div>
+                            @if (Model.IsCustomOrder)
+                            {
+                                <span class="text-muted">سفارشی</span>
+                            }
+                            else if (Model.Price.HasValue)
+                            {
+                                <span>@Model.Price.Value.ToString("N0") تومان</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">تعیین نشده</span>
+                            }
+                        </div>
+                    </div>
+                    @if (Model.TrackInventory)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">موجودی</label>
+                            <div>@Model.StockQuantity عدد</div>
+                        </div>
+                    }
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">تاریخ ثبت</label>
+                        <div>
+                            <i class="bi bi-calendar-event me-1"></i>
+                            @FormatDateTime(Model.CreatedAt)
+                        </div>
+                    </div>
+                    @if (Model.ReviewedAt.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">تاریخ بررسی</label>
+                            <div>
+                                <i class="bi bi-check-circle me-1"></i>
+                                @FormatDateTime(Model.ReviewedAt.Value)
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Summary))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">خلاصه</h5>
+                    <div>@Model.Summary</div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">توضیحات</h5>
+                    <div>@Html.Raw(Model.Description.Replace("\n", "<br />"))</div>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.TagList))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">تگ‌ها</h5>
+                    <div>
+                        @foreach (var tag in Model.TagList.Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)))
+                        {
+                            <span class="badge bg-secondary me-1">@tag</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.Gallery.Any())
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">گالری تصاویر</h5>
+                    <div class="row g-3">
+                        @foreach (var image in Model.Gallery.OrderBy(g => g.Order))
+                        {
+                            <div class="col-md-4">
+                                <img src="@image.Path" alt="Gallery Image" class="img-fluid rounded shadow-sm" style="max-height: 200px; object-fit: cover;">
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        @if (!string.IsNullOrWhiteSpace(Model.FeaturedImagePath))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-3">تصویر شاخص</h5>
+                    <img src="@Model.FeaturedImagePath" alt="@Model.Name" class="img-fluid rounded shadow-sm">
+                </div>
+            </div>
+        }
+
+        @if (Model.Status == ProductRequestStatus.Pending)
+        {
+            <div class="card border-0 bg-warning-subtle mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">وضعیت: در انتظار بررسی</h5>
+                    <p class="text-muted mb-0">درخواست شما در حال بررسی توسط مدیریت است. پس از تایید، محصول در سایت منتشر خواهد شد.</p>
+                </div>
+            </div>
+        }
+        else if (Model.Status == ProductRequestStatus.Approved && Model.ApprovedProductId.HasValue)
+        {
+            <div class="card border-0 bg-success-subtle mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">وضعیت: تایید شده</h5>
+                    <p class="text-muted mb-3">درخواست شما تایید و محصول در سایت منتشر شده است.</p>
+                    <a asp-area="Seller" asp-controller="Products" asp-action="Details" asp-route-id="@Model.ApprovedProductId.Value" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        مشاهده محصول
+                    </a>
+                </div>
+            </div>
+        }
+        else if (Model.Status == ProductRequestStatus.Rejected)
+        {
+            <div class="card border-0 bg-danger-subtle mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">وضعیت: رد شده</h5>
+                    @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                    {
+                        <div class="alert alert-light mb-3">
+                            <strong>دلیل رد:</strong>
+                            <div>@Model.RejectionReason</div>
+                        </div>
+                    }
+                    <p class="text-muted mb-0">می‌توانید درخواست جدیدی با اطلاعات اصلاح شده ثبت کنید.</p>
+                </div>
+            </div>
+        }
+
+        @if (Model.Type == ProductType.Digital && !string.IsNullOrWhiteSpace(Model.DigitalDownloadPath))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">فایل دانلودی</h5>
+                    <a href="@Model.DigitalDownloadPath" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-download"></i>
+                        مشاهده لینک دانلود
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-12">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-right"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+</div>
+

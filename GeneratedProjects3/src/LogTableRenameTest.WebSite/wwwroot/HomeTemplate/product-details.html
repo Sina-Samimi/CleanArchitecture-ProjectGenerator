@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جزئیات محصول - عطاری آنلاین</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">عطاری آنلاین</div>
+            <ul class="nav-links">
+                <li><a href="index.html">خانه</a></li>
+                <li><a href="index.html#products">محصولات</a></li>
+                <li><a href="index.html#about">درباره ما</a></li>
+                <li><a href="index.html#contact">تماس با ما</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Product Details Section -->
+    <section class="product-details-section">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">خانه</a> / 
+                <a href="index.html#products">محصولات</a> / 
+                <span>جزئیات محصول</span>
+            </div>
+
+            <div class="product-details-container">
+                <!-- Product Images -->
+                <div class="product-images">
+                    <div class="main-image">
+                        <img id="main-product-image" src="" alt="تصویر محصول">
+                    </div>
+                    <div class="thumbnail-images">
+                        <img class="thumbnail active" src="" alt="تصویر 1" onclick="changeMainImage(this.src)">
+                        <img class="thumbnail" src="" alt="تصویر 2" onclick="changeMainImage(this.src)">
+                        <img class="thumbnail" src="" alt="تصویر 3" onclick="changeMainImage(this.src)">
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="product-info">
+                    <h1 class="product-title">زعفران اصل قائنات</h1>
+                    <div class="product-rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-text">(۴.۸ از ۵ - ۱۲۳ نظر)</span>
+                    </div>
+                    
+                    <div class="product-price-section">
+                        <span class="current-price">۲۵۰,۰۰۰ تومان</span>
+                        <span class="old-price">۳۰۰,۰۰۰ تومان</span>
+                        <span class="discount-badge">۱۷٪ تخفیف</span>
+                    </div>
+
+                    <div class="product-description">
+                        <h3>توضیحات محصول</h3>
+                        <p>
+                            زعفران اصل قائنات با کیفیت درجه یک، از بهترین مزارع استان خراسان جنوبی تهیه شده است. 
+                            این زعفران با روش سنتی و بدون استفاده از مواد شیمیایی کشت و برداشت می‌شود.
+                        </p>
+                        <ul class="product-features">
+                            <li>✅ زعفران درجه یک و اصل</li>
+                            <li>✅ بسته‌بندی بهداشتی و استاندارد</li>
+                            <li>✅ بدون مواد نگهدارنده</li>
+                            <li>✅ دارای گواهی اصالت</li>
+                            <li>✅ مناسب برای مصارف خانگی و تجاری</li>
+                        </ul>
+                    </div>
+
+                    <div class="product-options">
+                        <div class="quantity-selector">
+                            <label>تعداد:</label>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" onclick="decreaseQuantity()">-</button>
+                                <input type="number" id="quantity" value="1" min="1" max="10">
+                                <button class="qty-btn" onclick="increaseQuantity()">+</button>
+                            </div>
+                        </div>
+
+                        <div class="weight-selector">
+                            <label>وزن:</label>
+                            <select id="weight">
+                                <option value="5">۵ گرم - ۲۵۰,۰۰۰ تومان</option>
+                                <option value="10">۱۰ گرم - ۴۸۰,۰۰۰ تومان</option>
+                                <option value="20">۲۰ گرم - ۹۰۰,۰۰۰ تومان</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="btn btn-primary" onclick="addToCart()">
+                            🛒 افزودن به سبد خرید
+                        </button>
+                        <button class="btn btn-secondary" onclick="addToWishlist()">
+                            ❤️ افزودن به علاقه‌مندی‌ها
+                        </button>
+                    </div>
+
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>موجود در انبار</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">🚚</span>
+                            <span>ارسال رایگان برای خرید بالای ۵۰۰,۰۰۰ تومان</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">🔒</span>
+                            <span>پرداخت امن و مطمئن</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Tabs -->
+            <div class="product-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('specifications')">مشخصات</button>
+                    <button class="tab-btn" onclick="showTab('reviews')">نظرات (۱۲۳)</button>
+                    <button class="tab-btn" onclick="showTab('shipping')">ارسال و بازگشت</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="specifications" class="tab-pane active">
+                        <table class="specifications-table">
+                            <tr>
+                                <td>نوع محصول</td>
+                                <td>زعفران خشک</td>
+                            </tr>
+                            <tr>
+                                <td>منطقه کشت</td>
+                                <td>قائنات - خراسان جنوبی</td>
+                            </tr>
+                            <tr>
+                                <td>درجه کیفیت</td>
+                                <td>درجه یک</td>
+                            </tr>
+                            <tr>
+                                <td>روش نگهداری</td>
+                                <td>در جای خشک و خنک</td>
+                            </tr>
+                            <tr>
+                                <td>میزان مصرف</td>
+                                <td>کمتر از ۱ گرم برای هر وعده</td>
+                            </tr>
+                            <tr>
+                                <td>تاریخ تولید</td>
+                                <td>۱۴۰۳</td>
+                            </tr>
+                            <tr>
+                                <td>تاریخ انقضا</td>
+                                <td>۳ سال</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div id="reviews" class="tab-pane">
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <strong>علی احمدی</strong>
+                                    <span class="review-rating">★★★★★</span>
+                                </div>
+                                <span class="review-date">۱۴۰۳/۰۳/۱۵</span>
+                            </div>
+                            <p class="review-text">
+                                زعفران بسیار با کیفیت و خوش رنگ بود. بسته‌بندی هم عالی بود. حتما دوباره خرید می‌کنم.
+                            </p>
+                        </div>
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <strong>فاطمه رضایی</strong>
+                                    <span class="review-rating">★★★★☆</span>
+                                </div>
+                                <span class="review-date">۱۴۰۳/۰۳/۱۰</span>
+                            </div>
+                            <p class="review-text">
+                                کیفیت خوبی داشت اما قیمت کمی بالا بود. به هر حال ارزش خرید داشت.
+                            </p>
+                        </div>
+                        <div class="review-form">
+                            <h3>نظر خود را ثبت کنید</h3>
+                            <form>
+                                <div class="form-group">
+                                    <label>امتیاز شما:</label>
+                                    <div class="rating-input">
+                                        <span onclick="setRating(5)">★</span>
+                                        <span onclick="setRating(4)">★</span>
+                                        <span onclick="setRating(3)">★</span>
+                                        <span onclick="setRating(2)">★</span>
+                                        <span onclick="setRating(1)">★</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>نظر شما:</label>
+                                    <textarea rows="4" placeholder="نظر خود را بنویسید..."></textarea>
+                                </div>
+                                <button type="submit" class="btn">ثبت نظر</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="shipping" class="tab-pane">
+                        <div class="shipping-info">
+                            <h3>اطلاعات ارسال</h3>
+                            <ul>
+                                <li>✅ ارسال به سراسر کشور</li>
+                                <li>✅ ارسال رایگان برای خرید بالای ۵۰۰,۰۰۰ تومان</li>
+                                <li>✅ ارسال در تهران: ۱ تا ۲ روز کاری</li>
+                                <li>✅ ارسال به شهرستان: ۳ تا ۵ روز کاری</li>
+                                <li>✅ بسته‌بندی مناسب و محافظت شده</li>
+                            </ul>
+                            <h3>سیاست بازگشت</h3>
+                            <ul>
+                                <li>✅ امکان بازگشت کالا تا ۷ روز پس از دریافت</li>
+                                <li>✅ بازگشت وجه در صورت عدم رضایت</li>
+                                <li>✅ کالا باید در بسته‌بندی اصلی باشد</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            <div class="related-products">
+                <h2 class="section-title">محصولات مرتبط</h2>
+                <div class="products-grid">
+                    <div class="product-card">
+                        <div class="product-image">🌺</div>
+                        <div class="product-info">
+                            <h3 class="product-name">گل گاوزبان</h3>
+                            <p class="product-description">گل گاوزبان خشک شده - بسته ۱۰۰ گرمی</p>
+                            <div class="product-price">۸۵,۰۰۰ تومان</div>
+                            <button class="btn-small">افزودن به سبد خرید</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image">🍃</div>
+                        <div class="product-info">
+                            <h3 class="product-name">چای سبز</h3>
+                            <p class="product-description">چای سبز با کیفیت - بسته ۲۰۰ گرمی</p>
+                            <div class="product-price">۱۲۰,۰۰۰ تومان</div>
+                            <button class="btn-small">افزودن به سبد خرید</button>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image">🌰</div>
+                        <div class="product-info">
+                            <h3 class="product-name">عسل طبیعی</h3>
+                            <p class="product-description">عسل کوهستان خالص - شیشه ۱ کیلویی</p>
+                            <div class="product-price">۳۵۰,۰۰۰ تومان</div>
+                            <button class="btn-small">افزودن به سبد خرید</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; ۱۴۰۳ عطاری آنلاین. تمام حقوق محفوظ است.</p>
+            <div class="social-links">
+                <a href="#">📱</a>
+                <a href="#">📧</a>
+                <a href="#">💬</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Set default product image
+        const defaultImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect fill="%23e8f5e9" width="400" height="400"/><text x="50%25" y="50%25" font-size="80" text-anchor="middle" dominant-baseline="middle">🌿</text></svg>';
+        document.getElementById('main-product-image').src = defaultImage;
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            if (!thumb.src) thumb.src = defaultImage;
+        });
+
+        function changeMainImage(src) {
+            document.getElementById('main-product-image').src = src;
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function increaseQuantity() {
+            const qtyInput = document.getElementById('quantity');
+            if (parseInt(qtyInput.value) < 10) {
+                qtyInput.value = parseInt(qtyInput.value) + 1;
+            }
+        }
+
+        function decreaseQuantity() {
+            const qtyInput = document.getElementById('quantity');
+            if (parseInt(qtyInput.value) > 1) {
+                qtyInput.value = parseInt(qtyInput.value) - 1;
+            }
+        }
+
+        function showTab(tabName) {
+            // Hide all tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function addToCart() {
+            const productName = document.querySelector('.product-title').textContent;
+            const quantity = document.getElementById('quantity').value;
+            alert(`محصول "${productName}" به تعداد ${quantity} عدد به سبد خرید اضافه شد!`);
+        }
+
+        function addToWishlist() {
+            const productName = document.querySelector('.product-title').textContent;
+            alert(`محصول "${productName}" به علاقه‌مندی‌ها اضافه شد!`);
+        }
+
+        function setRating(rating) {
+            alert(`امتیاز ${rating} ستاره ثبت شد!`);
+        }
+    </script>
+</body>
+</html>
+

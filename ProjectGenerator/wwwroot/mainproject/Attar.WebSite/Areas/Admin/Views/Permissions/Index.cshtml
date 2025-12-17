@@ -1,0 +1,628 @@
+﻿@model PermissionListViewModel
+@using System.Linq
+@{
+    ViewData["Title"] = "لیست مجوزها";
+    ViewData["Subtitle"] = "مدیریت و تعریف مجوزهای سیستم برای تخصیص به نقش‌ها";
+
+    var searchTerm = Model.SearchTerm ?? string.Empty;
+    var totalPages = Model.TotalPages;
+    var hasResults = Model.Groups.Any(group => group.Permissions.Any());
+
+    decimal ToPercent(int part, int total)
+    {
+        if (total == 0)
+        {
+            return 0;
+        }
+
+        return Math.Round((decimal)part / total * 100, 1, MidpointRounding.AwayFromZero);
+    }
+
+    string FormatPercent(decimal value)
+    {
+        return value % 1m == 0 ? value.ToString("0") + "%" : value.ToString("0.#") + "%";
+    }
+
+    var visiblePercent = ToPercent((int)Model.TotalCount, (int)Model.TotalPermissions);
+    var customPercent = ToPercent((int)Model.FilteredCustomPermissions, (int)Model.TotalCustomPermissions);
+    var corePercent = ToPercent((int)Model.FilteredCorePermissions, (int)Model.TotalCorePermissions);
+    var hiddenPermissions = Math.Max(0, (int)Model.TotalPermissions - (int)Model.TotalCount);
+    var customHidden = Math.Max(0, (int)Model.TotalCustomPermissions - (int)Model.FilteredCustomPermissions);
+    var coreHidden = Math.Max(0, (int)Model.TotalCorePermissions - (int)Model.FilteredCorePermissions);
+
+    int CalculateStartPage(int current, int total)
+    {
+        const int window = 2;
+        var start = current - window;
+        if (start < 1)
+        {
+            start = 1;
+        }
+
+        var end = current + window;
+        if (end > total)
+        {
+            end = total;
+            start = Math.Max(1, end - (window * 2));
+        }
+
+        return start;
+    }
+
+    int CalculateEndPage(int current, int total)
+    {
+        const int window = 2;
+        var end = current + window;
+        if (end > total)
+        {
+            end = total;
+        }
+
+        var start = current - window;
+        if (start < 1)
+        {
+            start = 1;
+            end = Math.Min(total, start + (window * 2));
+        }
+
+        return end;
+    }
+
+    var startPage = CalculateStartPage(Model.PageNumber, totalPages);
+    var endPage = CalculateEndPage(Model.PageNumber, totalPages);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/permissions.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="permissions-page">
+    <div class="metric-grid permissions-metrics">
+        <article class="metric-card metric-card--primary">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">کل مجوزها</span>
+                    <span class="metric-card__subtitle">فهرست کامل دسترسی‌های تعریف‌شده</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--neutral">@FormatPercent(visiblePercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-shield-check"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@Model.TotalPermissions</div>
+            <div class="metric-card__hint">کل مجوزهای موجود در سیستم</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-eye"></i>
+                    @Model.TotalCount مجوز قابل مشاهده
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-eye-slash"></i>
+                    @hiddenPermissions پنهان با فیلتر
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--info">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">مجوزهای سفارشی</span>
+                    <span class="metric-card__subtitle">قابل تنظیم برای نقش‌های خاص</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--positive">@FormatPercent(customPercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-stars"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@Model.FilteredCustomPermissions</div>
+            <div class="metric-card__hint">از @Model.TotalCustomPermissions مجوز سفارشی</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-lightning-charge"></i>
+                    @Model.FilteredCustomPermissions در لیست
+                </span>
+                <span class="metric-card__chip metric-card__chip--warning">
+                    <i class="bi bi-filter"></i>
+                    @customHidden خارج از دید
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--success">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">مجوزهای Core</span>
+                    <span class="metric-card__subtitle">زیرساخت اصلی سیستم</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--neutral">@FormatPercent(corePercent)</span>
+                    <span class="metric-card__icon"><i class="bi bi-diagram-3"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@Model.FilteredCorePermissions</div>
+            <div class="metric-card__hint">از @Model.TotalCorePermissions مجوز اصلی</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--success">
+                    <i class="bi bi-shield-lock"></i>
+                    @Model.FilteredCorePermissions فعال
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-archive"></i>
+                    @coreHidden خارج از محدوده
+                </span>
+            </div>
+        </article>
+    </div>
+
+    <div class="card permissions-card">
+        <div class="card-body">
+            <div class="permissions-card__toolbar">
+                <div class="permissions-card__info">
+                    <h2 class="permissions-card__headline">لیست مجوزها</h2>
+                    <p class="permissions-card__summary">
+                        نمایش @Model.TotalCount از @Model.TotalPermissions مجوز
+                        @if (!string.IsNullOrWhiteSpace(searchTerm) || !string.IsNullOrWhiteSpace(Model.GroupKey) || !Model.IncludeCore || !Model.IncludeCustom)
+                        {
+                            <span class="text-primary">(فیلتر فعال)</span>
+                        }
+                    </p>
+                </div>
+                <div class="permissions-card__actions">
+                    <div class="permissions-card__buttons">
+                        <button type="button" class="permissions-action" data-bs-toggle="modal" data-bs-target="#permissionFilterModal">
+                            <i class="bi bi-funnel"></i>
+                            فیلتر
+                        </button>
+                        <a class="permissions-action" href="#">
+                            <i class="bi bi-box-arrow-up"></i>
+                            خروجی
+                        </a>
+                        <button type="button"
+                                class="permissions-action permissions-action--primary"
+                                data-permission-modal-trigger
+                                data-modal-url="@Url.Action("Create")">
+                            <i class="bi bi-plus-lg"></i>
+                            افزودن مجوز
+                        </button>
+                        <form method="get" class="permissions-page-size-form" data-permissions-page-size-form>
+                            <input type="hidden" name="page" value="1" />
+                            <input type="hidden" name="search" value="@searchTerm" />
+                            <input type="hidden" name="group" value="@(Model.GroupKey ?? string.Empty)" />
+                            <input type="hidden" name="includeCore" value="@Model.IncludeCore.ToString().ToLowerInvariant()" />
+                            <input type="hidden" name="includeCustom" value="@Model.IncludeCustom.ToString().ToLowerInvariant()" />
+                            <label class="d-flex align-items-center gap-2 mb-0">
+                                <span>تعداد در صفحه</span>
+                                <select class="form-select form-select-sm admin-select admin-select--compact" name="pageSize">
+                                    @foreach (var option in new[] { 10, 20, 30, 50 })
+                                    {
+                                        <option value="@option" selected="@(option == Model.PageSize)">@option</option>
+                                    }
+                                </select>
+                            </label>
+                        </form>
+                    </div>
+                    <form method="get" class="permissions-search-form" data-permissions-search-form>
+                        <input type="hidden" name="page" value="1" />
+                        <input type="hidden" name="group" value="@(Model.GroupKey ?? string.Empty)" />
+                        <input type="hidden" name="includeCore" value="@Model.IncludeCore.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="includeCustom" value="@Model.IncludeCustom.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                        <label class="app-search app-search--pill permissions-search">
+                            <i class="bi bi-search"></i>
+                            <input type="search"
+                                   name="search"
+                                   value="@searchTerm"
+                                   placeholder="جستجو بر اساس نام مجوز یا توضیحات"
+                                   aria-label="جستجوی مجوزها" />
+                        </label>
+                    </form>
+                </div>
+            </div>
+
+            <div class="permissions-tree">
+                @if (!hasResults)
+                {
+                    <div class="permissions-empty text-center text-muted py-5">
+                        هیچ مجوزی مطابق با شرایط فعلی یافت نشد.
+                        <div class="small mt-2">برای افزودن مجوز جدید از دکمه «افزودن مجوز» استفاده کنید.</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle permissions-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">گروه دسترسی</th>
+                                    <th scope="col">تعداد مجوزها</th>
+                                    <th scope="col">وضعیت</th>
+                                    <th scope="col" class="text-center">زیر مجموعه‌ها</th>
+                                    <th scope="col" class="text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var group in Model.Groups)
+                                {
+                                    var permissions = group.Permissions.ToList();
+                                    var primaryPermission = permissions.FirstOrDefault();
+                                    var sanitizedGroupKey = (group.Key ?? string.Empty)
+                                        .Replace(" ", "-")
+                                        .Replace(".", "-")
+                                        .Replace("/", "-");
+                                    var subListId = $"permissions-sublist-{sanitizedGroupKey}";
+                                    var totalCore = permissions.Count(permission => permission.IsCore);
+                                    var totalCustom = permissions.Count(permission => permission.IsCustom);
+                                    var uniqueRoles = permissions
+                                        .SelectMany(permission => permission.AssignedRoles)
+                                        .Distinct(StringComparer.CurrentCulture)
+                                        .ToList();
+                                    var canEditPrimary = primaryPermission?.Id.HasValue ?? false;
+                                    var canDeletePrimary = (primaryPermission?.Id.HasValue ?? false) && !(primaryPermission?.IsCore ?? false);
+                                    var deleteTargetName = primaryPermission?.DisplayName ?? group.DisplayName ?? group.Key ?? "این مجوز";
+
+                                    <tr class="permissions-table__row" data-permissions-group-row>
+                                        <td data-label="گروه دسترسی">
+                                            <div class="permissions-group-cell">
+                                                <span class="permissions-group-cell__title">@group.DisplayName</span>
+                                                <span class="permissions-group-cell__key text-muted">@group.Key</span>
+                                            </div>
+                                        </td>
+                                        <td data-label="تعداد مجوزها">
+                                            <div class="permissions-count-cell">
+                                                <span class="permissions-count-cell__value">@permissions.Count</span>
+                                                <span class="permissions-count-cell__hint text-muted">مجوز ثبت شده</span>
+                                            </div>
+                                        </td>
+                                        <td data-label="وضعیت">
+                                            <div class="permissions-status-cell">
+                                                <span class="badge badge-solid badge-solid--warning">Core: @totalCore</span>
+                                                <span class="badge badge-solid badge-solid--primary">سفارشی: @totalCustom</span>
+                                                <span class="badge badge-solid badge-solid--neutral">نقش‌ها: @uniqueRoles.Count</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" data-label="زیر مجموعه‌ها">
+                                            <button type="button"
+                                                    class="btn btn-light btn-sm permissions-sublist-toggle"
+                                                    data-permission-subtoggle
+                                                    data-target="#@subListId"
+                                                    data-collapsed-label="مشاهده"
+                                                    data-expanded-label="عدم نمایش"
+                                                    aria-expanded="false">
+                                                مشاهده
+                                            </button>
+                                        </td>
+                                        <td class="text-center" data-label="عملیات">
+                                            <div class="dropdown permissions-actions-dropdown">
+                                                <button class="btn btn-soft-primary btn-sm dropdown-toggle"
+                                                        type="button"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false">
+                                                    عملیات
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end permissions-actions-dropdown__menu">
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           href="#"
+                                                           data-permission-modal-trigger
+                                                           data-modal-url="@Url.Action("Create", new { group = group.Key ?? string.Empty })">
+                                                            افزودن زیر مجموعه
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        @if (canEditPrimary)
+                                                        {
+                                                            <a class="dropdown-item"
+                                                               href="#"
+                                                               data-permission-modal-trigger
+                                                               data-modal-url="@Url.Action("Edit", new { id = primaryPermission!.Id.Value })">
+                                                                ویرایش
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="dropdown-item disabled">ویرایش</span>
+                                                        }
+                                                    </li>
+                                                    <li>
+                                                        @if (canDeletePrimary)
+                                                        {
+                                                            <form asp-area="Admin"
+                                                                  asp-controller="Permissions"
+                                                                  asp-action="Delete"
+                                                                  method="post"
+                                                                  data-permission-delete-form
+                                                                  data-permission-name="@deleteTargetName">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@primaryPermission!.Id.Value" />
+                                                                <button type="submit" class="dropdown-item text-danger" data-permission-delete-button>
+                                                                    حذف
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="dropdown-item disabled">حذف</span>
+                                                        }
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr id="@subListId" class="permissions-sublist" data-permission-sublist hidden>
+                                        <td colspan="5" data-label="زیر مجموعه‌ها">
+                                            <div class="permissions-sublist__container">
+                                                <header class="permissions-sublist__header">
+                                                    <div>
+                                                        <h3 class="permissions-sublist__title">زیر مجموعه‌های @group.DisplayName</h3>
+                                                        <p class="permissions-sublist__summary text-muted">مدیریت زیرمجوزهای مرتبط با این دسته.</p>
+                                                    </div>
+                                                    <div class="permissions-sublist__actions">
+                                                        <button type="button"
+                                                                class="btn btn-primary btn-sm"
+                                                                data-permission-modal-trigger
+                                                                data-modal-url="@Url.Action("Create", new { group = group.Key ?? string.Empty })">
+                                                            افزودن زیر مجموعه جدید
+                                                        </button>
+                                                    </div>
+                                                </header>
+                                                @if (permissions.Count == 0)
+                                                {
+                                                    <div class="text-center text-muted py-4">مجوزی برای این گروه ثبت نشده است.</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="permissions-sublist__items">
+                                                        @foreach (var permission in permissions)
+                                                        {
+                                                            var canEdit = permission.Id.HasValue;
+                                                            var canDelete = permission.Id.HasValue && !permission.IsCore;
+                                                            var itemDeleteName = permission.DisplayName ?? permission.Key ?? "این مجوز";
+                                                            <article class="permissions-sublist-item">
+                                                                <div class="permissions-sublist-item__main">
+                                                                    <h4 class="permissions-sublist-item__title">@permission.DisplayName</h4>
+                                                                    <div class="permissions-sublist-item__meta text-muted">
+                                                                        <span>@permission.Key</span>
+                                                                        <span>وضعیت: @(permission.IsCore ? "Core" : "استاندارد")</span>
+                                                                        <span>
+                                                                            تاریخ ایجاد:
+                                                                            @(permission.CreatedAt.HasValue
+                                                                                ? permission.CreatedAt.Value.ToPersianDateString()
+                                                                                : "—")
+                                                                        </span>
+                                                                    </div>
+                                                                    @if (!string.IsNullOrWhiteSpace(permission.Description))
+                                                                    {
+                                                                        <p class="permissions-sublist-item__description">@permission.Description</p>
+                                                                    }
+                                                                    <div class="permissions-sublist-item__roles">
+                                                                        <span class="permissions-sublist-item__roles-label">نقش‌های منتسب:</span>
+                                                                        @if (permission.AssignedRoles.Count == 0)
+                                                                        {
+                                                                            <span class="text-muted small">نقشی منتسب نشده است</span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="permissions-sublist-item__roles-list">
+                                                                                @foreach (var role in permission.AssignedRoles)
+                                                                                {
+                                                                                    <span class="badge rounded-pill bg-soft-role">@role</span>
+                                                                                }
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                                <div class="dropdown permissions-actions-dropdown">
+                                                                    <button class="btn btn-soft-secondary btn-sm dropdown-toggle"
+                                                                            type="button"
+                                                                            data-bs-toggle="dropdown"
+                                                                            aria-expanded="false">
+                                                                        عملیات
+                                                                    </button>
+                                                                    <ul class="dropdown-menu dropdown-menu-end permissions-actions-dropdown__menu">
+                                                                        <li>
+                                                                            @if (canEdit)
+                                                                            {
+                                                                                <a class="dropdown-item"
+                                                                                   href="#"
+                                                                                   data-permission-modal-trigger
+                                                                                   data-modal-url="@Url.Action("Edit", new { id = permission.Id.Value })">
+                                                                                    ویرایش
+                                                                                </a>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span class="dropdown-item disabled">ویرایش</span>
+                                                                            }
+                                                                        </li>
+                                                                        <li>
+                                                                            @if (canDelete)
+                                                                            {
+                                                                                <form asp-area="Admin"
+                                                                                      asp-controller="Permissions"
+                                                                                      asp-action="Delete"
+                                                                                      method="post"
+                                                                                      data-permission-delete-form
+                                                                                      data-permission-name="@itemDeleteName">
+                                                                                    @Html.AntiForgeryToken()
+                                                                                    <input type="hidden" name="id" value="@permission.Id.Value" />
+                                                                                    <button type="submit" class="dropdown-item text-danger" data-permission-delete-button>
+                                                                                        حذف
+                                                                                    </button>
+                                                                                </form>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span class="dropdown-item disabled">حذف</span>
+                                                                            }
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </article>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true" data-permission-modal></div>
+
+<div class="modal fade" id="permissionFilterModal" tabindex="-1" aria-labelledby="permissionFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content permissions-filter-modal admin-filter-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="permissionFilterModalLabel">تنظیم فیلتر مجوزها</h5>
+                    <p class="modal-subtitle">گزینه‌های دلخواه خود را انتخاب کنید تا لیست مجوزها دقیق‌تر شود.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <form method="get" class="permissions-filter-form admin-filter-modal__form" data-permissions-filter-form>
+                    <div class="admin-filter-modal__notice">
+                        <div class="admin-filter-modal__notice-icon">
+                            <i class="bi bi-sliders2"></i>
+                        </div>
+                        <div>
+                            <p class="admin-filter-modal__notice-title">راهنمای تنظیمات</p>
+                            <p class="admin-filter-modal__notice-text">فیلترهای زیر به شما کمک می‌کنند دسترسی‌ها را سریع‌تر پیدا کنید و فقط گزینه‌های ضروری را ببینید.</p>
+                        </div>
+                    </div>
+                    <input type="hidden" name="page" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    <div class="admin-filter-modal__fields row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPermissionSearch">عنوان یا کلید مجوز</label>
+                            <input type="text" class="form-control" id="filterPermissionSearch" name="search" placeholder="مثلاً: مدیریت کاربران" value="@searchTerm" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPermissionGroup">گروه مجوز</label>
+                            <select class="form-select admin-select" id="filterPermissionGroup" name="group">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.GroupKey))">همه گروه‌ها</option>
+                                @foreach (var option in Model.AvailableGroups)
+                                {
+                                    <option value="@option.Key" selected="@(string.Equals(option.Key, Model.GroupKey, StringComparison.OrdinalIgnoreCase))">@option.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="includeCore" value="@(Model.IncludeCore ? "true" : "false")" data-permissions-filter-core-field />
+                                        <input class="form-check-input" type="checkbox" role="switch" id="filterIncludeCore" data-permissions-filter-core-toggle @(Model.IncludeCore ? "checked" : null) />
+                                        <label class="form-check-label" for="filterIncludeCore">نمایش مجوزهای Core</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="includeCustom" value="@(Model.IncludeCustom ? "true" : "false")" data-permissions-filter-custom-field />
+                                        <input class="form-check-input" type="checkbox" role="switch" id="filterIncludeCustom" data-permissions-filter-custom-toggle @(Model.IncludeCustom ? "checked" : null) />
+                                        <label class="form-check-label" for="filterIncludeCustom">نمایش مجوزهای سفارشی</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer admin-filter-modal__actions">
+                        <a class="btn btn-light" asp-area="Admin" asp-controller="Permissions" asp-action="Index" asp-route-pageSize="@Model.PageSize">پاکسازی</a>
+                        <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (totalPages > 1)
+{
+    var previousPage = Math.Max(1, Model.PageNumber - 1);
+    var nextPage = Math.Min(totalPages, Model.PageNumber + 1);
+
+    <nav class="permissions-pagination" aria-label="صفحه‌بندی مجوزها">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.PageNumber == 1 ? "disabled" : string.Empty)">
+                <a class="page-link permissions-pagination__control"
+                   asp-area="Admin"
+                   asp-controller="Permissions"
+                   asp-action="Index"
+                   asp-route-page="@previousPage"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-search="@searchTerm"
+                   asp-route-group="@Model.GroupKey"
+                   asp-route-includeCore="@Model.IncludeCore"
+                   asp-route-includeCustom="@Model.IncludeCustom">
+                    <span class="permissions-pagination__label">قبلی</span>
+                    <span class="permissions-pagination__icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 6L9 12l6 6" />
+                        </svg>
+                    </span>
+                </a>
+            </li>
+
+            @for (var i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : string.Empty)">
+                    <a class="page-link permissions-pagination__number"
+                       asp-area="Admin"
+                       asp-controller="Permissions"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-search="@searchTerm"
+                       asp-route-group="@Model.GroupKey"
+                       asp-route-includeCore="@Model.IncludeCore"
+                       asp-route-includeCustom="@Model.IncludeCustom">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.PageNumber == totalPages ? "disabled" : string.Empty)">
+                <a class="page-link permissions-pagination__control"
+                   asp-area="Admin"
+                   asp-controller="Permissions"
+                   asp-action="Index"
+                   asp-route-page="@nextPage"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-search="@searchTerm"
+                   asp-route-group="@Model.GroupKey"
+                   asp-route-includeCore="@Model.IncludeCore"
+                   asp-route-includeCustom="@Model.IncludeCustom">
+                    <span class="permissions-pagination__label">بعدی</span>
+                    <span class="permissions-pagination__icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 6l6 6-6 6" />
+                        </svg>
+                    </span>
+                </a>
+            </li>
+        </ul>
+        <div class="permissions-pagination__summary text-center text-muted small">
+            نمایش @Model.Groups.Sum(group => group.Permissions.Count) از @Model.TotalCount نتیجه
+            @if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                <span> (جستجو برای «@searchTerm»)</span>
+            }
+        </div>
+    </nav>
+}
+
+@section Scripts {
+    <script src="~/js/admin/permissions.js" asp-append-version="true"></script>
+}

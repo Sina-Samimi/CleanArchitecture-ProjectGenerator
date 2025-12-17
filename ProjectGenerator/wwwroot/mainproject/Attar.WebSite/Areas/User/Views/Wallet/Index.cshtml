@@ -1,0 +1,303 @@
+@model WalletDashboardViewModel
+@{
+    ViewData["Title"] ??= "مدیریت کیف پول";
+    var summary = Model.Summary;
+    var currency = string.IsNullOrWhiteSpace(summary.Currency) ? "IRT" : summary.Currency;
+    var lastActivity = summary.LastActivityOn.ToPersianDateTimeString();
+    var isLocked = summary.IsLocked;
+    var recentTransactions = Model.Transactions.Take(5).ToList();
+    var recentInvoices = Model.Invoices.Take(5).ToList();
+}
+
+<div class="wallet-dashboard" data-wallet>
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-4">
+                        <div>
+                            <div class="text-uppercase text-muted fw-semibold mb-2">کیف پول من</div>
+                            <h1 class="display-5 fw-bold mb-2">@summary.Balance.ToString("N0") <span class="fs-5 text-muted">@currency</span></h1>
+                            <div class="d-flex flex-wrap gap-3 text-muted">
+                                <span>
+                                    <i class="bi bi-clock-history ms-1"></i>
+                                    آخرین فعالیت: @lastActivity
+                                </span>
+                                <span>
+                                    <i class="bi bi-shield-lock ms-1"></i>
+                                    وضعیت: <strong class="@(isLocked ? "text-danger" : "text-success")">@(isLocked ? "قفل" : "آماده")</strong>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w-100 w-lg-50">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <h2 class="h5 mb-3">شارژ کیف پول</h2>
+                                    <form asp-action="Charge" method="post" class="row g-3">
+                                        @Html.AntiForgeryToken()
+                                        <div class="col-12 col-lg-6">
+                                            <label asp-for="Charge.Amount" class="form-label"></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-cash-stack"></i></span>
+                                                <input asp-for="Charge.Amount" class="form-control" type="number" step="1" min="1000" placeholder="مثلاً 200000" inputmode="numeric" />
+                                            </div>
+                                            <span asp-validation-for="Charge.Amount" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-12 col-lg-6">
+                                            <label asp-for="Charge.Description" class="form-label"></label>
+                                            <input asp-for="Charge.Description" class="form-control" placeholder="یادداشت اختیاری" />
+                                            <span asp-validation-for="Charge.Description" class="text-danger small"></span>
+                                        </div>
+                                        <input asp-for="Charge.Currency" type="hidden" />
+                                        <div class="col-12 d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary px-4" @(isLocked ? "disabled" : null)>
+                                                <i class="bi bi-plus-circle ms-1"></i>
+                                                افزودن اعتبار
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @await Html.PartialAsync("_StatusMessage")
+
+        <div class="col-12 col-xl-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h5 mb-1">فاکتورهای اخیر</h2>
+                            <p class="text-muted small mb-0">۵ فاکتور آخر صادر شده برای شما</p>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary">@recentInvoices.Count</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (recentInvoices.Count == 0)
+                    {
+                        <div class="alert alert-info mb-0" role="alert">
+                            فاکتوری برای نمایش وجود ندارد.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">شماره فاکتور</th>
+                                        <th scope="col">عنوان</th>
+                                        <th scope="col">مبلغ کل</th>
+                                        <th scope="col">باقیمانده</th>
+                                        <th scope="col">تاریخ صدور</th>
+                                        <th scope="col">وضعیت</th>
+                                        <th scope="col" class="text-end">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var invoice in recentInvoices)
+                                    {
+                                        var outstanding = invoice.OutstandingAmount;
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">@invoice.InvoiceNumber</div>
+                                            </td>
+                                            <td>@invoice.Title</td>
+                                            <td>@invoice.GrandTotal.ToString("N0") @currency</td>
+                                            <td class="@(outstanding > 0 ? "text-danger" : "text-success") fw-semibold">@outstanding.ToString("N0") @currency</td>
+                                            <td>@invoice.IssueDate.ToPersianDateString()</td>
+                                            <td>
+                                                <span class="badge bg-primary-subtle text-primary">@invoice.Status</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        عملیات
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" asp-action="InvoiceDetails" asp-route-id="@invoice.Id">
+                                                                جزئیات
+                                                            </a>
+                                                        </li>
+                                                        @if (outstanding > 0)
+                                                        {
+                                                            <li>
+                                                                <a class="dropdown-item text-success" asp-action="PayInvoice" asp-route-id="@invoice.Id">
+                                                                    انتخاب روش پرداخت
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                        else
+                                                        {
+                                                            <li>
+                                                                <span class="dropdown-item disabled" aria-disabled="true">
+                                                                    پرداخت تکمیل شده
+                                                                </span>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">وضعیت کیف پول</h2>
+                    <ul class="list-unstyled mb-0 small text-muted">
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span>موجودی قابل استفاده</span>
+                            <strong class="text-dark">@summary.Balance.ToString("N0") @currency</strong>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span>آخرین بروزرسانی</span>
+                            <strong class="text-dark">@summary.LastActivityOn.ToPersianDateString()</strong>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span>وضعیت فعلی</span>
+                            <strong class="text-dark">@(isLocked ? "غیرفعال" : "فعال")</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">سبد خرید فعال</h2>
+                    @if (Model.Cart is null)
+                    {
+                        <div class="alert alert-secondary mb-0" role="alert">
+                            سبد خرید فعالی برای شما ثبت نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">آخرین بروزرسانی</span>
+                            <strong>@Model.Cart.UpdatedAt.ToPersianDateTimeString()</strong>
+                        </div>
+                        <ul class="list-group list-group-flush mb-3">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <li class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold">@item.ProductName</div>
+                                            <div class="text-muted small">@item.ProductType</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-semibold">@item.LineTotal.ToString("N0") @currency</div>
+                                            <div class="text-muted small">@item.Quantity × @item.UnitPrice.ToString("N0")</div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>جمع سفارش</span>
+                                <strong>@Model.Cart.Subtotal.ToString("N0") @currency</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>تخفیف</span>
+                                <strong class="text-success">@Model.Cart.DiscountTotal.ToString("N0") @currency</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold">مبلغ نهایی</span>
+                                <strong>@Model.Cart.GrandTotal.ToString("N0") @currency</strong>
+                            </div>
+                            <a class="btn btn-outline-primary w-100 mt-3" asp-area="" asp-controller="Cart" asp-action="Index">
+                                مشاهده سبد خرید
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h5 mb-1">تراکنش‌های اخیر</h2>
+                            <p class="text-muted small mb-0">۵ تراکنش آخر ثبت شده در کیف پول شما</p>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary">@recentTransactions.Count</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (recentTransactions.Count == 0)
+                    {
+                        <div class="alert alert-info mb-0" role="alert">
+                            هنوز تراکنشی برای کیف پول شما ثبت نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">نوع تراکنش</th>
+                                        <th scope="col" class="text-center">مبلغ</th>
+                                        <th scope="col">وضعیت</th>
+                                        <th scope="col">مانده پس از تراکنش</th>
+                                        <th scope="col">توضیحات</th>
+                                        <th scope="col">تاریخ</th>
+                                        <th scope="col"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in recentTransactions)
+                                    {
+                                        var amountClass = string.Equals(transaction.Type, "واریز", StringComparison.Ordinal) ? "text-success" : "text-danger";
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">@transaction.Type</div>
+                                                <div class="text-muted small">@transaction.Reference</div>
+                                            </td>
+                                            <td class="text-center @amountClass fw-bold">@transaction.Amount.ToString("N0")</td>
+                                            <td>
+                                                <span class="badge @(string.Equals(transaction.Status, "موفق", StringComparison.Ordinal) ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning")">@transaction.Status</span>
+                                            </td>
+                                            <td>@transaction.BalanceAfter.ToString("N0")</td>
+                                            <td class="text-muted small">@transaction.Description</td>
+                                            <td>@transaction.OccurredAt.ToPersianDateTimeString()</td>
+                                            <td class="text-end">
+                                                @if (transaction.InvoiceId is not null)
+                                                {
+                                                    <a class="btn btn-sm btn-outline-primary" asp-action="InvoiceDetails" asp-route-id="@transaction.InvoiceId">
+                                                        مشاهده فاکتور
+                                                    </a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

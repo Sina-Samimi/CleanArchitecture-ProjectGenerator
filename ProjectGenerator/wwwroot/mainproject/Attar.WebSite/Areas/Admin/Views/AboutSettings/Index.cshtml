@@ -1,0 +1,194 @@
+@model AboutSettingsViewModel
+@{
+    ViewData["Title"] ??= "تنظیمات صفحه درباره ما";
+    ViewData["Subtitle"] ??= "مدیریت محتوای صفحه درباره ما";
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-12 col-xl-8">
+        <form asp-area="Admin" asp-controller="AboutSettings" asp-action="Index" method="post" enctype="multipart/form-data" class="card h-100" novalidate>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="card-title h4 mb-1">محتوای صفحه درباره ما</h2>
+                    <p class="card-subtitle text-muted mb-0">اطلاعات نمایش داده شده در صفحه درباره ما را در این بخش مدیریت کنید.</p>
+                </div>
+                <span class="badge bg-light text-primary">به‌روز رسانی همیشگی</span>
+            </div>
+            <div class="card-body">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control" placeholder="عنوان صفحه درباره ما" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12" data-editor-field>
+                        <label class="form-label">توضیحات</label>
+                        <div id="descriptionEditor"
+                             class="blog-editor"
+                             data-editor-wrapper></div>
+                        <textarea asp-for="Description"
+                                  class="form-control d-none"
+                                  rows="8"
+                                  placeholder="توضیحات درباره ما..."
+                                  data-content-input
+                                  data-editor-textarea></textarea>
+                        <div class="form-text d-none text-warning" data-editor-fallback>
+                            در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                        </div>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12" data-editor-field>
+                        <label class="form-label">چشم‌انداز</label>
+                        <div id="visionEditor"
+                             class="blog-editor"
+                             data-editor-wrapper></div>
+                        <textarea asp-for="Vision"
+                                  class="form-control d-none"
+                                  rows="6"
+                                  placeholder="چشم‌انداز ما..."
+                                  data-content-input
+                                  data-editor-textarea></textarea>
+                        <div class="form-text d-none text-warning" data-editor-fallback>
+                            در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                        </div>
+                        <span asp-validation-for="Vision" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12" data-editor-field>
+                        <label class="form-label">ماموریت</label>
+                        <div id="missionEditor"
+                             class="blog-editor"
+                             data-editor-wrapper></div>
+                        <textarea asp-for="Mission"
+                                  class="form-control d-none"
+                                  rows="6"
+                                  placeholder="ماموریت ما..."
+                                  data-content-input
+                                  data-editor-textarea></textarea>
+                        <div class="form-text d-none text-warning" data-editor-fallback>
+                            در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                        </div>
+                        <span asp-validation-for="Mission" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="my-4" />
+                        <h5 class="mb-3">تنظیمات SEO</h5>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="MetaTitle" class="form-label"></label>
+                        <input asp-for="MetaTitle" class="form-control" placeholder="عنوان SEO" />
+                        <span class="form-text text-muted">عنوانی که در نتایج موتورهای جستجو نمایش داده می‌شود.</span>
+                        <span asp-validation-for="MetaTitle" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="MetaDescription" class="form-label"></label>
+                        <textarea asp-for="MetaDescription" class="form-control" rows="3" placeholder="توضیحات SEO"></textarea>
+                        <span class="form-text text-muted">توضیح کوتاهی که در نتایج موتورهای جستجو نمایش داده می‌شود.</span>
+                        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="my-4" />
+                        <h5 class="mb-3">تصویر</h5>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">تصویر صفحه درباره ما</label>
+                        <div class="featured-upload" data-image-uploader>
+                            <div class="featured-upload__preview @(string.IsNullOrWhiteSpace(Model.ImagePath) ? "featured-upload__preview--empty" : string.Empty)"
+                                 data-image-preview
+                                 style="@(string.IsNullOrWhiteSpace(Model.ImagePath) ? string.Empty : $"background-image: url('{Url.Content(Model.ImagePath)}')")">
+                                <span class="featured-upload__placeholder" data-image-placeholder>
+                                    <i class="bi bi-image"></i>
+                                    <span>تصویر را انتخاب کنید</span>
+                                </span>
+                            </div>
+                            <div class="featured-upload__controls">
+                                <label class="btn btn-outline-secondary featured-upload__button">
+                                    <i class="bi bi-upload"></i>
+                                    انتخاب تصویر
+                                    <input asp-for="Image" class="d-none" accept="image/*" data-image-input />
+                                </label>
+                                <div class="featured-upload__meta">
+                                    <span data-image-filename>
+                                        @(string.IsNullOrWhiteSpace(Model.ImagePath) ? "تصویر انتخاب نشده است" : "تصویر فعلی انتخاب شده")
+                                    </span>
+                                    <div class="form-check form-switch mt-2">
+                                        <input asp-for="RemoveImage" class="form-check-input" data-image-remove />
+                                        <label class="form-check-label" asp-for="RemoveImage">حذف تصویر</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" asp-for="ImagePath" />
+                        <span asp-validation-for="Image" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="text-muted small">اطلاعات ذخیره‌شده در صفحه درباره ما نمایش داده می‌شود.</div>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-save me-1"></i>
+                    ذخیره تنظیمات
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2 class="card-title h5 mb-1">پیشنمایش</h2>
+                <p class="card-subtitle text-muted mb-0">مرور سریع آنچه کاربران خواهند دید.</p>
+            </div>
+            <div class="card-body d-flex flex-column gap-4">
+                <div class="p-3 bg-light rounded-3">
+                    <div class="mb-2">
+                        <span class="text-muted small">عنوان</span>
+                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace(Model.Title) ? "عنوان وارد نشده" : Model.Title)</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="h6 mb-2">توضیحات</h3>
+                    <p class="small text-muted mb-0">@(string.IsNullOrWhiteSpace(Model.Description) ? "توضیحاتی وارد نشده است" : Model.Description)</p>
+                </div>
+
+                <div>
+                    <h3 class="h6 mb-2">چشم‌انداز</h3>
+                    <p class="small text-muted mb-0">@(string.IsNullOrWhiteSpace(Model.Vision) ? "چشم‌اندازی وارد نشده است" : Model.Vision)</p>
+                </div>
+
+                <div>
+                    <h3 class="h6 mb-2">ماموریت</h3>
+                    <p class="small text-muted mb-0">@(string.IsNullOrWhiteSpace(Model.Mission) ? "ماموریتی وارد نشده است" : Model.Mission)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/admin/rich-editor.js" asp-append-version="true"></script>
+    <script src="~/js/admin/about-settings-form.js" asp-append-version="true"></script>
+}
+

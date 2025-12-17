@@ -1,0 +1,340 @@
+﻿@model SellerProductDetailViewModel
+@using System.Globalization
+@using System.Text.Json
+
+@{
+    ViewData["Sidebar:ActiveTab"] = "products";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+
+    string FormatCurrency(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatNumber(decimal value) => string.Format(culture, "{0:N0}", value);
+    string FormatDate(DateTimeOffset? value) => value?.ToPersianDateTimeString() ?? "—";
+    string FormatShortDate(DateTimeOffset? value) => value?.ToPersianDateString() ?? "—";
+    string InventoryStatus(SellerProductDetailViewModel product)
+    {
+        if (!product.TrackInventory)
+        {
+            return "مدیریت موجودی غیرفعال";
+        }
+
+        return product.StockQuantity > 0
+            ? string.Format(culture, "{0:N0} عدد موجود", product.StockQuantity)
+            : "ناموجود";
+    }
+
+    string TypeLabel(ProductType type) => type switch
+    {
+        ProductType.Digital => "محصول دانلودی",
+        ProductType.Physical => "محصول فیزیکی",
+        _ => "محصول"
+    };
+
+    string TypeBadgeClass(ProductType type) => type switch
+    {
+        ProductType.Digital => "badge bg-info-subtle text-info-emphasis",
+        ProductType.Physical => "badge bg-primary-subtle text-primary-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+
+    string StatusLabel(bool published) => published ? "منتشر شده" : "در انتظار تایید";
+    string StatusBadgeClass(bool published) => published
+        ? "badge bg-success-subtle text-success-emphasis"
+        : "badge bg-warning-subtle text-warning-emphasis";
+
+    var hasTags = Model.Tags.Count > 0;
+    var hasGallery = Model.Gallery.Count > 0;
+
+    var trend = Model.Sales.Trend?.ToArray() ?? Array.Empty<SellerProductSalesTrendPointViewModel>();
+    var hasSales = Model.Sales.TotalOrders > 0;
+    var chartLabels = JsonSerializer.Serialize(trend.Select(point => point.Label));
+    var chartRevenue = JsonSerializer.Serialize(trend.Select(point => point.Revenue));
+    var chartQuantity = JsonSerializer.Serialize(trend.Select(point => point.Quantity));
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/seller/product-detail.css" asp-append-version="true" />
+}
+
+<div class="seller-product-detail">
+    <section class="seller-product-detail__card seller-product-detail__overview card shadow-sm border-0">
+        <div class="p-4">
+            <div class="seller-product-detail__header">
+                <div class="seller-product-detail__media">
+                    @if (!string.IsNullOrWhiteSpace(Model.FeaturedImagePath))
+                    {
+                        <img src="@Model.FeaturedImagePath" alt="@Model.Name" class="seller-product-detail__thumbnail" />
+                    }
+                    else
+                    {
+                        <span class="seller-product-detail__thumbnail seller-product-detail__thumbnail--placeholder">
+                            @(string.IsNullOrWhiteSpace(Model.Name) ? "?" : Model.Name.Trim().FirstOrDefault())
+                        </span>
+                    }
+                    <span class="seller-product-detail__status @StatusBadgeClass(Model.IsPublished)">
+                        @StatusLabel(Model.IsPublished)
+                    </span>
+                </div>
+                <div class="seller-product-detail__summary">
+                    <div class="seller-product-detail__title-row">
+                        <h1 class="seller-product-detail__title">@Model.Name</h1>
+                        <span class="seller-product-detail__type @TypeBadgeClass(Model.Type)">@TypeLabel(Model.Type)</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Summary))
+                    {
+                        <p class="seller-product-detail__subtitle">@Model.Summary</p>
+                    }
+                    <div class="seller-product-detail__metrics">
+                        <div class="seller-product-detail__metric">
+                            <span class="seller-product-detail__metric-icon bg-success-subtle text-success-emphasis">
+                                <i class="bi bi-cash-stack"></i>
+                            </span>
+                            <div>
+                                <span class="seller-product-detail__metric-label">قیمت</span>
+                                <span class="seller-product-detail__metric-value">@(Model.Price.HasValue ? FormatCurrency(Model.Price.Value) : "قیمت بر اساس سفارش")</span>
+                                @if (Model.CompareAtPrice.HasValue)
+                                {
+                                    <span class="seller-product-detail__metric-compare">@FormatCurrency(Model.CompareAtPrice.Value)</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="seller-product-detail__metric">
+                            <span class="seller-product-detail__metric-icon bg-primary-subtle text-primary-emphasis">
+                                <i class="bi bi-box-seam"></i>
+                            </span>
+                            <div>
+                                <span class="seller-product-detail__metric-label">موجودی</span>
+                                <span class="seller-product-detail__metric-value">@InventoryStatus(Model)</span>
+                            </div>
+                        </div>
+                        <div class="seller-product-detail__metric">
+                            <span class="seller-product-detail__metric-icon bg-warning-subtle text-warning-emphasis">
+                                <i class="bi bi-eye"></i>
+                            </span>
+                            <div>
+                                <span class="seller-product-detail__metric-label">بازدید</span>
+                                <span class="seller-product-detail__metric-value">@FormatNumber(Model.ViewCount)</span>
+                            </div>
+                        </div>
+                        <div class="seller-product-detail__metric">
+                            <span class="seller-product-detail__metric-icon bg-info-subtle text-info-emphasis">
+                                <i class="bi bi-collection"></i>
+                            </span>
+                            <div>
+                                <span class="seller-product-detail__metric-label">دسته‌بندی</span>
+                                <span class="seller-product-detail__metric-value">@Model.CategoryName</span>
+                            </div>
+                        </div>
+                    </div>
+                    @if (hasTags)
+                    {
+                        <div class="seller-product-detail__tags" aria-label="برچسب‌های محصول">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <span class="seller-product-detail__tag">@tag</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="seller-product-detail__card seller-product-detail__sales card shadow-sm border-0">
+        <div class="card-body">
+            <div class="seller-product-detail__sales-header">
+                <div>
+                    <h2 class="h5 mb-1">آمار فروش محصول</h2>
+                    <p class="text-muted mb-0">نمای کلی از عملکرد فروش و گردش مالی</p>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                    @string.Format(culture, "{0:N0}", Model.Sales.TotalOrders) سفارش ثبت‌شده
+                </span>
+            </div>
+            <div class="seller-product-detail__sales-metrics">
+                <div class="seller-product-detail__sales-metric">
+                    <span class="seller-product-detail__sales-metric-icon bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-graph-up"></i>
+                    </span>
+                    <div>
+                        <span class="seller-product-detail__sales-metric-label">درآمد کل</span>
+                        <span class="seller-product-detail__sales-metric-value">@FormatCurrency(Model.Sales.TotalRevenue)</span>
+                    </div>
+                </div>
+                <div class="seller-product-detail__sales-metric">
+                    <span class="seller-product-detail__sales-metric-icon bg-primary-subtle text-primary-emphasis">
+                        <i class="bi bi-cart-check"></i>
+                    </span>
+                    <div>
+                        <span class="seller-product-detail__sales-metric-label">تعداد فروش</span>
+                        <span class="seller-product-detail__sales-metric-value">@FormatNumber(Model.Sales.TotalQuantity)</span>
+                    </div>
+                </div>
+                <div class="seller-product-detail__sales-metric">
+                    <span class="seller-product-detail__sales-metric-icon bg-info-subtle text-info-emphasis">
+                        <i class="bi bi-receipt"></i>
+                    </span>
+                    <div>
+                        <span class="seller-product-detail__sales-metric-label">میانگین هر سفارش</span>
+                        <span class="seller-product-detail__sales-metric-value">@FormatCurrency(Model.Sales.AverageOrderValue)</span>
+                    </div>
+                </div>
+                <div class="seller-product-detail__sales-metric">
+                    <span class="seller-product-detail__sales-metric-icon bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-percent"></i>
+                    </span>
+                    <div>
+                        <span class="seller-product-detail__sales-metric-label">تخفیف اعمال شده</span>
+                        <span class="seller-product-detail__sales-metric-value">@FormatCurrency(Model.Sales.TotalDiscount)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="seller-product-detail__chart">
+                @if (hasSales)
+                {
+                    <canvas id="teacherProductSalesChart" height="220"></canvas>
+                }
+                else
+                {
+                    <p class="seller-product-detail__chart-empty">تا این لحظه فروشی برای این محصول ثبت نشده است.</p>
+                }
+            </div>
+            <div class="seller-product-detail__sales-meta">
+                <span><i class="bi bi-calendar-check"></i> اولین فروش: @FormatDate(Model.Sales.FirstSaleAt)</span>
+                <span><i class="bi bi-calendar-week"></i> آخرین فروش: @FormatDate(Model.Sales.LastSaleAt)</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="seller-product-detail__card seller-product-detail__description card shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="h5 mb-3">توضیحات محصول</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="seller-product-detail__description-content">
+                    @Html.Raw(Model.Description)
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">توضیحاتی برای این محصول ثبت نشده است.</p>
+            }
+        </div>
+    </section>
+
+    @if (hasGallery)
+    {
+        <section class="seller-product-detail__card seller-product-detail__gallery card shadow-sm border-0">
+            <div class="card-body">
+                <h2 class="h5 mb-3">گالری تصاویر</h2>
+                <div class="seller-product-detail__gallery-grid">
+                    @foreach (var image in Model.Gallery.OrderBy(item => item.Order).ThenBy(item => item.Id))
+                    {
+                        <figure class="seller-product-detail__gallery-item">
+                            <img src="@image.Path" alt="@Model.Name" loading="lazy" />
+                        </figure>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="seller-product-detail__card seller-product-detail__meta card shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="h6 mb-3">جزئیات زمان‌بندی و دسترسی</h2>
+            <ul class="seller-product-detail__meta-list">
+                <li><i class="bi bi-diagram-3"></i> دسته‌بندی: <span>@Model.CategoryName</span></li>
+                <li><i class="bi bi-hourglass"></i> وضعیت مدیریت موجودی: <span>@(Model.TrackInventory ? "فعال" : "غیرفعال")</span></li>
+                <li><i class="bi bi-calendar-plus"></i> تاریخ ایجاد: <span>@FormatShortDate(Model.CreatedAt)</span></li>
+                <li><i class="bi bi-calendar-check"></i> آخرین بروزرسانی: <span>@FormatDate(Model.UpdatedAt)</span></li>
+                <li><i class="bi bi-broadcast"></i> وضعیت انتشار: <span>@StatusLabel(Model.IsPublished)</span></li>
+                <li><i class="bi bi-calendar-event"></i> زمان انتشار: <span>@FormatDate(Model.PublishedAt)</span></li>
+            </ul>
+            @if (!string.IsNullOrWhiteSpace(Model.DigitalDownloadPath))
+            {
+                <a class="btn btn-outline-primary w-100 mt-3" href="@Model.DigitalDownloadPath" target="_blank" rel="noopener">
+                    <i class="bi bi-download"></i>
+                    مشاهده فایل دانلودی
+                </a>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script>
+        (() => {
+            const hasSales = @hasSales.ToString().ToLowerInvariant() === 'true';
+            if (!hasSales) {
+                return;
+            }
+
+            const labels = @Html.Raw(chartLabels);
+            const revenue = @Html.Raw(chartRevenue);
+            const quantity = @Html.Raw(chartQuantity);
+
+            const ctx = document.getElementById('teacherProductSalesChart');
+            if (!ctx) {
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'درآمد (تومان)',
+                            data: revenue,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                            tension: 0.35,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'تعداد فروش',
+                            data: quantity,
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.12)',
+                            tension: 0.35,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    stacked: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            position: 'right',
+                            ticks: {
+                                callback: (value) => new Intl.NumberFormat('fa-IR').format(value)
+                            }
+                        },
+                        y1: {
+                            position: 'left',
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: (value) => new Intl.NumberFormat('fa-IR').format(value)
+                            }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+}

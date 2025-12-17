@@ -1,0 +1,145 @@
+@using Attar.WebSite.Areas.Admin.Models
+@model PageFormViewModel
+@{
+    var isEdit = Model.Id.HasValue;
+    var formAction = isEdit ? "Edit" : "Create";
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/blog-form.css" asp-append-version="true" />
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<form asp-action="@formAction" asp-route-id="@(isEdit ? Model.Id : null)" method="post" enctype="multipart/form-data" class="card" data-page-form>
+    @Html.AntiForgeryToken()
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="عنوان صفحه" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Slug" class="form-label"></label>
+                    <input asp-for="Slug" class="form-control" placeholder="example-page" />
+                    <div class="form-text">آدرس صفحه در URL (فقط حروف کوچک انگلیسی، اعداد و خط تیره)</div>
+                    <span asp-validation-for="Slug" class="text-danger"></span>
+                </div>
+                <div class="mb-3" data-editor-field>
+                    <label class="form-label">محتوای صفحه</label>
+                    <div id="pageEditor"
+                         class="blog-editor"
+                         data-editor-wrapper
+                         data-upload-url="@Url.Action("UploadContentImage")"></div>
+                    <textarea asp-for="Content"
+                              class="form-control d-none"
+                              rows="8"
+                              placeholder="محتوای صفحه را اینجا وارد کنید..."
+                              data-content-input
+                              data-editor-textarea></textarea>
+                    <div class="form-text d-none text-warning" data-editor-fallback>
+                        در صورت بروز مشکل در بارگذاری ویرایشگر پیشرفته، متن را در این بخش وارد کنید.
+                    </div>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="mb-4">
+                    <label class="form-label">عکس شاخص</label>
+                    <div class="featured-upload" data-featured-uploader>
+                        <div class="featured-upload__preview @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? "featured-upload__preview--empty" : string.Empty)"
+                             data-featured-preview
+                             style="@(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? string.Empty : $"background-image: url('{Url.Content(Model.FeaturedImagePath)}')")">
+                            <span class="featured-upload__placeholder" data-featured-placeholder>
+                                <i class="bi bi-image"></i>
+                                <span>تصویر شاخص را انتخاب کنید</span>
+                            </span>
+                        </div>
+                        <div class="featured-upload__controls">
+                            <label class="btn btn-outline-secondary featured-upload__button">
+                                <i class="bi bi-upload"></i>
+                                انتخاب تصویر
+                                <input asp-for="FeaturedImage" class="d-none" accept="image/*" data-featured-input />
+                            </label>
+                            <div class="featured-upload__meta">
+                                <span data-featured-filename>
+                                    @(string.IsNullOrWhiteSpace(Model.FeaturedImagePath) ? "تصویر انتخاب نشده است" : "تصویر فعلی انتخاب شده")
+                                </span>
+                                <div class="form-check form-switch mt-2">
+                                    <input asp-for="RemoveFeaturedImage" class="form-check-input" data-featured-remove />
+                                    <label class="form-check-label" asp-for="RemoveFeaturedImage"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input asp-for="FeaturedImagePath" type="hidden" data-featured-path />
+                    <span asp-validation-for="FeaturedImage" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsPublished" />
+                        <label class="form-check-label" asp-for="IsPublished">منتشر شده</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="ShowInFooter" />
+                        <label class="form-check-label" asp-for="ShowInFooter">نمایش در فوتر</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="ShowInQuickAccess" />
+                        <label class="form-check-label" asp-for="ShowInQuickAccess">نمایش در دسترسی سریع</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h5 class="mb-3">تنظیمات SEO</h5>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="MetaTitle" class="form-label"></label>
+                    <input asp-for="MetaTitle" class="form-control" placeholder="عنوان سئو" />
+                    <span asp-validation-for="MetaTitle" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="MetaDescription" class="form-label"></label>
+                    <textarea asp-for="MetaDescription" class="form-control" rows="2" placeholder="توضیحات متا"></textarea>
+                    <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="MetaKeywords" class="form-label"></label>
+                    <input asp-for="MetaKeywords" class="form-control" placeholder="کلمات کلیدی با ویرگول" />
+                    <span asp-validation-for="MetaKeywords" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="MetaRobots" class="form-label"></label>
+                    <select asp-for="MetaRobots" class="form-select" asp-items="Model.Selections?.RobotsOptions"></select>
+                    <span asp-validation-for="MetaRobots" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Pages" asp-action="Index">بازگشت</a>
+        <button type="submit" class="btn btn-primary">
+            @if (isEdit)
+            {
+                <span><i class="bi bi-save me-1"></i>ذخیره تغییرات</span>
+            }
+            else
+            {
+                <span><i class="bi bi-check2-circle me-1"></i>ایجاد صفحه</span>
+            }
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/admin/rich-editor.js" asp-append-version="true"></script>
+    <script src="~/js/admin/blog-form.js" asp-append-version="true"></script>
+    <script src="~/js/admin/page-form.js" asp-append-version="true"></script>
+}

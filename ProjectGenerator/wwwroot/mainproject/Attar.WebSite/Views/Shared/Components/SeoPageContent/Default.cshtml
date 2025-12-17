@@ -1,0 +1,40 @@
+@{
+    var h1Title = ViewData["H1Title"] as string;
+    var featuredImageUrl = ViewData["FeaturedImageUrl"] as string;
+    var featuredImageAlt = ViewData["FeaturedImageAlt"] as string ?? h1Title ?? ViewData["Title"]?.ToString() ?? "";
+    var pageDescription = ViewData["PageDescription"] as string;
+    var tags = ViewData["Tags"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(h1Title))
+{
+    <h1 class="page-h1-title">@h1Title</h1>
+}
+
+@if (!string.IsNullOrWhiteSpace(featuredImageUrl))
+{
+    <div class="page-featured-image mb-4">
+        <img src="@featuredImageUrl" alt="@featuredImageAlt" class="img-fluid" style="max-width: 100%; height: auto; border-radius: 8px;" />
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(pageDescription))
+{
+    <div class="page-description">
+        @Html.Raw(pageDescription)
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(tags))
+{
+    <div class="page-tags mt-3">
+        @{
+            var tagList = tags.Split(new[] { ',', '،', ';', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+        @foreach (var tag in tagList)
+        {
+            <span class="badge bg-secondary me-2">@tag</span>
+        }
+    </div>
+}
+

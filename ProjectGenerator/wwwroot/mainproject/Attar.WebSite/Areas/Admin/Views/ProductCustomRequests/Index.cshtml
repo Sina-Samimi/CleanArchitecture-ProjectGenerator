@@ -1,0 +1,295 @@
+@using System.Globalization
+@using Attar.Domain.Enums
+@using Attar.SharedKernel.Extensions
+@using Attar.WebSite.Areas.Admin.Models
+@model ProductCustomRequestListViewModel
+@{
+    ViewData["Title"] = "مدیریت درخواست‌های سفارشی";
+    ViewData["Subtitle"] = "رسیدگی به درخواست‌های سفارشی محصولات";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string StatusLabel(CustomRequestStatus status) => status switch
+    {
+        CustomRequestStatus.Pending => "در انتظار",
+        CustomRequestStatus.Contacted => "تماس گرفته شده",
+        CustomRequestStatus.Completed => "تکمیل شده",
+        CustomRequestStatus.Cancelled => "لغو شده",
+        _ => "نامشخص"
+    };
+    string StatusBadgeClass(CustomRequestStatus status) => status switch
+    {
+        CustomRequestStatus.Pending => "badge bg-warning-subtle text-warning-emphasis",
+        CustomRequestStatus.Contacted => "badge bg-info-subtle text-info-emphasis",
+        CustomRequestStatus.Completed => "badge bg-success-subtle text-success-emphasis",
+        CustomRequestStatus.Cancelled => "badge bg-danger-subtle text-danger-emphasis",
+        _ => "badge bg-secondary-subtle text-secondary-emphasis"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">درخواست‌های سفارشی</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="custom-requests-page">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">درخواست‌های سفارشی محصولات</h1>
+                    <p class="text-muted mb-0">مدیریت و رسیدگی به درخواست‌های سفارشی کاربران</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!Model.Requests.Any())
+            {
+                <div class="alert alert-info-subtle border-0 text-center py-4 mb-0" role="alert">
+                    <i class="bi bi-inbox fs-3 mb-2 d-block"></i>
+                    <h2 class="h5 mb-1">هنوز درخواست سفارشی ثبت نشده است.</h2>
+                    <p class="mb-0">به محض ثبت درخواست جدید، در این بخش نمایش داده خواهد شد.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">محصول</th>
+                                <th scope="col">نام و نام خانوادگی</th>
+                                <th scope="col">تماس</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">تاریخ ثبت</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model.Requests)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@request.ProductId" class="text-decoration-none">
+                                            @request.ProductName
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@request.FullName</div>
+                                        @if (!string.IsNullOrWhiteSpace(request.UserId))
+                                        {
+                                            <small class="text-muted">کاربر ثبت‌نام شده</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="bi bi-telephone me-1"></i>
+                                            <span>@request.Phone</span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(request.Email))
+                                        {
+                                            <div class="mt-1">
+                                                <i class="bi bi-envelope me-1"></i>
+                                                <span>@request.Email</span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="@StatusBadgeClass(request.Status)">@StatusLabel(request.Status)</span>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <span>@FormatDateTime(request.CreatedAt)</span>
+                                        </div>
+                                        @if (request.ContactedAt.HasValue)
+                                        {
+                                            <small class="text-muted">
+                                                تماس: @FormatDateTime(request.ContactedAt.Value)
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#requestModal-@request.Id">
+                                                <i class="bi bi-eye"></i>
+                                                مشاهده
+                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                                    تغییر وضعیت
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form method="post" asp-action="UpdateStatus" asp-route-id="@request.Id">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="status" value="@((int)CustomRequestStatus.Pending)" />
+                                                            <button type="submit" class="dropdown-item @(request.Status == CustomRequestStatus.Pending ? "active" : "")">
+                                                                در انتظار
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="post" asp-action="UpdateStatus" asp-route-id="@request.Id">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="status" value="@((int)CustomRequestStatus.Contacted)" />
+                                                            <button type="submit" class="dropdown-item @(request.Status == CustomRequestStatus.Contacted ? "active" : "")">
+                                                                تماس گرفته شده
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="post" asp-action="UpdateStatus" asp-route-id="@request.Id">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="status" value="@((int)CustomRequestStatus.Completed)" />
+                                                            <button type="submit" class="dropdown-item @(request.Status == CustomRequestStatus.Completed ? "active" : "")">
+                                                                تکمیل شده
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form method="post" asp-action="UpdateStatus" asp-route-id="@request.Id">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="status" value="@((int)CustomRequestStatus.Cancelled)" />
+                                                            <button type="submit" class="dropdown-item text-danger @(request.Status == CustomRequestStatus.Cancelled ? "active" : "")">
+                                                                لغو شده
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Modal for request details -->
+                                <div class="modal fade" id="requestModal-@request.Id" tabindex="-1" aria-labelledby="requestModalLabel-@request.Id" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="requestModalLabel-@request.Id">جزئیات درخواست سفارشی</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">محصول</label>
+                                                        <div>
+                                                            <a asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@request.ProductId" class="text-decoration-none">
+                                                                @request.ProductName
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">وضعیت</label>
+                                                        <div>
+                                                            <span class="@StatusBadgeClass(request.Status)">@StatusLabel(request.Status)</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">نام و نام خانوادگی</label>
+                                                        <div>@request.FullName</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">شماره تماس</label>
+                                                        <div>
+                                                            <i class="bi bi-telephone me-1"></i>
+                                                            @request.Phone
+                                                        </div>
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(request.Email))
+                                                    {
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">ایمیل</label>
+                                                            <div>
+                                                                <i class="bi bi-envelope me-1"></i>
+                                                                @request.Email
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold">تاریخ ثبت</label>
+                                                        <div>
+                                                            <i class="bi bi-calendar-event me-1"></i>
+                                                            @FormatDateTime(request.CreatedAt)
+                                                        </div>
+                                                    </div>
+                                                    @if (request.ContactedAt.HasValue)
+                                                    {
+                                                        <div class="col-md-6">
+                                                            <label class="form-label fw-semibold">تاریخ تماس</label>
+                                                            <div>
+                                                                <i class="bi bi-telephone-forward me-1"></i>
+                                                                @FormatDateTime(request.ContactedAt.Value)
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(request.Message))
+                                                    {
+                                                        <div class="col-12">
+                                                            <label class="form-label fw-semibold">توضیحات و نیازمندی‌ها</label>
+                                                            <div class="p-3 bg-light rounded">@request.Message</div>
+                                                        </div>
+                                                    }
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">یادداشت ادمین</label>
+                                                        <form method="post" asp-action="UpdateStatus" asp-route-id="@request.Id">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="status" value="@((int)request.Status)" />
+                                                            <textarea class="form-control" name="adminNotes" rows="3" placeholder="یادداشت خود را وارد کنید...">@request.AdminNotes</textarea>
+                                                            <div class="mt-2">
+                                                                <button type="submit" class="btn btn-sm btn-primary">ذخیره یادداشت</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.TotalCount > Model.PageSize)
+                {
+                    <nav aria-label="صفحه‌بندی درخواست‌ها" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @{
+                                var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                                var currentPage = Model.PageNumber;
+                            }
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-status="@Model.SelectedStatus" asp-route-productId="@Model.SelectedProductId">قبلی</a>
+                                </li>
+                            }
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-status="@Model.SelectedStatus" asp-route-productId="@Model.SelectedProductId">@i</a>
+                                </li>
+                            }
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-status="@Model.SelectedStatus" asp-route-productId="@Model.SelectedProductId">بعدی</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+

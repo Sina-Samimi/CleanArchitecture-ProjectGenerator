@@ -1,0 +1,320 @@
+﻿@using System.Text.Json
+@using System.Globalization
+@model ProductDetailViewModel
+@{
+    ViewData["ContainerClass"] = "container product-detail-container";
+    ViewData["MainClass"] = "site-main product-detail-main";
+    var commentSuccess = TempData["ProductCommentSuccess"] as bool?;
+    var requestPath = Context?.Request?.Path.Value ?? Url.Action("Index", "Home") ?? "/";
+    var requestQuery = Context?.Request?.QueryString.Value;
+    var currentReturnUrl = string.IsNullOrEmpty(requestQuery) ? requestPath : $"{requestPath}{requestQuery}";
+    var quantityInputId = $"product-quantity-{Model.Product.Id:N}";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/product-detail-modern.css" asp-append-version="true" />
+}
+
+<section class="product-hero" aria-labelledby="productTitle" style="background-image: url('@Model.HeroImageUrl');">
+    <div class="product-hero__overlay"></div>
+    <div class="product-hero__content">
+        <div class="product-hero__info">
+            <span class="product-hero__category">@Model.Product.Category</span>
+            <h1 class="product-hero__title" id="productTitle">@Model.Product.Name</h1>
+            <p class="product-hero__description">@Html.Raw(Model.Description)</p>
+            <div class="product-hero__meta">
+                <div class="product-hero__rating" aria-label="@Model.Product.GetReviewCountLabel()">
+                    <span class="product-hero__rating-icon" aria-hidden="true">★</span>
+                    <span>@Model.Product.GetRatingLabel()</span>
+                    <span class="product-hero__dot" aria-hidden="true">•</span>
+                    <span>@Model.Product.GetReviewCountLabel()</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Duration))
+                {
+                    <span class="product-hero__dot" aria-hidden="true">•</span>
+                    <span class="product-hero__duration">@Model.Duration</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.DifficultyLevel))
+                {
+                    <span class="product-hero__dot" aria-hidden="true">•</span>
+                    <span class="product-hero__difficulty">@Model.DifficultyLevel</span>
+                }
+            </div>
+            @if (Model.Product.Tags.Any())
+            {
+                <div class="product-hero__tags" aria-label="برچسب‌های محصول">
+                    @foreach (var tag in Model.Product.Tags.Take(4))
+                    {
+                        <span class="product-hero__tag">@tag</span>
+                    }
+                </div>
+            }
+        </div>
+        <div class="product-hero__pricing" aria-labelledby="productPriceTitle">
+            <h2 class="product-hero__pricing-title" id="productPriceTitle">سرمایه‌گذاری</h2>
+            @if (Model.Product.IsCustomOrder)
+            {
+                <div class="product-hero__price">
+                    <span class="product-hero__price-current">قیمت بر اساس سفارش</span>
+                </div>
+                <div class="product-hero__custom-order-form">
+                    <h3 class="product-hero__custom-order-title">درخواست سفارشی</h3>
+                    <p class="product-hero__custom-order-description">لطفاً مشخصات خود را وارد کنید تا در اسرع وقت با شما تماس بگیریم.</p>
+                    @if (TempData["CustomRequestSuccess"] as bool? == true)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle"></i>
+                            درخواست شما با موفقیت ثبت شد. به زودی با شما تماس خواهیم گرفت.
+                        </div>
+                    }
+                    @if (TempData["CustomRequestError"] is string error)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-circle"></i>
+                            @error
+                        </div>
+                    }
+                    <form asp-controller="Product" asp-action="SubmitCustomRequest" method="post" class="product-custom-request-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ProductId" value="@Model.Product.Id" />
+                        <div class="mb-3">
+                            <label class="form-label" for="FullName">نام و نام خانوادگی <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="FullName" name="FullName" required maxlength="200" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="Phone">شماره تماس <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="Phone" name="Phone" required maxlength="50" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="Email">ایمیل (اختیاری)</label>
+                            <input type="email" class="form-control" id="Email" name="Email" maxlength="256" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="Message">توضیحات و نیازمندی‌های شما</label>
+                            <textarea class="form-control" id="Message" name="Message" rows="4" maxlength="2000" placeholder="لطفاً نیازمندی‌ها و مشخصات مورد نظر خود را وارد کنید..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-send"></i>
+                            ارسال درخواست
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="product-hero__price">
+                    <span class="product-hero__price-current">@Model.Product.GetFormattedPrice() تومان</span>
+                    @if (Model.Product.OriginalPrice.HasValue)
+                    {
+                        <span class="product-hero__price-original">@Model.Product.GetFormattedOriginalPrice() تومان</span>
+                    }
+                </div>
+                <ul class="product-hero__benefits" aria-label="ویژگی‌های کلیدی">
+                    @foreach (var highlight in Model.Highlights)
+                    {
+                        <li>@highlight</li>
+                    }
+                </ul>
+                <div class="product-hero__actions" aria-label="اقدامات خرید">
+                    <form asp-controller="Cart" asp-action="Add" method="post" class="product-hero__cart-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Product.Id" />
+                        <input type="hidden" name="returnUrl" value="@currentReturnUrl" />
+                        <div class="product-hero__quantity">
+                            <label class="product-hero__quantity-label" for="@quantityInputId">تعداد</label>
+                            <div class="product-hero__quantity-input">
+                                <button type="button" class="product-hero__quantity-button" aria-label="کاهش تعداد" onclick="const input=this.parentElement.querySelector('input'); if(input && input.value){ const value=parseInt(input.value,10)||1; if(value>1){ input.stepDown(); input.dispatchEvent(new Event('change')); }}">−</button>
+                                <input id="@quantityInputId" name="quantity" type="number" min="1" value="1" inputmode="numeric" pattern="[0-9]*" />
+                                <button type="button" class="product-hero__quantity-button" aria-label="افزایش تعداد" onclick="const input=this.parentElement.querySelector('input'); if(input){ input.stepUp(); input.dispatchEvent(new Event('change')); }}">+</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="product-hero__cart-button">
+                            <span class="product-hero__cart-icon" aria-hidden="true">🛒</span>
+                            <span>افزودن به سبد خرید</span>
+                        </button>
+                        <p class="product-hero__cart-hint">پرداخت امن و دریافت فوری دسترسی پس از تکمیل خرید.</p>
+                    </form>
+                    <a class="product-hero__cta" asp-controller="Account" asp-action="PhoneLogin">درخواست مشاوره رایگان</a>
+                </div>
+                <p class="product-hero__note">پس از ثبت درخواست، مشاور تخصصی @(ViewData["SiteName"] as string ?? "عطاری آنلاین") طی ۲۴ ساعت با شما تماس می‌گیرد.</p>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="product-section" aria-labelledby="modulesTitle">
+    <div class="product-section__header">
+        <h2 class="product-section__title" id="modulesTitle">ساختار برنامه</h2>
+        <p class="product-section__subtitle">گام‌های اجرایی محصول و محتوای هر مرحله</p>
+    </div>
+    <div class="product-modules">
+        @foreach (var module in Model.Modules)
+        {
+            <article class="product-module">
+                <h3 class="product-module__title">@module.Title</h3>
+                <p class="product-module__description">@module.Description</p>
+                @if (!string.IsNullOrWhiteSpace(module.Duration))
+                {
+                    <span class="product-module__duration">@module.Duration</span>
+                }
+            </article>
+        }
+    </div>
+</section>
+
+@if (Model.Statistics.Any())
+{
+    <section class="product-section" aria-labelledby="statsTitle">
+        <div class="product-section__header">
+            <h2 class="product-section__title" id="statsTitle">شاخص‌های کلیدی</h2>
+        </div>
+        <div class="product-stats">
+            @foreach (var stat in Model.Statistics)
+            {
+                <div class="product-stat" @(string.IsNullOrWhiteSpace(stat.Tooltip) ? null : $"title=\"{stat.Tooltip}\"")>
+                    <span class="product-stat__value">@stat.Value</span>
+                    <span class="product-stat__label">@stat.Label</span>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@if (Model.FaqItems.Any())
+{
+    <section class="product-section" aria-labelledby="faqTitle">
+        <div class="product-section__header">
+            <h2 class="product-section__title" id="faqTitle">سوالات متداول</h2>
+        </div>
+        <div class="product-faq">
+            @foreach (var faq in Model.FaqItems)
+            {
+                <details class="product-faq__item">
+                    <summary class="product-faq__question">@faq.Question</summary>
+                    <p class="product-faq__answer">@faq.Answer</p>
+                </details>
+            }
+        </div>
+    </section>
+}
+
+@if (Model.Attributes.Any())
+{
+    <section class="product-section" aria-labelledby="attributesTitle">
+        <div class="product-section__header">
+            <h2 class="product-section__title" id="attributesTitle">ویژگی‌های محصول</h2>
+            <p class="product-section__subtitle">مشخصات و ویژگی‌های کلیدی این محصول</p>
+        </div>
+        <div class="product-attributes">
+            <dl class="product-attributes__list">
+                @foreach (var attr in Model.Attributes)
+                {
+                    <div class="product-attributes__item">
+                        <dt class="product-attributes__key">@attr.Key</dt>
+                        <dd class="product-attributes__value">@attr.Value</dd>
+                    </div>
+                }
+            </dl>
+        </div>
+    </section>
+}
+
+<section class="product-comments blog-comments" id="comments" aria-labelledby="commentsTitle">
+    <div class="blog-comments__header">
+        <div>
+            <h2 class="blog-comments__title" id="commentsTitle">نظر مشتریان</h2>
+            <p class="blog-comments__subtitle">تجربه سازمان‌هایی که از این محصول استفاده کرده‌اند</p>
+        </div>
+        <div class="product-comments__meta">
+            <span class="product-comment__rating">
+                <span class="product-comment__rating-icon" aria-hidden="true">★</span>
+                @Model.Product.GetRatingLabel()
+            </span>
+            <span class="product-comments__count">@Model.Product.GetReviewCountLabel()</span>
+        </div>
+    </div>
+
+    @if (!Model.Comments.Any())
+    {
+        <p class="blog-comments__empty">هنوز نظری ثبت نشده است.</p>
+    }
+    else
+    {
+        <ol class="blog-comments__list" role="list">
+            @foreach (var comment in Model.Comments)
+            {
+                ViewData["ProductSlug"] = Model.Product.Slug;
+                ViewData["ProductId"] = Model.Product.Id;
+                @await Html.PartialAsync("_ProductComment", comment)
+            }
+        </ol>
+    }
+
+    <section class="blog-comments__form product-comments__form" aria-labelledby="commentFormTitle">
+        <h3 class="blog-comments__form-title" id="commentFormTitle">ثبت نظر جدید</h3>
+        <p class="blog-comments__form-subtitle">نظر شما پس از بررسی و تایید نمایش داده می‌شود.</p>
+        @if (commentSuccess == true)
+        {
+            <div class="alert alert-success product-comments__alert" role="status">
+                نظر شما با موفقیت ثبت شد و پس از بررسی نمایش داده می‌شود.
+            </div>
+        }
+        <form asp-action="AddComment" asp-route-slug="@Model.Product.Slug" method="post" class="blog-comment-form" novalidate>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="NewComment.ProductId" />
+            <input type="hidden" asp-for="NewComment.ParentId" />
+            <div class="blog-comment-form__row">
+                <div class="blog-comment-form__field">
+                    <label asp-for="NewComment.AuthorName" class="form-label"></label>
+                    <input asp-for="NewComment.AuthorName" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="NewComment.AuthorName" class="text-danger"></span>
+                </div>
+                <div class="blog-comment-form__field">
+                    <label asp-for="NewComment.Rating" class="form-label"></label>
+                    <select asp-for="NewComment.Rating" class="form-select">
+                        @for (var rating = 5.0; rating >= 0; rating -= 0.5)
+                        {
+                            <option value="@rating">@rating.ToString("0.0")</option>
+                        }
+                    </select>
+                    <span asp-validation-for="NewComment.Rating" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="blog-comment-form__field">
+                <label asp-for="NewComment.Content" class="form-label"></label>
+                <textarea asp-for="NewComment.Content" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="NewComment.Content" class="text-danger"></span>
+            </div>
+            <button type="submit" class="blog-comment-form__submit">ثبت نظر</button>
+        </form>
+    </section>
+</section>
+
+@if (Model.RelatedProducts.Any())
+{
+    <section class="product-section" aria-labelledby="relatedProductsTitle">
+        <div class="product-section__header">
+            <h2 class="product-section__title" id="relatedProductsTitle">محصولات مرتبط</h2>
+            <p class="product-section__subtitle">راهکارهای مکمل برای توسعه عمیق‌تر</p>
+        </div>
+        <div class="product-related">
+            @foreach (var product in Model.RelatedProducts)
+            {
+                <article class="product-related__item">
+                    <a class="product-related__card" asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug">
+                        <div class="product-related__media" aria-hidden="true">
+                            <img src="@product.ThumbnailUrl" alt="" loading="lazy" />
+                        </div>
+                        <div class="product-related__body">
+                            <h3 class="product-related__title">@StringHelper.TruncateName(product.Name)</h3>
+                            <p class="product-related__excerpt">@StringHelper.TruncateDescription(product.ShortDescription)</p>
+                            <div class="product-related__price">
+                                <span class="product-related__price-current">@product.GetFormattedPrice() تومان</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            }
+        </div>
+    </section>
+}

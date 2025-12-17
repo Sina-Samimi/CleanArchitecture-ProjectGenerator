@@ -1,0 +1,95 @@
+﻿@using LogTableRenameTest.WebSite.Areas.Admin.Models
+@using LogTableRenameTest.Domain.Enums
+@model SeoMetadataIndexViewModel
+@{
+    string GetPageTypeName(SeoPageType pageType)
+    {
+        return pageType switch
+        {
+            SeoPageType.Home => "صفحه اصلی",
+            SeoPageType.ProductList => "لیست محصولات",
+            SeoPageType.ProductDetails => "جزییات محصول",
+            SeoPageType.BlogList => "لیست وبلاگ",
+            SeoPageType.BlogPost => "پست وبلاگ",
+            SeoPageType.Page => "صفحه داینامیک",
+            SeoPageType.Contact => "تماس با ما",
+            SeoPageType.About => "درباره ما",
+            SeoPageType.Category => "دسته‌بندی محصولات",
+            SeoPageType.BlogCategory => "دسته‌بندی وبلاگ",
+            SeoPageType.Search => "صفحه جستجو",
+            SeoPageType.Cart => "سبد خرید",
+            SeoPageType.Checkout => "تسویه حساب",
+            _ => pageType.ToString()
+        };
+    }
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">لیست تنظیمات SEO</h5>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> افزودن تنظیمات SEO
+        </a>
+    </div>
+    <div class="card-body">
+        @if (Model.Items.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>نوع صفحه</th>
+                            <th>شناسه صفحه</th>
+                            <th>عنوان SEO</th>
+                            <th>توضیحات</th>
+                            <th>Robots</th>
+                            <th>آخرین به‌روزرسانی</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@GetPageTypeName(item.PageType)</td>
+                                <td>@(item.PageIdentifier ?? "-")</td>
+                                <td>@(item.MetaTitle ?? "-")</td>
+                                <td>@(item.MetaDescription?.Length > 50 ? item.MetaDescription.Substring(0, 50) + "..." : item.MetaDescription ?? "-")</td>
+                                <td>@(item.MetaRobots ?? "-")</td>
+                                <td>@item.UpdateDate.ToPersianDateTimeString()</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i> ویرایش
+                                        </a>
+                                        <a asp-action="Faqs" asp-route-pageType="@item.PageType" asp-route-pageIdentifier="@item.PageIdentifier" class="btn btn-outline-info">
+                                            <i class="bi bi-question-circle"></i> FAQ
+                                        </a>
+                                        <a asp-action="OgImages" asp-route-seoMetadataId="@item.Id" class="btn btn-outline-success">
+                                            <i class="bi bi-image"></i> OG Images
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> هنوز تنظیمات SEO ایجاد نشده است.
+                <a asp-action="Create" class="alert-link">ایجاد تنظیمات SEO جدید</a>
+            </div>
+        }
+    </div>
+</div>
+

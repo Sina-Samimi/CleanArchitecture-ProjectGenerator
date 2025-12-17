@@ -1,0 +1,36 @@
+﻿@model DeactivateUserViewModel
+@{
+    Layout = null;
+    var displayName = string.IsNullOrWhiteSpace(Model.FullName) ? Model.Email : Model.FullName;
+}
+
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content user-form-modal">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">غیرفعال‌سازی کاربر</h5>
+                <p class="modal-subtitle">با غیرفعال کردن، کاربر تا زمان فعال‌سازی مجدد قادر به ورود نخواهد بود.</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+        </div>
+        <form asp-action="Deactivate" asp-route-id="@Model.Id" method="post" class="user-form" data-user-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="FullName" />
+            <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <p>آیا از غیرفعال کردن «@displayName» مطمئن هستید؟</p>
+                <div class="mb-0">
+                    <label asp-for="Reason" class="form-label"></label>
+                    <textarea asp-for="Reason" class="form-control" rows="3" placeholder="در صورت نیاز توضیحات غیرفعالسازی را بنویسید."></textarea>
+                    <span asp-validation-for="Reason" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link" data-bs-dismiss="modal">انصراف</button>
+                <button type="submit" class="btn btn-warning">تأیید غیرفعالسازی</button>
+            </div>
+        </form>
+    </div>
+</div>

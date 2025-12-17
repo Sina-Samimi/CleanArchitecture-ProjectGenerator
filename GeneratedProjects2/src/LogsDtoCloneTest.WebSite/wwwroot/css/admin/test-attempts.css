@@ -1,0 +1,48 @@
+﻿.tests-attempts .attempts-summary span {
+    font-weight: 500;
+}
+
+.tests-attempts [data-attempt-actions] .btn {
+    min-width: 140px;
+}
+
+.attempts-page-size .form-select-sm {
+    min-width: 90px;
+}
+
+.attempts-filter-summary {
+    border-top: 1px solid var(--bs-border-color);
+    padding: 0.75rem 1rem;
+}
+
+.attempts-filter-summary .badge {
+    font-weight: 500;
+    background-color: var(--bs-light-bg-subtle);
+}
+
+.jalali-picker {
+    width: 100%;
+}
+
+.jalali-picker__controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.jalali-picker__controls .form-control {
+    flex: 1 1 auto;
+    min-width: 190px;
+    text-align: center;
+}
+
+@media (max-width: 576px) {
+    .tests-attempts [data-attempt-actions] .btn {
+        width: 100%;
+    }
+
+    .attempts-page-size {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

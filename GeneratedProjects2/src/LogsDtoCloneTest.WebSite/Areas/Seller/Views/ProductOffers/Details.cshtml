@@ -1,0 +1,168 @@
+﻿@using System.Globalization
+@using LogsDtoCloneTest.SharedKernel.Extensions
+@using LogsDtoCloneTest.WebSite.Areas.Seller.Models
+@model SellerProductOfferDetailViewModel
+@{
+    ViewData["Sidebar:ActiveTab"] = "product-offers";
+    ViewData["Title"] = "جزئیات پیشنهاد";
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string FormatPrice(decimal price) => price.ToString("N0");
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/seller/product-index.css" asp-append-version="true" />
+}
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h3 mb-1">جزئیات پیشنهاد</h1>
+                <p class="text-muted mb-0">@Model.ProductName</p>
+            </div>
+            <div>
+                @if (Model.IsPublished)
+                {
+                    <span class="badge bg-success-subtle text-success-emphasis fs-6">
+                        <i class="bi bi-check-circle"></i> منتشر شده
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-warning-subtle text-warning-emphasis fs-6">
+                        <i class="bi bi-hourglass-split"></i> منتشر نشده
+                    </span>
+                }
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-primary-subtle text-primary-emphasis fs-6 ms-2">فعال</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis fs-6 ms-2">غیرفعال</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4">اطلاعات پیشنهاد</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">محصول</label>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(Model.ProductSlug))
+                            {
+                                <a asp-area="" asp-controller="Product" asp-action="Details" asp-route-slug="@Model.ProductSlug" target="_blank" class="text-decoration-none">
+                                    @Model.ProductName
+                                </a>
+                            }
+                            else
+                            {
+                                @Model.ProductName
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">قیمت</label>
+                        <div>
+                            @if (Model.Price.HasValue)
+                            {
+                                <span class="fs-5 fw-bold">@FormatPrice(Model.Price.Value) تومان</span>
+                                @if (Model.CompareAtPrice.HasValue && Model.CompareAtPrice.Value > Model.Price.Value)
+                                {
+                                    <br />
+                                    <small class="text-decoration-line-through text-muted">@FormatPrice(Model.CompareAtPrice.Value) تومان</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">تعیین نشده</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">وضعیت موجودی</label>
+                        <div>
+                            @if (Model.TrackInventory)
+                            {
+                                <span class="@(Model.StockQuantity > 0 ? "text-success fw-bold" : "text-danger")">
+                                    @Model.StockQuantity عدد
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">نامحدود</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">وضعیت انتشار</label>
+                        <div>
+                            @if (Model.IsPublished && Model.PublishedAt.HasValue)
+                            {
+                                <div>منتشر شده در @FormatDateTime(Model.PublishedAt.Value)</div>
+                            }
+                            else
+                            {
+                                <div class="text-muted">هنوز منتشر نشده است</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4">اطلاعات زمانی</h5>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">تاریخ ثبت</label>
+                    <div>@FormatDateTime(Model.CreatedAt)</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">آخرین بروزرسانی</label>
+                    <div>@FormatDateTime(Model.UpdatedAt)</div>
+                </div>
+                @if (Model.PublishedAt.HasValue)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">تاریخ انتشار</label>
+                        <div>@FormatDateTime(Model.PublishedAt.Value)</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i>
+                        ویرایش پیشنهاد
+                    </a>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-right"></i>
+                        بازگشت به لیست
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

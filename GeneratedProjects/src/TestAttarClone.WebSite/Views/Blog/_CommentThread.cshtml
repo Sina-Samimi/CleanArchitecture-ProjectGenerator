@@ -1,0 +1,24 @@
+﻿@model BlogCommentViewModel
+
+<li class="blog-comment" id="comment-@Model.Id">
+    <article class="blog-comment__card">
+        <header class="blog-comment__meta">
+            <span class="blog-comment__avatar" aria-hidden="true">💬</span>
+            <div class="blog-comment__author">
+                <span class="blog-comment__author-name">@Model.AuthorName</span>
+                <time class="blog-comment__date" datetime="@Model.CreatedAt.ToString("o")">@Model.GetFormattedCreateDate()</time>
+            </div>
+        </header>
+        <p class="blog-comment__content">@Model.Content</p>
+    </article>
+
+    @if (Model.HasReplies)
+    {
+        <ol class="blog-comment__replies" aria-label="پاسخ‌ها">
+            @foreach (var reply in Model.Replies)
+            {
+                @await Html.PartialAsync("_CommentThread", reply)
+            }
+        </ol>
+    }
+</li>

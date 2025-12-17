@@ -1,0 +1,37 @@
+﻿@{
+    var success = TempData["Success"] as string;
+    var error = TempData["Error"] as string;
+    var hasSuccess = !string.IsNullOrWhiteSpace(success);
+    var hasError = !string.IsNullOrWhiteSpace(error);
+}
+
+@if (hasSuccess || hasError)
+{
+    <div class="app-toast-stack" data-app-toast-stack>
+        @if (hasSuccess)
+        {
+            <div class="app-toast app-toast--success" role="status" aria-live="polite" data-app-toast data-toast-lifetime="3000">
+                <span class="app-toast__icon" aria-hidden="true">
+                    <span class="app-toast__icon-mark">✓</span>
+                </span>
+                <div class="app-toast__body">@success</div>
+                <button type="button" class="app-toast__close" aria-label="بستن اعلان" data-app-toast-dismiss>
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        }
+
+        @if (hasError)
+        {
+            <div class="app-toast app-toast--danger" role="alert" aria-live="assertive" data-app-toast data-toast-lifetime="6000">
+                <span class="app-toast__icon" aria-hidden="true">
+                    <span class="app-toast__icon-mark">!</span>
+                </span>
+                <div class="app-toast__body">@error</div>
+                <button type="button" class="app-toast__close" aria-label="بستن اعلان" data-app-toast-dismiss>
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        }
+    </div>
+}

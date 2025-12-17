@@ -1,0 +1,148 @@
+﻿@model HomeViewModel
+@{
+    Layout = "_HomeTemplateLayout";
+    // فقط اگر از قبل تنظیم نشده باشد، از مقادیر پیش‌فرض استفاده کن
+    // این اجازه می‌دهد که Action Filter تنظیمات SEO را اعمال کند
+    if (string.IsNullOrWhiteSpace(ViewData["Title"]?.ToString()))
+    {
+        ViewData["Title"] = "عطاری آنلاین - فروشگاه گیاهان دارویی";
+    }
+    if (string.IsNullOrWhiteSpace(ViewData["MetaDescription"]?.ToString()))
+    {
+        ViewData["MetaDescription"] = "طبیعت را به خانه خود بیاورید - گیاهان دارویی اصل و با کیفیت";
+    }
+
+    var currentPath = Context?.Request?.Path.Value ?? Url.Action("Index", "Home") ?? "/";
+    var currentQuery = Context?.Request?.QueryString.Value;
+    var currentReturnUrl = string.IsNullOrEmpty(currentQuery) ? currentPath : $"{currentPath}{currentQuery}";
+}
+
+<!-- Hero Section -->
+@await Component.InvokeAsync("HomePageBanners")
+
+<!-- SEO Page Content (H1, Featured Image, Description) -->
+@await Html.PartialAsync("~/Views/Shared/Components/SeoPageContent/Default.cshtml")
+
+<!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">چرا ما را انتخاب کنید؟</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🌱</div>
+                <h3 class="feature-title">گیاهان اصل</h3>
+                <p class="feature-description">تمام محصولات ما از منابع معتبر و طبیعی تهیه می‌شوند</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🚚</div>
+                <h3 class="feature-title">ارسال سریع</h3>
+                <p class="feature-description">ارسال در سراسر کشور با بسته‌بندی مناسب و سریع</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💚</div>
+                <h3 class="feature-title">کیفیت تضمینی</h3>
+                <p class="feature-description">تضمین کیفیت و اصالت تمام محصولات</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">👨‍⚕️</div>
+                <h3 class="feature-title">مشاوره رایگان</h3>
+                <p class="feature-description">مشاوره تخصصی توسط کارشناسان مجرب</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+@if (Model.FeaturedProducts?.Any() ?? false)
+{
+    <section id="products" class="products-section">
+        <div class="container">
+            <h2 class="section-title">محصولات محبوب</h2>
+            <div class="products-grid">
+                @foreach (var product in Model.FeaturedProducts.Take(6))
+                {
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="@product.ThumbnailUrl" alt="@product.Name" style="width: 100%; height: 100%; object-fit: cover;" />
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">
+                                <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug" style="text-decoration: none; color: inherit;">@StringHelper.TruncateName(product.Name)</a>
+                            </h3>
+                            <p class="product-description">@StringHelper.TruncateDescription(product.ShortDescription)</p>
+                            <div class="product-price">@product.GetFormattedPrice() تومان</div>
+                            <a asp-controller="Product" asp-action="Details" asp-route-slug="@product.Slug" style="text-decoration: none;">
+                                <span class="archive-product-btn">مشاهده جزئیات</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- Blog Section -->
+@if (Model.LatestPosts?.Any() ?? false)
+{
+    <section id="blog" class="blog-section">
+        <div class="container">
+            <h2 class="section-title">وبلاگ و مقالات</h2>
+            <p class="section-subtitle">آخرین مقالات و مطالب مفید درباره گیاهان دارویی و سلامت</p>
+
+            <div class="blog-grid">
+                @foreach (var post in Model.LatestPosts)
+                {
+                    <article class="blog-card">
+                        <a asp-controller="Blog" asp-action="Details" asp-route-slug="@post.Slug" style="text-decoration: none; color: inherit;">
+                            <div class="blog-image">
+                                <div class="blog-category">@(post.Tags.FirstOrDefault() ?? "مقالات")</div>
+                                <img src="@post.HeroImageUrl" alt="@post.Title" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+                            <div class="blog-content">
+                                <div class="blog-meta">
+                                    <span class="blog-date">📅 @post.GetFormattedPublishDate()</span>
+                                    <span class="blog-author">👤 نویسنده: @post.AuthorName</span>
+                                </div>
+                                <h3 class="blog-title">@post.Title</h3>
+                                <p class="blog-excerpt">@post.Summary</p>
+                                <span class="blog-read-more">ادامه مطلب →</span>
+                            </div>
+                        </a>
+                    </article>
+                }
+            </div>
+
+            <div class="blog-actions">
+                <a asp-controller="Blog" asp-action="Index" class="btn">مشاهده همه مقالات</a>
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script>
+        function searchProducts() {
+            const searchInput = document.getElementById('hero-search-input');
+            const searchTerm = searchInput ? searchInput.value.trim() : '';
+
+            if (searchTerm) {
+                window.location.href = '@Url.Action("Index", "Product")?search=' + encodeURIComponent(searchTerm);
+            } else {
+                window.location.href = '@Url.Action("Index", "Product")';
+            }
+        }
+
+        // Enter key search in hero
+        document.addEventListener('DOMContentLoaded', function() {
+            const heroSearchInput = document.getElementById('hero-search-input');
+            if (heroSearchInput) {
+                heroSearchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchProducts();
+                    }
+                });
+            }
+        });
+    </script>
+}

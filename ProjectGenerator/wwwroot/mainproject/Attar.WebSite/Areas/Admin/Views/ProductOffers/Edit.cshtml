@@ -1,0 +1,365 @@
+@using Attar.WebSite.Areas.Admin.Models
+@using Attar.SharedKernel.Extensions
+@using System.Globalization
+@model ProductOfferFormViewModel
+@{
+    ViewData["Title"] = "ویرایش پیشنهاد محصول";
+    var publishedLocal = Model.PublishedAt?.ToLocalTime();
+    var calendar = new PersianCalendar();
+    var publishedPersian = !string.IsNullOrWhiteSpace(Model.PublishedAtPersian)
+        ? Model.PublishedAtPersian
+        : (publishedLocal is not null
+            ? string.Format(
+                CultureInfo.InvariantCulture,
+                "{0:0000}-{1:00}-{2:00}",
+                calendar.GetYear(publishedLocal.Value.DateTime),
+                calendar.GetMonth(publishedLocal.Value.DateTime),
+                calendar.GetDayOfMonth(publishedLocal.Value.DateTime))
+            : string.Empty);
+    var publishedJalaliInit = string.IsNullOrWhiteSpace(publishedPersian)
+        ? string.Empty
+        : publishedPersian.Replace('-', '/');
+    var publishedDisplay = publishedLocal.HasValue
+        ? publishedLocal.Value.DateTime.ToPersianDateString()
+        : string.Empty;
+    var publishedTimeValue = !string.IsNullOrWhiteSpace(Model.PublishedAtTime)
+        ? Model.PublishedAtTime
+        : (publishedLocal?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? string.Empty);
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin/catalog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="ProductOffers" asp-action="Index">پیشنهادات محصولات</a></li>
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="ProductOffers" asp-action="Details" asp-route-id="@Model.Id">جزئیات</a></li>
+    <li class="breadcrumb-item active" aria-current="page">ویرایش</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="product-offer-edit-page">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-1">ویرایش پیشنهاد</h1>
+                    <p class="text-muted mb-0">@Model.ProductName</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" data-product-offer-form>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ProductId" />
+                <input type="hidden" asp-for="ProductName" />
+
+                <div class="row g-3">
+                    <!-- قیمت‌ها -->
+                    <div class="col-12">
+                        <h5 class="mb-3">قیمت‌گذاری</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Price" class="form-label">قیمت (تومان)</label>
+                        <input type="number" asp-for="Price" class="form-control" min="0" step="1" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CompareAtPrice" class="form-label">قیمت قبل از تخفیف (تومان)</label>
+                        <input type="number" asp-for="CompareAtPrice" class="form-control" min="0" step="1" />
+                        <span asp-validation-for="CompareAtPrice" class="text-danger"></span>
+                    </div>
+
+                    <!-- موجودی -->
+                    <div class="col-12">
+                        <h5 class="mb-3">مدیریت موجودی</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="TrackInventory" id="trackInventory" />
+                            <label class="form-check-label" for="trackInventory">
+                                ردیابی موجودی
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="StockQuantity" class="form-label">موجودی</label>
+                        <input type="number" asp-for="StockQuantity" class="form-control" min="0" id="StockQuantity" />
+                        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                    </div>
+
+                    <!-- وضعیت -->
+                    <div class="col-12">
+                        <h5 class="mb-3">وضعیت</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="IsActive" id="isActive" />
+                            <label class="form-check-label" for="isActive">
+                                فعال
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="IsPublished" id="isPublished" />
+                            <label class="form-check-label" for="isPublished">
+                                منتشر شده
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- تاریخ انتشار -->
+                    @if (Model.IsPublished)
+                    {
+                        <div class="col-12">
+                            <h5 class="mb-3">تاریخ انتشار</h5>
+                        </div>
+                        <div class="col-12" data-publish-picker>
+                            <label class="form-label" for="publishDateTimeInput">تاریخ و زمان انتشار</label>
+                            <div class="publish-scheduler">
+                                <div class="jalali-picker publish-scheduler__datetime" data-jalali-picker>
+                                    <div class="jalali-picker__controls">
+                                        <input type="text"
+                                               id="publishDateTimeInput"
+                                               class="form-control"
+                                               placeholder="انتخاب تاریخ و زمان"
+                                               value="@(string.IsNullOrWhiteSpace(publishedDisplay) ? string.Empty : $"{publishedDisplay} {publishedTimeValue}")"
+                                               data-jalali-input
+                                               data-jdp
+                                               data-jdp-init-date="@publishedJalaliInit"
+                                               autocomplete="off"
+                                               dir="ltr" />
+                                    </div>
+                                    <input asp-for="PublishedAtPersian" type="hidden" data-jalali-target />
+                                </div>
+                            </div>
+                            <input asp-for="PublishedAtTime" type="hidden" data-publish-time-hidden />
+                            <div class="form-text">تاریخ و زمان را از datepicker انتخاب کنید. هنگام ثبت، به میلادی تبدیل می‌شود.</div>
+                            <span asp-validation-for="PublishedAt" class="text-danger"></span>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i>
+                        انصراف
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        ذخیره تغییرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script>
+        (function () {
+            const form = document.querySelector('[data-product-offer-form]');
+            if (!form) return;
+
+            // Track inventory toggle
+            const trackInventoryCheckbox = document.getElementById('trackInventory');
+            const stockInput = document.getElementById('StockQuantity');
+            
+            if (trackInventoryCheckbox && stockInput) {
+                trackInventoryCheckbox.addEventListener('change', function() {
+                    if (!this.checked) {
+                        stockInput.value = '0';
+                        stockInput.disabled = true;
+                    } else {
+                        stockInput.disabled = false;
+                    }
+                });
+
+                // Initialize on page load
+                if (!trackInventoryCheckbox.checked) {
+                    stockInput.disabled = true;
+                }
+            }
+
+            // Date picker initialization
+            const pickerContainer = form.querySelector('[data-publish-picker]');
+            if (pickerContainer) {
+                const jalaliInput = pickerContainer.querySelector('[data-jalali-input]');
+                const jalaliTarget = pickerContainer.querySelector('[data-jalali-target]');
+                const timeHiddenInput = pickerContainer.querySelector('[data-publish-time-hidden]');
+
+                if (!jalaliInput || !jalaliTarget || !timeHiddenInput) {
+                    return;
+                }
+
+                const persianDigitMap = new Map([
+                    ['۰', '0'], ['۱', '1'], ['۲', '2'], ['۳', '3'], ['۴', '4'],
+                    ['۵', '5'], ['۶', '6'], ['۷', '7'], ['۸', '8'], ['۹', '9']
+                ]);
+
+                const toEnglishDigits = (value) => {
+                    if (!value) return '';
+                    return value.replace(/[۰-۹]/g, (digit) => persianDigitMap.get(digit) || digit);
+                };
+
+                const normalizeTimeValue = (value) => {
+                    if (!value) return '';
+                    const sanitized = toEnglishDigits(value).trim();
+                    const match = sanitized.match(/^(\d{1,2})(?::?(\d{1,2}))?$/);
+                    if (!match) return '';
+                    let hours = parseInt(match[1], 10);
+                    let minutes = typeof match[2] === 'undefined' ? 0 : parseInt(match[2], 10);
+                    if (Number.isNaN(hours) || Number.isNaN(minutes)) return '';
+                    hours = Math.min(Math.max(hours, 0), 23);
+                    minutes = Math.min(Math.max(minutes, 0), 59);
+                    const pad = (part) => String(part).padStart(2, '0');
+                    return `${pad(hours)}:${pad(minutes)}`;
+                };
+
+                const normalizeDateValue = (value) => {
+                    if (!value) return '';
+                    const sanitized = toEnglishDigits(value)
+                        .replace(/\u200f/g, '')
+                        .replace(/\s+/g, ' ')
+                        .replace(/\./g, '/')
+                        .replace(/-/g, '/');
+                    const match = sanitized.match(/(\d{4})[\/](\d{1,2})[\/](\d{1,2})/);
+                    if (!match) return '';
+                    const [, year, month, day] = match;
+                    const pad = (part, length) => part.padStart(length, '0');
+                    return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
+                };
+
+                const parseDateTimeInput = (value) => {
+                    if (!value) return { date: '', time: '' };
+                    const englishValue = toEnglishDigits(value);
+                    // Extract date part (YYYY/MM/DD)
+                    const dateMatch = englishValue.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+                    const date = dateMatch ? normalizeDateValue(dateMatch[0]) : '';
+                    
+                    // Extract time part - datepicker usually formats as "YYYY/MM/DD HH:MM" or "YYYY/MM/DD HH:MM:SS"
+                    // Try multiple patterns
+                    let time = '';
+                    const timePatterns = [
+                        /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/, // Date followed by time
+                        /\b(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\b/, // Standalone time HH:MM or HH:MM:SS
+                        /\b(\d{1,2})\s+(\d{1,2})\b/ // HH MM (space separated)
+                    ];
+                    
+                    for (const pattern of timePatterns) {
+                        const timeMatch = englishValue.match(pattern);
+                        if (timeMatch) {
+                            // Get hours and minutes (usually at the end of match groups)
+                            const groups = timeMatch;
+                            let hours, minutes;
+                            if (pattern === timePatterns[0]) {
+                                // Date + time pattern: groups[4] = hours, groups[5] = minutes
+                                hours = groups[4];
+                                minutes = groups[5];
+                            } else if (pattern === timePatterns[1]) {
+                                // Standalone time: groups[1] = hours, groups[2] = minutes
+                                hours = groups[1];
+                                minutes = groups[2];
+                            } else {
+                                // Space separated: groups[1] = hours, groups[2] = minutes
+                                hours = groups[1];
+                                minutes = groups[2];
+                            }
+                            if (hours && minutes) {
+                                time = normalizeTimeValue(`${hours}:${minutes}`);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    return { date, time };
+                };
+
+                const formatDisplayValue = (dateValue, timeValue) => {
+                    if (!dateValue) return timeValue || '';
+                    const dateDisplay = dateValue.replace(/-/g, '/');
+                    return timeValue ? `${dateDisplay} ${timeValue}` : dateDisplay;
+                };
+
+                const applyNormalized = () => {
+                    const { date, time } = parseDateTimeInput(jalaliInput.value);
+                    jalaliTarget.value = date || '';
+                    timeHiddenInput.value = time || '';
+                    
+                    // Update display value only if we have a date
+                    if (date) {
+                        const displayValue = formatDisplayValue(date, time);
+                        // Only update if different to avoid infinite loops
+                        const currentValue = jalaliInput.value.trim();
+                        if (currentValue !== displayValue && !currentValue.endsWith(displayValue) && !displayValue.endsWith(currentValue)) {
+                            jalaliInput.value = displayValue;
+                        }
+                    } else if (!jalaliInput.value.trim()) {
+                        jalaliTarget.value = '';
+                        timeHiddenInput.value = '';
+                    }
+                };
+
+                // Initialize from hidden fields
+                const applyInitial = () => {
+                    if (jalaliTarget.value || timeHiddenInput.value) {
+                        const dateValue = jalaliTarget.value.replace(/-/g, '/');
+                        const timeValue = timeHiddenInput.value;
+                        const displayValue = formatDisplayValue(jalaliTarget.value, timeValue);
+                        if (displayValue) {
+                            jalaliInput.value = displayValue;
+                        }
+                    }
+                    applyNormalized();
+                };
+
+                // Initialize jalaliDatepicker after DOM is ready
+                if (window.jalaliDatepicker && typeof window.jalaliDatepicker.startWatch === 'function') {
+                    window.jalaliDatepicker.startWatch({
+                        date: true,
+                        time: true,
+                        persianDigits: true,
+                        showCloseBtn: 'dynamic',
+                        topSpace: 10,
+                        bottomSpace: 30,
+                        overflowSpace: 10
+                    });
+                }
+
+                // Set initial value for datepicker (date only, time will be handled separately)
+                if (jalaliTarget.value) {
+                    const initDate = jalaliTarget.value.replace(/-/g, '/');
+                    jalaliInput.setAttribute('data-jdp-init-date', initDate);
+                }
+
+                // Listen for datepicker changes
+                jalaliInput.addEventListener('change', applyNormalized);
+                jalaliInput.addEventListener('input', applyNormalized);
+                jalaliInput.addEventListener('blur', applyNormalized);
+                
+                // Also listen for datepicker's internal events if available
+                if (jalaliInput.addEventListener) {
+                    // Listen for focus events to ensure datepicker is ready
+                    jalaliInput.addEventListener('focus', () => {
+                        // Ensure datepicker shows time picker
+                        if (window.jalaliDatepicker && typeof window.jalaliDatepicker.show === 'function') {
+                            // Datepicker will handle time automatically when time: true is set
+                        }
+                    });
+                }
+
+                // Initialize on page load
+                setTimeout(() => {
+                    applyInitial();
+                }, 100);
+            }
+        })();
+    </script>
+}

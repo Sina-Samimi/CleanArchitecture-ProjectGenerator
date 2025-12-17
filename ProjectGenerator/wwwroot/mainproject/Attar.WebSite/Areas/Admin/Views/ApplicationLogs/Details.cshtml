@@ -1,0 +1,229 @@
+@using Attar.SharedKernel.Extensions
+@model ApplicationLogDetailsViewModel
+@{
+    ViewData["Title"] = "جزئیات لاگ";
+    ViewData["Subtitle"] = "مشاهده جزئیات کامل لاگ";
+
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+    string GetLevelBadgeClass(string level) => level.ToUpperInvariant() switch
+    {
+        "ERROR" => "badge bg-danger",
+        "WARNING" => "badge bg-warning text-dark",
+        "INFORMATION" => "badge bg-info",
+        "DEBUG" => "badge bg-secondary",
+        _ => "badge bg-secondary"
+    };
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-action="Index">مانیتور لاگ‌ها</a></li>
+    <li class="breadcrumb-item active" aria-current="page">جزئیات لاگ</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text text-primary"></i>
+                    جزئیات لاگ
+                </h5>
+                <span class="@GetLevelBadgeClass(Model.Level)">@Model.Level</span>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">شناسه لاگ:</dt>
+                    <dd class="col-sm-8"><code>@Model.Id</code></dd>
+
+                    <dt class="col-sm-4">سطح:</dt>
+                    <dd class="col-sm-8">
+                        <span class="@GetLevelBadgeClass(Model.Level)">@Model.Level</span>
+                    </dd>
+
+                    <dt class="col-sm-4">تاریخ و زمان:</dt>
+                    <dd class="col-sm-8">
+                        <small class="text-muted">@FormatDateTime(Model.CreateDate)</small>
+                    </dd>
+
+                    <dt class="col-sm-4">آخرین بروزرسانی:</dt>
+                    <dd class="col-sm-8">
+                        <small class="text-muted">@FormatDateTime(Model.UpdateDate)</small>
+                    </dd>
+
+                    <dt class="col-sm-4">پیام:</dt>
+                    <dd class="col-sm-8">
+                        <div class="alert alert-info mb-0">
+                            @Model.Message
+                        </div>
+                    </dd>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Exception))
+                    {
+                        <dt class="col-sm-4">Exception:</dt>
+                        <dd class="col-sm-8">
+                            <pre class="bg-dark text-light p-3 rounded" style="max-height: 500px; overflow-y: auto; font-size: 0.875rem;"><code>@Model.Exception</code></pre>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.SourceContext))
+                    {
+                        <dt class="col-sm-4">Source Context:</dt>
+                        <dd class="col-sm-8">
+                            <code>@Model.SourceContext</code>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.RequestPath))
+                    {
+                        <dt class="col-sm-4">Request:</dt>
+                        <dd class="col-sm-8">
+                            <div>
+                                <span class="badge bg-secondary">@Model.RequestMethod</span>
+                                <code class="ms-2">@Model.RequestPath</code>
+                            </div>
+                            @if (Model.StatusCode.HasValue)
+                            {
+                                <div class="mt-2">
+                                    <span class="badge @(Model.StatusCode >= 400 ? "bg-danger" : Model.StatusCode >= 300 ? "bg-warning" : "bg-success")">
+                                        Status Code: @Model.StatusCode
+                                    </span>
+                                </div>
+                            }
+                            @if (Model.ElapsedMs.HasValue)
+                            {
+                                <div class="mt-2">
+                                    <span class="badge bg-info">Elapsed: @Model.ElapsedMs.Value.ToString("F2") ms</span>
+                                </div>
+                            }
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.UserAgent))
+                    {
+                        <dt class="col-sm-4">User Agent:</dt>
+                        <dd class="col-sm-8">
+                            <code class="small">@Model.UserAgent</code>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.RemoteIpAddress))
+                    {
+                        <dt class="col-sm-4">IP Address:</dt>
+                        <dd class="col-sm-8">
+                            <code>@Model.RemoteIpAddress</code>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ApplicationName))
+                    {
+                        <dt class="col-sm-4">Application Name:</dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.ApplicationName</strong>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.MachineName))
+                    {
+                        <dt class="col-sm-4">Machine Name:</dt>
+                        <dd class="col-sm-8">
+                            <code>@Model.MachineName</code>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Environment))
+                    {
+                        <dt class="col-sm-4">Environment:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-info">@Model.Environment</span>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Properties))
+                    {
+                        <dt class="col-sm-4">Properties (JSON):</dt>
+                        <dd class="col-sm-8">
+                            <pre class="bg-light p-3 rounded border" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;"><code>@Model.Properties</code></pre>
+                        </dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    خلاصه
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>سطح لاگ:</strong>
+                    <div class="mt-1">
+                        <span class="@GetLevelBadgeClass(Model.Level)">@Model.Level</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>تاریخ ثبت:</strong>
+                    <div class="mt-1">
+                        <small class="text-muted">@FormatDateTime(Model.CreateDate)</small>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ApplicationName))
+                {
+                    <div class="mb-3">
+                        <strong>Application:</strong>
+                        <div class="mt-1">
+                            <code>@Model.ApplicationName</code>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.MachineName))
+                {
+                    <div class="mb-3">
+                        <strong>Machine:</strong>
+                        <div class="mt-1">
+                            <code>@Model.MachineName</code>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Environment))
+                {
+                    <div class="mb-3">
+                        <strong>Environment:</strong>
+                        <div class="mt-1">
+                            <span class="badge bg-info">@Model.Environment</span>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.RemoteIpAddress))
+                {
+                    <div class="mb-3">
+                        <strong>IP Address:</strong>
+                        <div class="mt-1">
+                            <code>@Model.RemoteIpAddress</code>
+                        </div>
+                    </div>
+                }
+
+                <hr />
+
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-right"></i>
+                    بازگشت به لیست
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

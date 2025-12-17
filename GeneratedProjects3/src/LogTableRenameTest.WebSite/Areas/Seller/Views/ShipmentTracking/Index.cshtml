@@ -1,0 +1,243 @@
+﻿@using LogTableRenameTest.Domain.Enums
+@using LogTableRenameTest.WebSite.Areas.Seller.Models
+@model SellerShipmentTrackingIndexViewModel
+@{
+    ViewData["Title"] = $"پیگیری ارسال - {Model.ProductName}";
+    ViewData["Sidebar:ActiveTab"] = "products";
+
+    string GetStatusText(string? notes) 
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return "بدون پیگیری";
+        
+        // Extract first line (status text) before \n\n
+        var lines = notes.Split(new[] { "\n\n" }, StringSplitOptions.None);
+        return lines[0].Trim();
+    }
+
+    string ShipmentStatusBadge(string? notes) 
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return "badge bg-secondary-subtle text-secondary-emphasis";
+        
+        return "badge bg-info-subtle text-info-emphasis";
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">پیگیری ارسال محصول</h1>
+        <p class="text-muted mb-0">@Model.ProductName</p>
+    </div>
+    <a asp-area="Seller" asp-controller="Products" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right"></i> بازگشت به لیست محصولات
+    </a>
+</div>
+
+@await Html.PartialAsync("_StatusMessage")
+
+@if (Model.InvoiceItems.Count == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        هنوز سفارشی برای این محصول ثبت نشده است.
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>شماره فاکتور</th>
+                            <th>مشتری</th>
+                            <th>تعداد</th>
+                            <th>گزینه</th>
+                            <th>وضعیت</th>
+                            <th>شماره پیگیری</th>
+                            <th>تاریخ</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.InvoiceItems)
+                        {
+                            <tr>
+                                <td>
+                                    <code>@item.InvoiceNumber</code>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.CustomerName))
+                                    {
+                                        <div>@item.CustomerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(item.CustomerPhone))
+                                        {
+                                            <small class="text-muted">@item.CustomerPhone</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@item.Quantity</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.VariantInfo))
+                                    {
+                                        <div class="text-muted small">
+                                            <i class="bi bi-tag"></i> @item.VariantInfo
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="@ShipmentStatusBadge(item.Notes)">@GetStatusText(item.Notes)</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.TrackingNumber))
+                                    {
+                                        <code>@item.TrackingNumber</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.StatusDate.HasValue)
+                                    {
+                                        @item.StatusDate.Value.ToPersianDateTimeString()
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#shipmentTrackingModal"
+                                            data-tracking-id="@(item.TrackingId?.ToString() ?? "")"
+                                            data-invoice-item-id="@item.InvoiceItemId"
+                                            data-tracking-number="@(item.TrackingNumber ?? "")"
+                                            data-notes="@(item.Notes ?? "")"
+                                            data-status-date="@(item.StatusDate?.ToPersianDateString() ?? "")">
+                                        <i class="bi bi-pencil"></i>
+                                        @(item.TrackingId.HasValue ? "ویرایش" : "ایجاد")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Shipment Tracking Modal -->
+<div class="modal fade" id="shipmentTrackingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shipmentTrackingModalTitle">ایجاد پیگیری ارسال</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form asp-action="UpdateTracking" method="post" id="shipmentTrackingForm">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="trackingId" />
+                    <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                    <input type="hidden" name="InvoiceItemId" id="invoiceItemId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="status">وضعیت <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="status" 
+                               name="StatusText" 
+                               placeholder="مثال: در حال آماده سازی، تحویل به پست، ارسال شده و..."
+                               required />
+                        <small class="text-muted">وضعیت سفارش را به صورت دلخواه وارد کنید</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="trackingNumber">شماره پیگیری پست</label>
+                        <input type="text" class="form-control" id="trackingNumber" name="TrackingNumber" maxlength="100" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="statusDatePersian">تاریخ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="statusDatePersian" name="StatusDatePersian" data-jalali-datepicker required />
+                        <input type="hidden" id="statusDate" name="StatusDate" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="notes">توضیحات اضافی</label>
+                        <textarea class="form-control" id="notes" name="Notes" rows="3" maxlength="1000" placeholder="توضیحات اضافی (اختیاری)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('shipmentTrackingModal');
+            if (modal) {
+                modal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const trackingId = button.getAttribute('data-tracking-id');
+                    const invoiceItemId = button.getAttribute('data-invoice-item-id');
+                    const status = button.getAttribute('data-status');
+                    const trackingNumber = button.getAttribute('data-tracking-number') || '';
+                    const notes = button.getAttribute('data-notes') || '';
+                    const statusDate = button.getAttribute('data-status-date');
+
+                    const title = document.getElementById('shipmentTrackingModalTitle');
+                    
+                    if (trackingId && trackingId !== '') {
+                        title.textContent = 'ویرایش پیگیری ارسال';
+                        document.getElementById('trackingId').value = trackingId;
+                    } else {
+                        title.textContent = 'ایجاد پیگیری ارسال';
+                        document.getElementById('trackingId').value = '';
+                    }
+
+                    document.getElementById('invoiceItemId').value = invoiceItemId;
+                    // Extract status text from notes (first line before \n\n)
+                    const statusText = notes ? notes.split('\n\n')[0] : '';
+                    document.getElementById('status').value = statusText;
+                    document.getElementById('trackingNumber').value = trackingNumber;
+                    // Extract additional notes (after \n\n)
+                    const additionalNotes = notes && notes.includes('\n\n') ? notes.split('\n\n').slice(1).join('\n\n') : '';
+                    document.getElementById('notes').value = additionalNotes;
+                    if (statusDate) {
+                        document.getElementById('statusDatePersian').value = statusDate;
+                    }
+                });
+            }
+
+            if (typeof jalaliDatepicker !== 'undefined') {
+                jalaliDatepicker.startWatch();
+            }
+        });
+    </script>
+}
+

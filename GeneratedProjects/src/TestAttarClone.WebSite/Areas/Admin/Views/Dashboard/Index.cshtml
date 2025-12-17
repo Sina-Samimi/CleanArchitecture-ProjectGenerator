@@ -1,0 +1,451 @@
+﻿@model TestAttarClone.WebSite.Areas.Admin.Models.Dashboard.SystemPerformanceSummaryViewModel
+@using DashboardViewModel = TestAttarClone.WebSite.Areas.Admin.Models.Dashboard.SystemPerformanceSummaryViewModel;
+
+@section Head {
+    <link rel="stylesheet" href="~/css/admin-dashboard-summary.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">تصویر کلی امروز</div>
+                <div class="panel-subtitle">مقایسه دوره جاری با دوره قبل به همراه شاخص‌های مهم رشد</div>
+            </div>
+        </div>
+        <div class="meta-grid">
+            <div class="meta-chip">
+                <strong>دوره جاری</strong>
+                <span>@Model.CurrentPeriodLabel</span>
+            </div>
+            <div class="meta-chip">
+                <strong>دوره قبل</strong>
+                <span>@Model.PreviousPeriodLabel</span>
+            </div>
+            <div class="meta-chip">
+                <strong>بازدید هفتگی</strong>
+                <span>@Model.CurrentWeekLabel</span>
+            </div>
+            <div class="meta-chip">
+                <strong>درآمد تجمعی</strong>
+                <span>@DashboardViewModel.FormatCurrencyCompact(Model.Commerce.TotalRevenueAllTime)</span>
+            </div>
+        </div>
+        <div class="insight-grid">
+            <article class="metric-card accent-indigo">
+                <h3>فعالیت کاربران</h3>
+                <div class="metric-value">@DashboardViewModel.FormatDecimal(Model.ActiveUserRate, "N1") <span class="unit">٪</span></div>
+                <div class="metric-change @DashboardViewModel.GetTrendCssClass(Model.NewUsersTrendPercent)">
+                    <i class="bi @DashboardViewModel.GetTrendIcon(Model.NewUsersTrendPercent)"></i>
+                    <span>@DashboardViewModel.GetTrendLabel(Model.NewUsersTrendPercent)</span>
+                </div>
+                <p class="metric-note">از میان @DashboardViewModel.FormatInt(Model.People.TotalUsers) حساب ثبت‌شده</p>
+            </article>
+            <article class="metric-card accent-emerald">
+                <h3>درآمد دوره جاری</h3>
+                <div class="metric-value">@DashboardViewModel.FormatCurrencyCompact(Model.Commerce.RevenueCurrentPeriod)</div>
+                <div class="metric-change @DashboardViewModel.GetTrendCssClass(Model.RevenueTrendPercent)">
+                    <i class="bi @DashboardViewModel.GetTrendIcon(Model.RevenueTrendPercent)"></i>
+                    <span>@DashboardViewModel.GetTrendLabel(Model.RevenueTrendPercent)</span>
+                </div>
+                <p class="metric-note">میانگین هر تراکنش @DashboardViewModel.FormatCurrencyCompact(Model.Commerce.AverageOrderValueCurrentPeriod)</p>
+            </article>
+            <article class="metric-card accent-amber">
+                <h3>بازدید سایت</h3>
+                <div class="metric-value">@DashboardViewModel.FormatInt(Model.Visits.SiteVisitsCurrentPeriod)</div>
+                <div class="metric-change @DashboardViewModel.GetTrendCssClass(Model.SiteVisitsTrendPercent)">
+                    <i class="bi @DashboardViewModel.GetTrendIcon(Model.SiteVisitsTrendPercent)"></i>
+                    <span>@DashboardViewModel.GetTrendLabel(Model.SiteVisitsTrendPercent)</span>
+                </div>
+                <p class="metric-note">@DashboardViewModel.FormatInt(Model.Visits.UniqueVisitors) بازدیدکننده منحصر به فرد</p>
+            </article>
+            <article class="metric-card accent-rose">
+                <h3>صفحات داینامیک</h3>
+                <div class="metric-value">@DashboardViewModel.FormatInt(Model.Pages.PublishedPages)</div>
+                <div class="metric-note">@DashboardViewModel.FormatInt(Model.Pages.TotalPages) صفحه کل</div>
+                <p class="metric-note">@DashboardViewModel.FormatInt(Model.Pages.TotalPageViews) بازدید کل</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">وضعیت‌های فوری</div>
+                <div class="panel-subtitle">مواردی که نیاز به پیگیری سریع دارند</div>
+            </div>
+        </div>
+        <div class="admin-quick-cards d-flex flex-wrap gap-2">
+            <a asp-area="Admin" asp-controller="ProductRequests" asp-action="Index" asp-route-status="1" class="quick-card card text-decoration-none text-dark p-3 flex-fill">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">درخواست‌های محصول (در انتظار)</div>
+                        <small class="text-muted">درخواست‌های جدید برای بررسی</small>
+                    </div>
+                    <div class="badge bg-warning text-dark">@DashboardViewModel.FormatInt(Model.PendingProductRequestsCount)</div>
+                </div>
+            </a>
+
+            <a asp-area="Admin" asp-controller="ProductViolationReports" asp-action="Index" asp-route-isReviewed="false" class="quick-card card text-decoration-none text-dark p-3 flex-fill">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">گزارش‌های تخلف (جدید)</div>
+                        <small class="text-muted">گزارش‌های بررسی نشده</small>
+                    </div>
+                    <div class="badge bg-danger">@DashboardViewModel.FormatInt(Model.NewProductViolationReportsCount)</div>
+                </div>
+            </a>
+
+            <a asp-area="Admin" asp-controller="ProductComments" asp-action="Index" class="quick-card card text-decoration-none text-dark p-3 flex-fill">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">نظرات در انتظار</div>
+                        <small class="text-muted">نظرات محصولات منتظر تایید</small>
+                    </div>
+                    <div class="badge bg-info text-dark">@DashboardViewModel.FormatInt(Model.PendingProductCommentsCount)</div>
+                </div>
+            </a>
+
+            <a asp-area="Admin" asp-controller="ApplicationLogs" asp-action="Index" class="quick-card card text-decoration-none text-dark p-3 flex-fill">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">خطاهای امروز</div>
+                        <small class="text-muted">تعداد لاگ‌های Error ثبت‌شده امروز</small>
+                    </div>
+                    <div class="badge bg-dark">@DashboardViewModel.FormatInt(Model.TodayErrorLogsCount)</div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="panel-grid">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">افراد و دسترسی‌ها</div>
+                    <div class="panel-subtitle">تصویر وضعیت کاربران و مدرسین در دوره جاری</div>
+                </div>
+                <span class="badge-soft info"><i class="bi bi-people"></i> کاربران فعال: @DashboardViewModel.FormatInt(Model.People.ActiveUsers)</span>
+            </div>
+            <div class="stat-list">
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">کل کاربران ثبت‌شده</span>
+                        <span class="stat-hint">غیرفعال: @DashboardViewModel.FormatInt(System.Math.Max(0, Model.People.TotalUsers - Model.People.ActiveUsers))</span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.People.TotalUsers)</div>
+                </div>
+                <div class="progress" role="progressbar" aria-valuenow="@Model.ActiveUserRate" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width:@DashboardViewModel.ClampPercent(Model.ActiveUserRate)%"></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">کاربران جدید</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.People.NewUsersPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.NewUsersTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.NewUsersTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.NewUsersTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.People.NewUsersCurrentPeriod)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">مدرسین فعال</span>
+                        <span class="stat-hint">کل فروشندگان: @DashboardViewModel.FormatInt(Model.People.TotalSellers)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.NewSellersTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.NewSellersTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.NewSellersTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.People.ActiveSellers)</div>
+                </div>
+            </div>
+        </article>
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">تجارت و مالی</div>
+                    <div class="panel-subtitle">جریان نقدی و وضعیت فاکتورها</div>
+                </div>
+                <span class="badge-soft success"><i class="bi bi-currency-dollar"></i> تراکنش‌های موفق: @DashboardViewModel.FormatInt(Model.Commerce.SuccessfulTransactionsCurrentPeriod)</span>
+            </div>
+            <table class="data-table">
+                <tbody>
+                    <tr>
+                        <td>درآمد کل دوره</td>
+                        <td class="stat-value">
+                            <div>@DashboardViewModel.FormatCurrencyCompact(Model.Commerce.RevenueCurrentPeriod)</div>
+                            <div class="delta @DashboardViewModel.GetTrendCssClass(Model.RevenueTrendPercent)">
+                                <i class="bi @DashboardViewModel.GetTrendIcon(Model.RevenueTrendPercent)"></i>
+                                @DashboardViewModel.GetTrendLabel(Model.RevenueTrendPercent)
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>میانگین مبلغ هر سفارش</td>
+                        <td class="stat-value">
+                            <div>@DashboardViewModel.FormatCurrencyCompact(Model.Commerce.AverageOrderValueCurrentPeriod)</div>
+                            <div class="delta @DashboardViewModel.GetTrendCssClass(Model.AverageOrderValueTrendPercent)">
+                                <i class="bi @DashboardViewModel.GetTrendIcon(Model.AverageOrderValueTrendPercent)"></i>
+                                @DashboardViewModel.GetTrendLabel(Model.AverageOrderValueTrendPercent)
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>صورتحساب‌های در انتظار</td>
+                        <td class="stat-value">
+                            <div>@DashboardViewModel.FormatInt(Model.Commerce.PendingInvoices)</div>
+                            @if (Model.Commerce.OverdueInvoices > 0)
+                            {
+                                <span class="badge-soft warning"><i class="bi bi-clock-history"></i> معوق: @DashboardViewModel.FormatInt(Model.Commerce.OverdueInvoices)</span>
+                            }
+                            else
+                            {
+                                <span class="badge-soft success"><i class="bi bi-check-circle"></i> بدون معوق</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>تراکنش‌های ناموفق</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Commerce.FailedTransactionsCurrentPeriod)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+
+    <section class="panel-grid">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">اولویت‌های اقدام سریع</div>
+                    <div class="panel-subtitle">مواردی که امروز ارزش پیگیری دارند</div>
+                </div>
+            </div>
+            <div class="alert-stack">
+                @foreach (var alert in Model.Alerts)
+                {
+                    <div class="alert-card" data-tone="@alert.Tone">
+                        <span class="alert-icon"><i class="bi @alert.Icon"></i></span>
+                        <div class="alert-content">
+                            <strong>@alert.Title</strong>
+                            <span>@alert.Description</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </article>
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">پویش محصول و محتوا</div>
+                    <div class="panel-subtitle">پیشرفت تولید و بازخورد مخاطبان</div>
+                </div>
+                <span class="badge-soft info"><i class="bi bi-kanban"></i> @Model.CurrentWeekLabel</span>
+            </div>
+            <div class="stat-list">
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">محصولات منتشر شده</span>
+                        <span class="stat-hint">جدید در این دوره: @DashboardViewModel.FormatInt(Model.Content.NewProductsCurrentPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.NewProductsTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.NewProductsTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.NewProductsTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.PublishedProducts)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">نظرات وبلاگ</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Content.BlogCommentsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.BlogCommentTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.BlogCommentTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.BlogCommentTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.BlogCommentsCurrentPeriod)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">نظرات محصولات</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Content.ProductCommentsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.ProductCommentTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.ProductCommentTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.ProductCommentTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.ProductCommentsCurrentPeriod)</div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel-grid">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">صفحات داینامیک</div>
+                    <div class="panel-subtitle">وضعیت صفحات و نمایش‌های آن‌ها</div>
+                </div>
+                <span class="badge-soft info"><i class="bi bi-file-text"></i> صفحات منتشر شده: @DashboardViewModel.FormatInt(Model.Pages.PublishedPages)</span>
+            </div>
+            <table class="data-table">
+                <tbody>
+                    <tr>
+                        <td>کل صفحات</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.TotalPages)</td>
+                    </tr>
+                    <tr>
+                        <td>صفحات منتشر شده</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.PublishedPages)</td>
+                    </tr>
+                    <tr>
+                        <td>پیش‌نویس‌ها</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.DraftPages)</td>
+                    </tr>
+                    <tr>
+                        <td>کل بازدیدها</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.TotalPageViews)</td>
+                    </tr>
+                    <tr>
+                        <td>صفحات در فوتر</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.FooterPages)</td>
+                    </tr>
+                    <tr>
+                        <td>صفحات دسترسی سریع</td>
+                        <td class="stat-value">@DashboardViewModel.FormatInt(Model.Pages.QuickAccessPages)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">بازدیدها و ترافیک</div>
+                    <div class="panel-subtitle">آمار بازدید سایت و صفحات</div>
+                </div>
+                <span class="badge-soft info"><i class="bi bi-clipboard-data"></i> بازدیدکنندگان منحصر به فرد: @DashboardViewModel.FormatInt(Model.Visits.UniqueVisitors)</span>
+            </div>
+            <div class="stat-list">
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">بازدید سایت (دوره جاری)</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Visits.SiteVisitsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.SiteVisitsTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.SiteVisitsTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.SiteVisitsTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Visits.SiteVisitsCurrentPeriod)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">بازدید صفحات (دوره جاری)</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Visits.PageVisitsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.PageVisitsTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.PageVisitsTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.PageVisitsTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Visits.PageVisitsCurrentPeriod)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">کل بازدیدهای سایت</span>
+                        <span class="stat-hint">از ابتدا تا کنون</span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Visits.TotalSiteVisits)</div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel-grid">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">نمای کلی محتوا</div>
+                    <div class="panel-subtitle">وضعیت انتشار و نمایش در بلاگ</div>
+                </div>
+                <span class="badge-soft info"><i class="bi bi-journal-text"></i> مطالب منتشرشده: @DashboardViewModel.FormatInt(Model.Content.PublishedBlogs)</span>
+            </div>
+            <div class="stat-list">
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">وضعیت مطالب</span>
+                        <span class="stat-hint">پیش‌نویس‌ها: @DashboardViewModel.FormatInt(Model.Content.DraftBlogs)</span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.PublishedBlogs)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">بازدید هفتگی</span>
+                        <span class="stat-hint">هفته قبل: @DashboardViewModel.FormatInt(Model.Content.BlogViewsPreviousWeek) (@Model.PreviousWeekLabel)</span>
+                    </div>
+                    <div class="stat-value">
+                        <div>@DashboardViewModel.FormatInt(Model.Content.BlogViewsCurrentWeek)</div>
+                        <div class="delta @DashboardViewModel.GetTrendCssClass(Model.BlogViewTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.BlogViewTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.BlogViewTrendPercent)
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">کل بازخوردها</span>
+                        <span class="stat-hint">وبلاگ + محصولات</span>
+                    </div>
+                    <div class="stat-value">
+                        <span class="badge-soft info"><i class="bi bi-chat-left-text"></i> @DashboardViewModel.FormatInt(Model.Content.BlogCommentsCurrentPeriod + Model.Content.ProductCommentsCurrentPeriod)</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">محصولات</div>
+                    <div class="panel-subtitle">وضعیت محصولات و نظرات</div>
+                </div>
+                <span class="badge-soft success"><i class="bi bi-box-seam"></i> محصولات منتشر شده: @DashboardViewModel.FormatInt(Model.Content.PublishedProducts)</span>
+            </div>
+            <div class="stat-list">
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">محصولات منتشر شده</span>
+                        <span class="stat-hint">جدید در این دوره: @DashboardViewModel.FormatInt(Model.Content.NewProductsCurrentPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.NewProductsTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.NewProductsTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.NewProductsTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.PublishedProducts)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">نظرات محصولات</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Content.ProductCommentsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.ProductCommentTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.ProductCommentTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.ProductCommentTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.ProductCommentsCurrentPeriod)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-meta">
+                        <span class="stat-label">نظرات وبلاگ</span>
+                        <span class="stat-hint">دوره قبل: @DashboardViewModel.FormatInt(Model.Content.BlogCommentsPreviousPeriod)</span>
+                        <span class="delta @DashboardViewModel.GetTrendCssClass(Model.BlogCommentTrendPercent)">
+                            <i class="bi @DashboardViewModel.GetTrendIcon(Model.BlogCommentTrendPercent)"></i>
+                            @DashboardViewModel.GetTrendLabel(Model.BlogCommentTrendPercent)
+                        </span>
+                    </div>
+                    <div class="stat-value">@DashboardViewModel.FormatInt(Model.Content.BlogCommentsCurrentPeriod)</div>
+                </div>
+            </div>
+        </article>
+    </section>
+</div>

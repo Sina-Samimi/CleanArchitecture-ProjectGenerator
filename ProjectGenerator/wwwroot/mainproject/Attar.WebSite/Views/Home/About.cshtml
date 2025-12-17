@@ -1,0 +1,50 @@
+@{
+    Layout = "_HomeTemplateLayout";
+    var aboutTitle = ViewData["AboutTitle"] as string ?? "درباره ما";
+    var aboutDescription = ViewData["AboutDescription"] as string ?? string.Empty;
+    var aboutVision = ViewData["AboutVision"] as string;
+    var aboutMission = ViewData["AboutMission"] as string;
+    var aboutImagePath = ViewData["AboutImagePath"] as string;
+}
+
+<!-- About Section -->
+<section class="about" id="about">
+    <div class="container">
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index">خانه</a> / 
+            <span>درباره ما</span>
+        </div>
+        <h2 class="section-title">@aboutTitle</h2>
+        <div class="about-content">
+            <div class="about-text">
+                @if (!string.IsNullOrWhiteSpace(aboutDescription))
+                {
+                    <div>@Html.Raw(aboutDescription)</div>
+                }
+                
+                @if (!string.IsNullOrWhiteSpace(aboutVision))
+                {
+                    <h3>چشم‌انداز ما</h3>
+                    <div>@Html.Raw(aboutVision)</div>
+                }
+                
+                @if (!string.IsNullOrWhiteSpace(aboutMission))
+                {
+                    <h3>ماموریت ما</h3>
+                    <div>@Html.Raw(aboutMission)</div>
+                }
+            </div>
+            <div class="about-image">
+                @if (!string.IsNullOrWhiteSpace(aboutImagePath))
+                {
+                    <img src="@Url.Content(aboutImagePath)" alt="@aboutTitle" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />
+                }
+                else
+                {
+                    <span>🌿</span>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+

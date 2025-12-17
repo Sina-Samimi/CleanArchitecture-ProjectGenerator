@@ -1,0 +1,476 @@
+@model SellerProfileViewModel
+@using Attar.SharedKernel.Extensions
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "پروفایل فروشنده";
+    ViewData["Subtitle"] = "اطلاعات و مشخصات فروشنده";
+    ViewData["Sidebar:ActiveTab"] = "profile";
+
+    var culture = CultureInfo.GetCultureInfo("fa-IR");
+    string FormatDateOnly(DateOnly? value)
+    {
+        if (!value.HasValue) return "—";
+        var dateTime = value.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        return dateTime.ToPersianDateString();
+    }
+
+    // Check if sections have content
+    var hasContactInfo = !string.IsNullOrWhiteSpace(Model.ContactPhone) || 
+                        !string.IsNullOrWhiteSpace(Model.ContactEmail) || 
+                        !string.IsNullOrWhiteSpace(Model.ShopAddress);
+    
+    var hasLicenseInfo = !string.IsNullOrWhiteSpace(Model.LicenseNumber) || 
+                        Model.LicenseIssueDate.HasValue || 
+                        Model.LicenseExpiryDate.HasValue;
+    
+    var hasExperienceInfo = Model.ExperienceYears.HasValue || 
+                           !string.IsNullOrWhiteSpace(Model.WorkingHours);
+    
+    var hasBio = !string.IsNullOrWhiteSpace(Model.Bio);
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="seller-profile-page">
+    <!-- Profile Header Card -->
+    <div class="card shadow-sm border-0 mb-4 seller-profile-header">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-auto text-center text-md-start mb-3 mb-md-0">
+                    <div class="seller-profile-avatar-wrapper">
+                        @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="seller-profile-avatar" />
+                        }
+                        else
+                        {
+                            <div class="seller-profile-avatar-placeholder">
+                                <span>@(Model.DisplayName.Length > 0 ? Model.DisplayName[0].ToString().ToUpperInvariant() : "?")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col-12 col-md">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                        <div>
+                            <h1 class="h3 mb-2 fw-bold">@Model.DisplayName</h1>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success-emphasis px-3 py-2">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        فعال
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-2">
+                                        <i class="bi bi-pause-circle-fill me-1"></i>
+                                        غیرفعال
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <a class="btn btn-primary btn-lg" asp-area="Seller" asp-controller="Profile" asp-action="Edit">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            ویرایش پروفایل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Contact Information Section -->
+        @if (hasContactInfo)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100 seller-profile-section">
+                    <div class="card-header bg-white border-0 pb-2">
+                        <h3 class="h5 mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-telephone-fill text-primary"></i>
+                            اطلاعات تماس
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="seller-profile-info-list">
+                            @if (!string.IsNullOrWhiteSpace(Model.ContactPhone))
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-phone"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">شماره تماس</div>
+                                        <div class="seller-profile-info-value">
+                                            <a href="tel:@Model.ContactPhone" class="text-decoration-none">@Model.ContactPhone</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @* Email intentionally hidden in seller profile card per request *@
+                            @if (!string.IsNullOrWhiteSpace(Model.ShopAddress))
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">آدرس فروشگاه</div>
+                                        <div class="seller-profile-info-value">@Model.ShopAddress</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- License & Experience Section -->
+        @if (hasLicenseInfo || hasExperienceInfo)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100 seller-profile-section">
+                    <div class="card-header bg-white border-0 pb-2">
+                        <h3 class="h5 mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-award-fill text-primary"></i>
+                            اطلاعات مجوز و تجربه
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="seller-profile-info-list">
+                            @if (!string.IsNullOrWhiteSpace(Model.LicenseNumber))
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-card-text"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">شماره مجوز</div>
+                                        <div class="seller-profile-info-value">@Model.LicenseNumber</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.LicenseIssueDate.HasValue)
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">تاریخ صدور مجوز</div>
+                                        <div class="seller-profile-info-value">@FormatDateOnly(Model.LicenseIssueDate)</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.LicenseExpiryDate.HasValue)
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-calendar-x"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">تاریخ انقضای مجوز</div>
+                                        <div class="seller-profile-info-value">@FormatDateOnly(Model.LicenseExpiryDate)</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.ExperienceYears.HasValue)
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">تجربه کاری</div>
+                                        <div class="seller-profile-info-value">@Model.ExperienceYears.Value سال</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.WorkingHours))
+                            {
+                                <div class="seller-profile-info-item">
+                                    <div class="seller-profile-info-icon">
+                                        <i class="bi bi-clock"></i>
+                                    </div>
+                                    <div class="seller-profile-info-content">
+                                        <div class="seller-profile-info-label">ساعات کاری</div>
+                                        <div class="seller-profile-info-value">@Model.WorkingHours</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Biography Section -->
+        @if (hasBio)
+        {
+            <div class="col-12">
+                <div class="card shadow-sm border-0 seller-profile-section">
+                    <div class="card-header bg-white border-0 pb-2">
+                        <h3 class="h5 mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-person-badge-fill text-primary"></i>
+                            بیوگرافی
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="seller-profile-bio">
+                            @Html.Raw(Model.Bio)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Account Information Section -->
+        <div class="col-12">
+            <div class="card shadow-sm border-0 seller-profile-section">
+                <div class="card-header bg-white border-0 pb-2">
+                    <h3 class="h5 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill text-primary"></i>
+                        اطلاعات حساب
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-sm-6 col-md-4">
+                            <div class="seller-profile-stat-card">
+                                <div class="seller-profile-stat-icon">
+                                    <i class="bi bi-calendar-plus"></i>
+                                </div>
+                                <div class="seller-profile-stat-content">
+                                    <div class="seller-profile-stat-label">تاریخ ایجاد</div>
+                                    <div class="seller-profile-stat-value">@Model.CreatedAt.ToPersianDateTimeString()</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4">
+                            <div class="seller-profile-stat-card">
+                                <div class="seller-profile-stat-icon">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+                                <div class="seller-profile-stat-content">
+                                    <div class="seller-profile-stat-label">آخرین بروزرسانی</div>
+                                    <div class="seller-profile-stat-value">@Model.UpdatedAt.ToPersianDateTimeString()</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-4">
+                            <div class="seller-profile-stat-card">
+                                <div class="seller-profile-stat-icon">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <div class="seller-profile-stat-content">
+                                    <div class="seller-profile-stat-label">وضعیت حساب</div>
+                                    <div class="seller-profile-stat-value">
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success-emphasis">فعال</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning-emphasis">غیرفعال</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Head {
+    <style>
+        .seller-profile-page {
+            padding: 0;
+        }
+
+        .seller-profile-header {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(13, 110, 253, 0.03));
+            border-radius: 1rem;
+        }
+
+        .seller-profile-avatar-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .seller-profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .seller-profile-avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(13, 110, 253, 0.08));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--bs-primary);
+        }
+
+        .seller-profile-section {
+            border-radius: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .seller-profile-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .seller-profile-info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .seller-profile-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(13, 110, 253, 0.03);
+            border-radius: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .seller-profile-info-item:hover {
+            background: rgba(13, 110, 253, 0.06);
+        }
+
+        .seller-profile-info-icon {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(13, 110, 253, 0.08));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bs-primary);
+            font-size: 1.25rem;
+        }
+
+        .seller-profile-info-content {
+            flex: 1;
+        }
+
+        .seller-profile-info-label {
+            font-size: 0.875rem;
+            color: var(--bs-secondary);
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .seller-profile-info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--bs-body-color);
+            word-break: break-word;
+        }
+
+        .seller-profile-info-value a {
+            color: var(--bs-primary);
+            transition: color 0.2s ease;
+        }
+
+        .seller-profile-info-value a:hover {
+            color: var(--bs-primary-emphasis);
+        }
+
+        .seller-profile-bio {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--bs-body-color);
+            padding: 1.5rem;
+            background: rgba(13, 110, 253, 0.03);
+            border-radius: 0.75rem;
+        }
+
+        .seller-profile-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: rgba(13, 110, 253, 0.03);
+            border-radius: 0.75rem;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            height: 100%;
+        }
+
+        .seller-profile-stat-card:hover {
+            transform: translateY(-2px);
+            background: rgba(13, 110, 253, 0.06);
+        }
+
+        .seller-profile-stat-icon {
+            width: 56px;
+            height: 56px;
+            min-width: 56px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.15), rgba(13, 110, 253, 0.08));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bs-primary);
+            font-size: 1.5rem;
+        }
+
+        .seller-profile-stat-content {
+            flex: 1;
+        }
+
+        .seller-profile-stat-label {
+            font-size: 0.875rem;
+            color: var(--bs-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .seller-profile-stat-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--bs-body-color);
+        }
+
+        @@media (max-width: 767.98px) {
+            .seller-profile-avatar,
+            .seller-profile-avatar-placeholder {
+                width: 120px;
+                height: 120px;
+            }
+
+            .seller-profile-avatar-placeholder {
+                font-size: 3rem;
+            }
+
+            .seller-profile-info-item {
+                padding: 0.75rem;
+            }
+
+            .seller-profile-stat-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+}

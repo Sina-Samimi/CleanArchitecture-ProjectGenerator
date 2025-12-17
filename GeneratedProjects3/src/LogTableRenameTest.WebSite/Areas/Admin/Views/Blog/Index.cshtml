@@ -1,0 +1,571 @@
+﻿@using System
+@using System.Globalization
+@using LogTableRenameTest.WebSite.Areas.Admin.Models
+@model BlogIndexViewModel
+@using LogTableRenameTest.Domain.Enums
+@{
+    var blogs = Model.Blogs?.ToList() ?? new List<BlogListItemViewModel>();
+    var filters = Model.Filters ?? new BlogIndexFilterViewModel();
+    var stats = Model.Statistics ?? new BlogStatisticsViewModel(0, 0, 0, 0, 0, 0, 0, 0);
+    var pageSizeOptions = new[] { 10, 20, 30, 50 };
+    var hasFilters = !string.IsNullOrWhiteSpace(filters.Search)
+        || filters.CategoryId is not null
+        || filters.AuthorId is not null
+        || filters.Status is not null
+        || filters.FromDate is not null
+        || filters.ToDate is not null;
+
+    string FormatDateOnly(DateOnly? date)
+        => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty;
+
+    string FormatDateOnlyDisplay(DateOnly? date)
+    {
+        if (date is null)
+        {
+            return string.Empty;
+        }
+
+        var asDateTime = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        return asDateTime.ToPersianDateString();
+    }
+
+    string StatusBadgeClass(BlogStatus status) => status switch
+    {
+        BlogStatus.Published => "badge bg-success-subtle text-success-emphasis",
+        BlogStatus.Trash => "badge bg-danger-subtle text-danger-emphasis",
+        _ => "badge bg-warning-subtle text-warning-emphasis"
+    };
+
+    string StatusLabel(BlogStatus status) => status switch
+    {
+        BlogStatus.Published => "منتشر شده",
+        BlogStatus.Trash => "زباله‌دان",
+        _ => "پیش‌نویس"
+    };
+
+    string RobotsLabel(string robots) => (robots ?? string.Empty).Trim().ToLowerInvariant() switch
+    {
+        "index,nofollow" => "ایندکس · عدم دنبال",
+        "noindex,follow" => "عدم ایندکس · دنبال",
+        "noindex,nofollow" => "عدم ایندکس · عدم دنبال",
+        _ => "ایندکس · دنبال"
+    };
+
+    string RobotsBadgeClass(string robots) => (robots ?? string.Empty).Trim().ToLowerInvariant() switch
+    {
+        "index,nofollow" => "badge bg-warning-subtle text-warning-emphasis",
+        "noindex,follow" => "badge bg-info-subtle text-info-emphasis",
+        "noindex,nofollow" => "badge bg-secondary-subtle text-secondary-emphasis",
+        _ => "badge bg-success-subtle text-success-emphasis"
+    };
+
+    string FormatDate(DateTimeOffset? date)
+        => date is null ? "-" : date.Value.ToPersianDateTimeString();
+
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/blog.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="blog-page">
+    <div class="blog-page__hero">
+        <div>
+            <h1 class="blog-page__title">مدیریت وبلاگ</h1>
+            <p class="blog-page__subtitle">پایش مقالات، وضعیت انتشار و عملکرد آن‌ها</p>
+        </div>
+        <a class="blog-actions__button blog-actions__button--accent" asp-area="Admin" asp-controller="Blog" asp-action="Create">
+            <i class="bi bi-journal-plus"></i>
+            بلاگ جدید
+        </a>
+    </div>
+
+    <div class="metric-grid blog-metrics">
+        <article class="metric-card metric-card--primary">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">کل بلاگ‌ها</span>
+                    <span class="metric-card__subtitle">نمای کلی از وضعیت انتشار</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--neutral">@stats.Total</span>
+                    <span class="metric-card__icon"><i class="bi bi-journal-richtext"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@stats.Total</div>
+            <div class="metric-card__hint">@stats.Published منتشر شده · @stats.Draft پیش‌نویس</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-upload"></i>
+                    @(stats.Total == 0 ? 0 : Math.Round(stats.Published * 100d / Math.Max(stats.Total, 1), 1))%
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-trash3"></i>
+                    @stats.Trash در زباله‌دان
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--success">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">میانگین مطالعه</span>
+                    <span class="metric-card__subtitle">بر اساس زمان تخمینی</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--positive">@stats.AverageReadingTimeMinutes.ToString("0.0") دقیقه</span>
+                    <span class="metric-card__icon"><i class="bi bi-alarm"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@stats.AverageReadingTimeMinutes.ToString("0.0")</div>
+            <div class="metric-card__hint">زمان میانگین مطالعه هر بلاگ (دقیقه)</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--success">
+                    <i class="bi bi-journal-check"></i>
+                    @stats.Published منتشر شده
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-cloud-plus"></i>
+                    @stats.Draft پیش‌نویس فعال
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--warning">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">بررسی وضعیت</span>
+                    <span class="metric-card__subtitle">توزیع چرخه حیات بلاگ</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--warning">@stats.Draft پیش‌نویس</span>
+                    <span class="metric-card__icon"><i class="bi bi-clock-history"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@stats.Trash</div>
+            <div class="metric-card__hint">بلاگ‌های انتقال یافته به زباله‌دان</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--warning">
+                    <i class="bi bi-hourglass-split"></i>
+                    @stats.Draft پیش‌نویس منتظر
+                </span>
+                <span class="metric-card__chip metric-card__chip--danger">
+                    <i class="bi bi-exclamation-octagon"></i>
+                    @stats.Trash حذف موقت
+                </span>
+            </div>
+        </article>
+
+        <article class="metric-card metric-card--info">
+            <div class="metric-card__top">
+                <div class="metric-card__heading">
+                    <span class="metric-card__title">تعامل کاربران</span>
+                    <span class="metric-card__subtitle">بازدید، لایک و دیسلایک</span>
+                </div>
+                <div class="metric-card__meta">
+                    <span class="metric-card__badge metric-card__badge--neutral">@stats.TotalViews بازدید</span>
+                    <span class="metric-card__icon"><i class="bi bi-people"></i></span>
+                </div>
+            </div>
+            <div class="metric-card__value">@stats.TotalLikes</div>
+            <div class="metric-card__hint">مجموع علاقه‌مندی‌ها</div>
+            <div class="metric-card__footer">
+                <span class="metric-card__chip metric-card__chip--positive">
+                    <i class="bi bi-hand-thumbs-up"></i>
+                    @stats.TotalLikes پسند
+                </span>
+                <span class="metric-card__chip metric-card__chip--muted">
+                    <i class="bi bi-hand-thumbs-down"></i>
+                    @stats.TotalDislikes ناپسند
+                </span>
+            </div>
+        </article>
+    </div>
+
+    <div class="blog-card app-card">
+        <div class="blog-card__header">
+            <div>
+                <h2 class="blog-card__title">لیست بلاگ‌ها</h2>
+                <span class="blog-card__subtitle">نمایش @Model.FilteredCount بلاگ</span>
+            </div>
+            <div class="blog-card__actions">
+                <div class="blog-card__buttons">
+                    <button type="button" class="blog-actions__button" data-bs-toggle="modal" data-bs-target="#blogFilterModal">
+                        <i class="bi bi-funnel"></i>
+                        فیلتر
+                    </button>
+                    @if (hasFilters)
+                    {
+                        <a class="blog-actions__button blog-actions__button--muted" asp-area="Admin" asp-controller="Blog" asp-action="Index">
+                            <i class="bi bi-x-circle"></i>
+                            حذف فیلترها
+                        </a>
+                    }
+                </div>
+                <form method="get" class="blog-card__search" data-blog-search-form>
+                    <input type="hidden" name="categoryId" value="@(filters.CategoryId?.ToString() ?? string.Empty)" />
+                    <input type="hidden" name="authorId" value="@(filters.AuthorId?.ToString() ?? string.Empty)" />
+                    <input type="hidden" name="status" value="@(filters.Status?.ToString() ?? string.Empty)" />
+                    <input type="hidden" name="fromDate" value="@FormatDateOnly(filters.FromDate)" />
+                    <input type="hidden" name="toDate" value="@FormatDateOnly(filters.ToDate)" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                    <input type="hidden" name="page" value="1" />
+                    <label class="app-search app-search--pill">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control" name="search" value="@filters.Search" placeholder="جستجو بر اساس عنوان، نویسنده یا سئو" aria-label="جستجوی بلاگ" />
+                    </label>
+                </form>
+            </div>
+        </div>
+
+        <div class="blog-card__body">
+            <div class="blog-card__summary">
+                <div class="blog-card__summary-item">
+                    <i class="bi bi-collection"></i>
+                    <span>کل نتایج: @Model.TotalCount</span>
+                </div>
+                <div class="blog-card__summary-item">
+                    <i class="bi bi-eye"></i>
+                    <span>بازدیدها: @stats.TotalViews</span>
+                </div>
+                <div class="blog-card__summary-item">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>نظرات: @blogs.Sum(b => b.CommentCount)</span>
+                </div>
+            </div>
+
+            <div class="blog-table card">
+        <div class="card-body p-0">
+            @if (blogs.Count == 0)
+            {
+                <div class="blog-table__empty">
+                    <i class="bi bi-journal-x"></i>
+                    <p>هیچ بلاگی مطابق فیلترهای انتخابی یافت نشد.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">عنوان</th>
+                                <th scope="col">نویسنده</th>
+                                <th scope="col">دسته‌بندی</th>
+                                <th scope="col">وضعیت</th>
+                                <th scope="col">زمان انتشار</th>
+                                <th scope="col">آمار</th>
+                                <th scope="col">آخرین بروزرسانی</th>
+                                <th scope="col" class="text-end">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var blog in blogs)
+                            {
+                                 var featuredPath = string.IsNullOrWhiteSpace(blog.FeaturedImagePath)
+                                    ? null
+                                    : Url.Content(blog.FeaturedImagePath); 
+                                <tr>
+                                    <td>
+                                        <div class="blog-table__primary">
+                                            <div class="blog-table__thumb @(featuredPath is null ? "blog-table__thumb--empty" : string.Empty)">
+                                                @if (featuredPath is not null)
+                                                {
+                                                    <img src="@featuredPath" alt="@blog.Title" loading="lazy" />
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-image"></i>
+                                                }
+                                            </div>
+                                            <div class="blog-table__info">
+                                                <strong>@blog.Title</strong>
+                                                <small>@blog.ReadingTimeMinutes دقیقه مطالعه</small>
+                                                @if (blog.Tags?.Count > 0)
+                                                {
+                                                    <div class="blog-table__tags">
+                                                        @foreach (var tag in blog.Tags)
+                                                        {
+                                                            <span class="blog-table__tag">@tag</span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="blog-table__meta">
+                                            <span>@blog.Author</span>
+                                        </div>
+                                    </td>
+                                    <td>@blog.Category</td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="@StatusBadgeClass(blog.Status)">@StatusLabel(blog.Status)</span>
+                                            <span class="@RobotsBadgeClass(blog.Robots) blog-table__robots">
+                                                <i class="bi bi-search"></i>
+                                                @RobotsLabel(blog.Robots)
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="blog-table__publish">@FormatDate(blog.PublishedAt)</div>
+                                    </td>
+                                    <td>
+                                        <div class="blog-table__stats">
+                                            <span><i class="bi bi-eye"></i>@blog.ViewCount</span>
+                                            <span><i class="bi bi-hand-thumbs-up"></i>@blog.LikeCount</span>
+                                            <span><i class="bi bi-hand-thumbs-down"></i>@blog.DislikeCount</span>
+                                            <span><i class="bi bi-chat-dots"></i>@blog.CommentCount</span>
+                                        </div>
+                                    </td>
+                                    <td>@FormatDate(blog.UpdatedAt)</td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-sm btn-outline-secondary" asp-area="Admin" asp-controller="Blog" asp-action="Comments" asp-route-id="@blog.Id">
+                                                <i class="bi bi-chat-left-text"></i>
+                                                دیدگاه‌ها
+                                            </a>
+                                            <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Blog" asp-action="Edit" asp-route-id="@blog.Id">
+                                                <i class="bi bi-pencil"></i>
+                                                ویرایش
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-blog-delete-trigger
+                                                    data-blog-id="@blog.Id"
+                                                    data-blog-title="@blog.Title"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteBlogModal">
+                                                <i class="bi bi-trash"></i>
+                                                حذف
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+        <div class="card-footer d-flex flex-column flex-lg-row justify-content-between align-items-center gap-2">
+            <div class="text-muted">
+                @if (Model.FilteredCount == 0)
+                {
+                    <span>نتیجه‌ای برای نمایش وجود ندارد.</span>
+                }
+                else
+                {
+                    <span>نمایش @Model.FirstItemIndex تا @Model.LastItemIndex از @Model.FilteredCount نتیجه</span>
+                }
+            </div>
+            @if (Model.TotalPages > 1)
+            {
+                var prevPage = Math.Max(1, Model.PageNumber - 1);
+                var nextPage = Math.Min(Model.TotalPages, Model.PageNumber + 1);
+                <nav class="blog-pagination" aria-label="صفحه‌بندی وبلاگ">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(Model.PageNumber == 1 ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Blog"
+                               asp-action="Index"
+                               asp-route-search="@filters.Search"
+                               asp-route-categoryId="@filters.CategoryId"
+                               asp-route-authorId="@filters.AuthorId"
+                               asp-route-status="@filters.Status"
+                               asp-route-fromDate="@filters.FromDate"
+                               asp-route-toDate="@filters.ToDate"
+                               asp-route-page="@prevPage"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="قبلی">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == Model.PageNumber ? "active" : string.Empty)">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="Blog"
+                                   asp-action="Index"
+                                   asp-route-search="@filters.Search"
+                                   asp-route-categoryId="@filters.CategoryId"
+                                   asp-route-authorId="@filters.AuthorId"
+                                   asp-route-status="@filters.Status"
+                                   asp-route-fromDate="@filters.FromDate"
+                                   asp-route-toDate="@filters.ToDate"
+                                   asp-route-page="@pageNumber"
+                                   asp-route-pageSize="@Model.PageSize">@pageNumber</a>
+                        </li>
+                        }
+                        <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : string.Empty)">
+                            <a class="page-link"
+                               asp-area="Admin"
+                               asp-controller="Blog"
+                               asp-action="Index"
+                               asp-route-search="@filters.Search"
+                               asp-route-categoryId="@filters.CategoryId"
+                               asp-route-authorId="@filters.AuthorId"
+                               asp-route-status="@filters.Status"
+                               asp-route-fromDate="@filters.FromDate"
+                               asp-route-toDate="@filters.ToDate"
+                               asp-route-page="@nextPage"
+                               asp-route-pageSize="@Model.PageSize"
+                               aria-label="بعدی">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-labelledby="deleteBlogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBlogModalLabel">حذف بلاگ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p>آیا از انتقال بلاگ <strong data-blog-delete-name></strong> به زباله‌دان مطمئن هستید؟</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+                <form method="post" asp-area="Admin" asp-controller="Blog" asp-action="Delete" data-blog-delete-form>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="" />
+                    <button type="submit" class="btn btn-danger">بله، حذف شود</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="blogFilterModal" tabindex="-1" aria-labelledby="blogFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content admin-filter-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="blogFilterModalLabel">فیلتر بلاگ‌ها</h5>
+                    <p class="modal-subtitle">نمایش لیست را با انتخاب معیارهای دلخواه محدود کنید.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <form method="get" class="admin-filter-modal__form" data-blog-filter-form>
+                    <div class="admin-filter-modal__notice">
+                        <div class="admin-filter-modal__notice-icon">
+                            <i class="bi bi-filter-square"></i>
+                        </div>
+                        <div>
+                            <p class="admin-filter-modal__notice-title">راهنمای جستجو</p>
+                            <p class="admin-filter-modal__notice-text">برای رسیدن سریع‌تر به نتایج، از فیلدهای زیر استفاده کنید.</p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="search" value="@filters.Search" />
+                    <input type="hidden" name="page" value="1" />
+
+                    <div class="admin-filter-modal__fields row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterCategory">دسته‌بندی</label>
+                            <select class="form-select admin-select" id="filterCategory" name="categoryId">
+                                @foreach (var option in Model.CategoryOptions)
+                                {
+                                    <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">@option.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterAuthor">نویسنده</label>
+                            <select class="form-select admin-select" id="filterAuthor" name="authorId">
+                                @foreach (var option in Model.AuthorOptions)
+                                {
+                                    <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">@option.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterStatus">وضعیت انتشار</label>
+                            <select class="form-select admin-select" id="filterStatus" name="status">
+                                @foreach (var option in Model.StatusOptions)
+                                {
+                                    <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">@option.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="filterPageSize">تعداد در صفحه</label>
+                            <select class="form-select admin-select" id="filterPageSize" name="pageSize">
+                                @foreach (var size in pageSizeOptions)
+                                {
+                                    <option value="@size" selected="@(size == Model.PageSize ? "selected" : null)">@size</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">از تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@FormatDateOnlyDisplay(filters.FromDate)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@FormatDateOnlyDisplay(filters.FromDate)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden" name="fromDate" value="@FormatDateOnly(filters.FromDate)" data-jalali-target />
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">تا تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@FormatDateOnlyDisplay(filters.ToDate)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@FormatDateOnlyDisplay(filters.ToDate)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden" name="toDate" value="@FormatDateOnly(filters.ToDate)" data-jalali-target />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-filter-modal__actions">
+                        <button type="reset" class="btn btn-light">پاکسازی</button>
+                        <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script src="~/js/admin/blog-index.js" asp-append-version="true"></script>
+}

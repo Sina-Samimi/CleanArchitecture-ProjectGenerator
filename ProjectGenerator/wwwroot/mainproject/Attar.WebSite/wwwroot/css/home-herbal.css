@@ -1,0 +1,1041 @@
+/* ========================================
+   Herbal Medicine Store Theme
+   Natural, Organic, Earthy Colors
+   ======================================== */
+
+/* AOS Animation Library Import */
+@import url('https://unpkg.com/aos@next/dist/aos.css');
+
+:root {
+    /* Natural Color Palette */
+    --herbal-primary: #2d5016;
+    --herbal-primary-light: #4a7c2a;
+    --herbal-primary-dark: #1a3009;
+    --herbal-secondary: #8b6914;
+    --herbal-success: #4a7c2a;
+    --herbal-success-light: #6ba03d;
+    --herbal-warning: #d4a574;
+    --herbal-info: #5a8f5a;
+    --herbal-accent: #c9a961;
+    
+    /* Gradients */
+    --herbal-primary-gradient: linear-gradient(135deg, #2d5016 0%, #4a7c2a 100%);
+    --herbal-success-gradient: linear-gradient(135deg, #4a7c2a 0%, #6ba03d 100%);
+    --herbal-warm-gradient: linear-gradient(135deg, #d4a574 0%, #c9a961 100%);
+    --herbal-natural-gradient: linear-gradient(135deg, #5a8f5a 0%, #4a7c2a 100%);
+    
+    /* Text Colors */
+    --herbal-text-dark: #2c3e1f;
+    --herbal-text-light: #5a6c4a;
+    --herbal-text-muted: #7a8a6a;
+    
+    /* Background Colors */
+    --herbal-bg-light: #f5f7f0;
+    --herbal-bg-cream: #faf9f5;
+    --herbal-surface: #ffffff;
+    --herbal-border: #e0e6d4;
+    
+    /* Shadows */
+    --herbal-shadow-sm: 0 2px 8px rgba(45, 80, 22, 0.08);
+    --herbal-shadow-md: 0 4px 12px rgba(45, 80, 22, 0.12);
+    --herbal-shadow-lg: 0 10px 24px rgba(45, 80, 22, 0.15);
+    --herbal-shadow-xl: 0 20px 40px rgba(45, 80, 22, 0.2);
+    
+    /* Border Radius */
+    --herbal-radius-sm: 0.75rem;
+    --herbal-radius-md: 1rem;
+    --herbal-radius-lg: 1.5rem;
+    --herbal-radius-xl: 2rem;
+    
+    /* Transitions */
+    --herbal-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* RTL Support */
+* {
+    direction: rtl;
+    text-align: right;
+}
+
+html {
+    direction: rtl;
+}
+
+body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Global Resets */
+.home-page {
+    max-width: 1200px;
+    margin: 0 auto !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+}
+
+.home-main {
+    padding: 0 !important;
+}
+
+@media (min-width: 1400px) {
+    .home-page {
+        max-width: 1320px;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .home-page {
+        max-width: 1140px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .home-page {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .home-page {
+        max-width: 720px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .home-page {
+        max-width: 540px;
+    }
+}
+
+/* ========================================
+   Hero Section - Herbal Theme
+   ======================================== */
+
+.hero-herbal {
+    position: relative;
+    padding: 120px 15px 80px;
+    margin-left: -15px;
+    margin-right: -15px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7f0 0%, #e8ede0 50%, #dde6d0 100%);
+}
+
+.hero-herbal__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-herbal__bg-gradient {
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(74, 124, 42, 0.1), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(45, 80, 22, 0.08), transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(201, 169, 97, 0.05), transparent 60%);
+}
+
+.hero-herbal__bg-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        repeating-linear-gradient(
+            30deg,
+            transparent,
+            transparent 2px,
+            rgba(74, 124, 42, 0.03) 2px,
+            rgba(74, 124, 42, 0.03) 4px
+        );
+    opacity: 0.5;
+}
+
+.hero-herbal .container,
+.hero-herbal .row {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero-herbal__content {
+    padding: 40px 0;
+    text-align: right;
+    direction: rtl;
+}
+
+.hero-herbal__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--herbal-primary);
+    box-shadow: var(--herbal-shadow-md);
+    backdrop-filter: blur(10px);
+    margin-bottom: 2rem;
+    border: 1px solid var(--herbal-border);
+}
+
+.badge-icon {
+    font-size: 1.25rem;
+}
+
+.hero-herbal__title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--herbal-text-dark);
+    margin-bottom: 1.5rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.hero-herbal__title-highlight {
+    background: var(--herbal-primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-herbal__description {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--herbal-text-light);
+    margin-bottom: 2.5rem;
+    max-width: 540px;
+    text-align: right;
+    direction: rtl;
+}
+
+.hero-herbal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.hero-herbal__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--herbal-border);
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 120px;
+}
+
+.stat-item__value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--herbal-primary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-item__label {
+    font-size: 0.875rem;
+    color: var(--herbal-text-light);
+    text-align: center;
+    direction: rtl;
+}
+
+/* Hero Visual - Herbal */
+.hero-herbal__visual {
+    position: relative;
+    padding: 40px;
+}
+
+.hero-visual-herbal {
+    position: relative;
+    width: 100%;
+    height: 500px;
+}
+
+.hero-visual-herbal__main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.herbal-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    background: white;
+    border-radius: var(--herbal-radius-lg);
+    box-shadow: var(--herbal-shadow-xl);
+    backdrop-filter: blur(10px);
+    animation: float-herbal 3s ease-in-out infinite;
+    border: 1px solid var(--herbal-border);
+}
+
+.herbal-card--primary {
+    animation-delay: 0s;
+    border-top: 3px solid var(--herbal-primary);
+}
+
+.herbal-card--secondary {
+    animation-delay: 1s;
+    border-top: 3px solid var(--herbal-info);
+}
+
+.herbal-card--success {
+    animation-delay: 2s;
+    border-top: 3px solid var(--herbal-success);
+}
+
+@keyframes float-herbal {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.herbal-card__icon {
+    font-size: 2.5rem;
+}
+
+.herbal-card__content {
+    display: flex;
+    flex-direction: column;
+}
+
+.herbal-card__title {
+    font-size: 0.875rem;
+    color: var(--herbal-text-light);
+    margin-bottom: 0.25rem;
+}
+
+.herbal-card__value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--herbal-text-dark);
+}
+
+.hero-visual-herbal__orbs {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.3;
+}
+
+.orb--1 {
+    width: 300px;
+    height: 300px;
+    background: var(--herbal-primary);
+    top: 10%;
+    right: 10%;
+    animation: pulse-herbal 4s ease-in-out infinite;
+}
+
+.orb--2 {
+    width: 250px;
+    height: 250px;
+    background: var(--herbal-success);
+    bottom: 20%;
+    left: 15%;
+    animation: pulse-herbal 5s ease-in-out infinite;
+}
+
+.orb--3 {
+    width: 200px;
+    height: 200px;
+    background: var(--herbal-info);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse-herbal 6s ease-in-out infinite;
+}
+
+@keyframes pulse-herbal {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+}
+
+/* ========================================
+   Herbal Button Styles
+   ======================================== */
+
+.btn-herbal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--herbal-radius-md);
+    border: none;
+    cursor: pointer;
+    transition: var(--herbal-transition);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-herbal--primary {
+    background: var(--herbal-primary-gradient);
+    color: white;
+    box-shadow: 0 10px 20px rgba(45, 80, 22, 0.3);
+}
+
+.btn-herbal--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(45, 80, 22, 0.4);
+    color: white;
+}
+
+.btn-herbal--outline {
+    background: transparent;
+    color: var(--herbal-text-dark);
+    border: 2px solid var(--herbal-border);
+}
+
+.btn-herbal--outline:hover {
+    background: white;
+    border-color: var(--herbal-primary);
+    color: var(--herbal-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--herbal-shadow-md);
+}
+
+.btn-herbal--white {
+    background: white;
+    color: var(--herbal-primary);
+    box-shadow: var(--herbal-shadow-lg);
+}
+
+.btn-herbal--white:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--herbal-shadow-xl);
+    color: var(--herbal-primary);
+}
+
+.btn-herbal--large {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.125rem;
+}
+
+.btn-herbal--block {
+    width: 100%;
+}
+
+/* ========================================
+   Section Styles
+   ======================================== */
+
+.categories-section,
+.benefits-section,
+.products-section,
+.testimonials-section {
+    padding: 100px 15px;
+    margin: 0;
+}
+
+.categories-section .container,
+.benefits-section .container,
+.products-section .container,
+.testimonials-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.section-header {
+    margin-bottom: 4rem;
+}
+
+.section-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(74, 124, 42, 0.1);
+    color: var(--herbal-primary);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: var(--herbal-text-dark);
+    margin-bottom: 1rem;
+    direction: rtl;
+}
+
+.section-description {
+    font-size: 1.125rem;
+    color: var(--herbal-text-light);
+    max-width: 600px;
+    margin: 0 auto;
+    direction: rtl;
+}
+
+.section-header.text-center {
+    text-align: center;
+}
+
+.section-header.text-center .section-badge,
+.section-header.text-center .section-title,
+.section-header.text-center .section-description {
+    direction: rtl;
+}
+
+/* ========================================
+   Category Cards
+   ======================================== */
+
+.category-card {
+    height: 100%;
+    padding: 2.5rem;
+    background: white;
+    border-radius: var(--herbal-radius-lg);
+    box-shadow: var(--herbal-shadow-md);
+    transition: var(--herbal-transition);
+    border: 1px solid var(--herbal-border);
+    text-align: center;
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--herbal-shadow-xl);
+}
+
+.category-card__icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    margin: 0 auto 1.5rem;
+}
+
+.category-card__icon--primary {
+    background: var(--herbal-primary-gradient);
+    color: white;
+}
+
+.category-card__icon--success {
+    background: var(--herbal-success-gradient);
+    color: white;
+}
+
+.category-card__icon--warning {
+    background: var(--herbal-warm-gradient);
+    color: white;
+}
+
+.category-card__icon--info {
+    background: var(--herbal-natural-gradient);
+    color: white;
+}
+
+.category-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--herbal-text-dark);
+    margin-bottom: 1rem;
+}
+
+.category-card__description {
+    font-size: 1rem;
+    color: var(--herbal-text-light);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.category-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--herbal-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--herbal-transition);
+}
+
+.category-card__link:hover {
+    color: var(--herbal-primary-light);
+    gap: 0.75rem;
+}
+
+/* ========================================
+   Benefit Cards
+   ======================================== */
+
+.benefits-section {
+    background: var(--herbal-bg-light);
+}
+
+.benefit-card {
+    height: 100%;
+    padding: 2.5rem;
+    background: white;
+    border-radius: var(--herbal-radius-lg);
+    box-shadow: var(--herbal-shadow-md);
+    transition: var(--herbal-transition);
+    border: 1px solid var(--herbal-border);
+}
+
+.benefit-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--herbal-shadow-xl);
+}
+
+.benefit-card__icon {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--herbal-radius-md);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.benefit-card__icon--primary {
+    background: linear-gradient(135deg, rgba(45, 80, 22, 0.1), rgba(74, 124, 42, 0.1));
+    color: var(--herbal-primary);
+}
+
+.benefit-card__icon--success {
+    background: linear-gradient(135deg, rgba(74, 124, 42, 0.1), rgba(107, 160, 61, 0.1));
+    color: var(--herbal-success);
+}
+
+.benefit-card__icon--info {
+    background: linear-gradient(135deg, rgba(90, 143, 90, 0.1), rgba(74, 124, 42, 0.1));
+    color: var(--herbal-info);
+}
+
+.benefit-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--herbal-text-dark);
+    margin-bottom: 1rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.benefit-card__description {
+    font-size: 1rem;
+    color: var(--herbal-text-light);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.benefit-card__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.benefit-card__list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--herbal-text-light);
+    direction: rtl;
+    text-align: right;
+}
+
+.benefit-card__list li i {
+    color: var(--herbal-success);
+    font-size: 1.25rem;
+}
+
+/* ========================================
+   Product Cards - Herbal Theme
+   ======================================== */
+
+.product-card-herbal {
+    height: 100%;
+    background: white;
+    border-radius: var(--herbal-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--herbal-shadow-md);
+    transition: var(--herbal-transition);
+    border: 1px solid var(--herbal-border);
+}
+
+.product-card-herbal:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--herbal-shadow-xl);
+}
+
+.product-card-herbal__link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-card-herbal__image {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    background: var(--herbal-bg-light);
+}
+
+.product-card-herbal__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--herbal-transition);
+}
+
+.product-card-herbal:hover .product-card-herbal__image img {
+    transform: scale(1.05);
+}
+
+.product-card-herbal__badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--herbal-primary-gradient);
+    color: white;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.product-card-herbal__content {
+    padding: 1.5rem;
+}
+
+.product-card-herbal__category {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(74, 124, 42, 0.1);
+    color: var(--herbal-primary);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.product-card-herbal__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--herbal-text-dark);
+    margin-bottom: 0.75rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.product-card-herbal__description {
+    font-size: 0.875rem;
+    color: var(--herbal-text-light);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.product-card-herbal__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--herbal-border);
+}
+
+.product-card-herbal__price .current {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--herbal-primary);
+}
+
+.product-card-herbal__price .original {
+    font-size: 1rem;
+    color: var(--herbal-text-muted);
+    text-decoration: line-through;
+    margin-right: 0.5rem;
+}
+
+.product-card-herbal__rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.product-card-herbal__actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--herbal-border);
+}
+
+/* ========================================
+   Testimonial Cards - Herbal Theme
+   ======================================== */
+
+.testimonials-section {
+    background: var(--herbal-bg-light);
+}
+
+.testimonial-card-herbal {
+    height: 100%;
+    padding: 2.5rem;
+    background: white;
+    border-radius: var(--herbal-radius-lg);
+    box-shadow: var(--herbal-shadow-md);
+    transition: var(--herbal-transition);
+    border: 1px solid var(--herbal-border);
+}
+
+.testimonial-card-herbal:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--herbal-shadow-xl);
+}
+
+.testimonial-card-herbal__rating {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    color: #fbbf24;
+    font-size: 1.25rem;
+}
+
+.testimonial-card-herbal__text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--herbal-text-light);
+    margin-bottom: 2rem;
+    font-style: italic;
+    text-align: right;
+    direction: rtl;
+}
+
+.testimonial-card-herbal__author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.testimonial-card-herbal__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--herbal-primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.testimonial-card-herbal__name {
+    font-weight: 700;
+    color: var(--herbal-text-dark);
+    margin-bottom: 0.25rem;
+}
+
+.testimonial-card-herbal__role {
+    font-size: 0.875rem;
+    color: var(--herbal-text-light);
+}
+
+/* ========================================
+   CTA Section - Herbal Theme
+   ======================================== */
+
+.cta-section-herbal {
+    position: relative;
+    padding: 100px 15px;
+    margin-left: -15px;
+    margin-right: -15px;
+    overflow: hidden;
+}
+
+.cta-section-herbal__bg {
+    position: absolute;
+    inset: 0;
+    background: var(--herbal-primary-gradient);
+    z-index: 0;
+}
+
+.cta-section-herbal .container,
+.cta-section-herbal .row {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.cta-content-herbal__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    color: white;
+    margin-bottom: 1rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.cta-content-herbal__description {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2rem;
+    text-align: right;
+    direction: rtl;
+}
+
+.cta-content-herbal__features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    direction: rtl;
+}
+
+.cta-content-herbal__features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 1.125rem;
+    direction: rtl;
+}
+
+.cta-content-herbal__features li i {
+    color: var(--herbal-success-light);
+    font-size: 1.5rem;
+}
+
+.cta-action-herbal {
+    text-align: center;
+}
+
+.cta-action-herbal__note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 991.98px) {
+    .hero-herbal {
+        padding: 80px 15px 60px;
+    }
+    
+    .hero-herbal__title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-visual-herbal {
+        height: 400px;
+    }
+    
+    .categories-section,
+    .benefits-section,
+    .products-section,
+    .testimonials-section {
+        padding: 80px 15px;
+    }
+    
+    .cta-section-herbal {
+        padding: 80px 15px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hero-herbal {
+        padding: 60px 10px 40px;
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+    
+    .hero-herbal__title {
+        font-size: 2rem;
+    }
+    
+    .hero-herbal__actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-herbal {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .hero-visual-herbal {
+        height: 300px;
+    }
+    
+    .herbal-card {
+        padding: 1rem 1.5rem;
+    }
+    
+    .categories-section,
+    .benefits-section,
+    .products-section,
+    .testimonials-section {
+        padding: 60px 15px;
+    }
+    
+    .cta-section-herbal {
+        padding: 60px 10px;
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+    
+    .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .home-page {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .categories-section .container,
+    .benefits-section .container,
+    .products-section .container,
+    .testimonials-section .container {
+        padding: 0 10px;
+    }
+}
+

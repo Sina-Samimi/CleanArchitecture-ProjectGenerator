@@ -1,0 +1,437 @@
+﻿@using System.Globalization
+@using LogsDtoCloneTest.Domain.Enums
+@using LogsDtoCloneTest.WebSite.Areas.Admin.Models
+@model OrderIndexViewModel
+@{
+    ViewData["Title"] ??= "سفارشات";
+    ViewData["Subtitle"] ??= "لیست خریدها و سفارشات کاربران";
+
+    var culture = new CultureInfo("fa-IR");
+
+    string FormatMoney(decimal value) => string.Format(culture, "{0:N0} تومان", value);
+    string FormatDate(DateTimeOffset value) => value.ToPersianDateString();
+    string FormatDateTime(DateTimeOffset value) => value.ToPersianDateTimeString();
+
+    string StatusBadge(InvoiceStatus status) => status switch
+    {
+        InvoiceStatus.Paid => "badge bg-success-subtle text-success-emphasis",
+        InvoiceStatus.PartiallyPaid => "badge bg-warning-subtle text-warning-emphasis",
+        InvoiceStatus.Overdue => "badge bg-danger-subtle text-danger-emphasis",
+        InvoiceStatus.Cancelled => "badge bg-secondary-subtle text-secondary-emphasis",
+        InvoiceStatus.Draft => "badge bg-info-subtle text-info-emphasis",
+        _ => "badge bg-primary-subtle text-primary-emphasis"
+    };
+
+    string StatusText(InvoiceStatus status) => status switch
+    {
+        InvoiceStatus.Paid => "پرداخت شده",
+        InvoiceStatus.PartiallyPaid => "پرداخت جزئی",
+        InvoiceStatus.Overdue => "سررسید گذشته",
+        InvoiceStatus.Cancelled => "لغو شده",
+        InvoiceStatus.Draft => "پیش‌نویس",
+        _ => "در انتظار پرداخت"
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/Plugins/JalaliDatePicker/css/jalalidatepicker.min.css" />
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">سفارشات</h1>
+        <p class="text-muted mb-0">لیست خریدها و سفارشات کاربران</p>
+    </div>
+    <div>
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#order-filter-modal">
+            <i class="bi bi-funnel"></i>
+            فیلترها
+        </button>
+    </div>
+</div>
+
+@{
+    var hasActiveFilters = !string.IsNullOrWhiteSpace(Model.Filter.SearchTerm)
+        || Model.Filter.Status.HasValue
+        || !string.IsNullOrWhiteSpace(Model.Filter.UserId)
+        || !string.IsNullOrWhiteSpace(Model.Filter.FromDate)
+        || !string.IsNullOrWhiteSpace(Model.Filter.ToDate);
+}
+
+@if (hasActiveFilters)
+{
+    <div class="alert alert-info d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <i class="bi bi-funnel"></i>
+            <strong>فیلترهای فعال:</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.SearchTerm))
+            {
+                <span class="badge bg-light text-dark ms-2">جستجو: @Model.Filter.SearchTerm</span>
+            }
+            @if (Model.Filter.Status.HasValue)
+            {
+                <span class="badge bg-light text-dark ms-2">وضعیت: @StatusText(Model.Filter.Status.Value)</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.UserId))
+            {
+                <span class="badge bg-light text-dark ms-2">کاربر: @Model.Filter.UserId</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.FromDate))
+            {
+                <span class="badge bg-light text-dark ms-2">از تاریخ: @Model.Filter.FromDate</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Filter.ToDate))
+            {
+                <span class="badge bg-light text-dark ms-2">تا تاریخ: @Model.Filter.ToDate</span>
+            }
+        </div>
+        <a class="btn btn-sm btn-link text-danger" asp-action="Index">
+            <i class="bi bi-x-circle"></i> حذف فیلترها
+        </a>
+    </div>
+}
+
+@if (Model.Orders.Count == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        سفارشی ثبت نشده است.
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>شماره فاکتور</th>
+                            <th>محصول</th>
+                            <th>تعداد</th>
+                            <th>مبلغ</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ سفارش</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>
+                                    <code>@order.InvoiceNumber</code>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@order.ProductName</div>
+                                    @if (order.ProductId.HasValue)
+                                    {
+                                        <a asp-area="Admin" asp-controller="Catalog" asp-action="Details" asp-route-id="@order.ProductId.Value" class="text-muted small">
+                                            مشاهده محصول
+                                        </a>
+                                    }
+                                </td>
+                                <td>@order.Quantity</td>
+                                <td>
+                                    <div class="fw-semibold">@FormatMoney(order.Total)</div>
+                                    <small class="text-muted">قیمت واحد: @FormatMoney(order.UnitPrice)</small>
+                                </td>
+                                <td>
+                                    <span class="@StatusBadge(order.Status)">@StatusText(order.Status)</span>
+                                </td>
+                                <td>@FormatDateTime(order.OrderDate)</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-area="Admin" asp-controller="Invoices" asp-action="Details" asp-route-id="@order.InvoiceId" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> مشاهده فاکتور
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-success" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#shipment-status-modal"
+                                                data-invoice-item-id="@order.InvoiceItemId"
+                                                data-product-id="@(order.ProductId?.ToString() ?? "")"
+                                                data-product-name="@order.ProductName">
+                                            <i class="bi bi-truck"></i> ثبت وضعیت
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav aria-label="صفحه‌بندی">
+                    <ul class="pagination justify-content-center mt-4">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.PageNumber - 1)" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-status="@Model.Filter.Status"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    <i class="bi bi-chevron-right"></i> قبلی
+                                </a>
+                            </li>
+                        }
+                        @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@i" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-status="@Model.Filter.Status"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-page="@(Model.PageNumber + 1)" 
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-searchTerm="@Model.Filter.SearchTerm"
+                                   asp-route-userId="@Model.Filter.UserId"
+                                   asp-route-status="@Model.Filter.Status"
+                                   asp-route-fromDate="@Model.Filter.FromDate"
+                                   asp-route-toDate="@Model.Filter.ToDate">
+                                    بعدی <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+                <div class="text-center text-muted small mt-2">
+                    نمایش @((Model.PageNumber - 1) * Model.PageSize + 1) تا @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) از @Model.TotalCount سفارش
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Filter Modal -->
+<div class="modal fade" id="order-filter-modal" tabindex="-1" aria-labelledby="order-filter-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="order-filter-modal-label">فیلتر سفارشات</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form method="get" asp-action="Index">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="OrderFilter_Status">وضعیت فاکتور</label>
+                            <select class="form-select" id="OrderFilter_Status" name="status">
+                                <option value="">همه وضعیت‌ها</option>
+                                @foreach (InvoiceStatus status in Enum.GetValues(typeof(InvoiceStatus)))
+                                {
+                                    var selected = Model.Filter.Status.HasValue && Model.Filter.Status.Value == status;
+                                    <option value="@status" selected="@(selected ? "selected" : null)">@StatusText(status)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="OrderFilter_UserId">شناسه کاربر</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="OrderFilter_UserId"
+                                   name="userId"
+                                   value="@Model.Filter.UserId"
+                                   placeholder="شناسه کاربر" />
+                        </div>
+                        <div class="col-md-6" data-order-date>
+                            <label class="form-label" for="OrderFilter_FromDateDisplay">از تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="OrderFilter_FromDateDisplay"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.Filter.FromDate?.Replace("-", "/") ?? string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.Filter.FromDate?.Replace("-", "/") ?? string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden"
+                                       id="OrderFilter_FromDate"
+                                       name="fromDate"
+                                       value="@Model.Filter.FromDate"
+                                       data-jalali-target />
+                            </div>
+                        </div>
+                        <div class="col-md-6" data-order-date>
+                            <label class="form-label" for="OrderFilter_ToDateDisplay">تا تاریخ</label>
+                            <div class="jalali-picker" data-jalali-picker>
+                                <div class="jalali-picker__controls">
+                                    <input type="text"
+                                           class="form-control"
+                                           id="OrderFilter_ToDateDisplay"
+                                           placeholder="انتخاب تاریخ"
+                                           value="@(Model.Filter.ToDate?.Replace("-", "/") ?? string.Empty)"
+                                           data-jalali-input
+                                           data-jdp
+                                           data-jdp-only-date
+                                           data-jdp-init-date="@(Model.Filter.ToDate?.Replace("-", "/") ?? string.Empty)"
+                                           autocomplete="off"
+                                           dir="ltr" />
+                                </div>
+                                <input type="hidden"
+                                       id="OrderFilter_ToDate"
+                                       name="toDate"
+                                       value="@Model.Filter.ToDate"
+                                       data-jalali-target />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel-fill"></i>
+                        اعمال فیلترها
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <a class="btn btn-link text-danger ms-auto" asp-action="Index">
+                        <i class="bi bi-x-circle"></i> حذف فیلترها
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Shipment Status Modal -->
+<div class="modal fade" id="shipment-status-modal" tabindex="-1" aria-labelledby="shipment-status-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shipment-status-modal-label">ثبت وضعیت سفارش</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form asp-area="Admin" asp-controller="Orders" asp-action="UpdateShipmentStatus" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="ShipmentStatus_InvoiceItemId" name="InvoiceItemId" />
+                    <input type="hidden" id="ShipmentStatus_ProductId" name="ProductId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ShipmentStatus_ProductName">محصول</label>
+                        <input type="text" class="form-control" id="ShipmentStatus_ProductName" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ShipmentStatus_Status">وضعیت <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="ShipmentStatus_Status" 
+                               name="StatusText" 
+                               placeholder="مثال: در حال آماده سازی، تحویل به پست، ارسال شده و..."
+                               required />
+                        <small class="text-muted">وضعیت سفارش را به صورت دلخواه وارد کنید</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ShipmentStatus_TrackingNumber">شماره پیگیری پست</label>
+                        <input type="text" class="form-control" id="ShipmentStatus_TrackingNumber" name="TrackingNumber" maxlength="100" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ShipmentStatus_StatusDatePersian">تاریخ <span class="text-danger">*</span></label>
+                        <div class="jalali-picker" data-jalali-picker>
+                            <div class="jalali-picker__controls">
+                                <input type="text"
+                                       class="form-control"
+                                       id="ShipmentStatus_StatusDatePersian"
+                                       placeholder="انتخاب تاریخ"
+                                       data-jalali-input
+                                       data-jdp
+                                       data-jdp-only-date
+                                       autocomplete="off"
+                                       dir="ltr"
+                                       required />
+                            </div>
+                            <input type="hidden" id="ShipmentStatus_StatusDate" name="StatusDate" data-jalali-target />
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label" for="ShipmentStatus_Notes">توضیحات اضافی</label>
+                        <textarea class="form-control" id="ShipmentStatus_Notes" name="Notes" rows="3" maxlength="1000" placeholder="توضیحات اضافی (اختیاری)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        ثبت
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">انصراف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Plugins/JalaliDatePicker/js/jalalidatepicker.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize jalali date picker
+            if (typeof jalaliDatepicker !== 'undefined') {
+                jalaliDatepicker.startWatch();
+            }
+            
+            // Handle shipment status modal
+            const shipmentModal = document.getElementById('shipment-status-modal');
+            if (shipmentModal) {
+                shipmentModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const invoiceItemId = button.getAttribute('data-invoice-item-id');
+                    const productId = button.getAttribute('data-product-id');
+                    const productName = button.getAttribute('data-product-name');
+                    
+                    document.getElementById('ShipmentStatus_InvoiceItemId').value = invoiceItemId || '';
+                    document.getElementById('ShipmentStatus_ProductId').value = productId || '';
+                    document.getElementById('ShipmentStatus_ProductName').value = productName || '';
+                    
+                    // Reset form fields
+                    document.getElementById('ShipmentStatus_Status').value = '';
+                    document.getElementById('ShipmentStatus_TrackingNumber').value = '';
+                    document.getElementById('ShipmentStatus_Notes').value = '';
+                    
+                    // Set today's date as default (will be set by jalali date picker)
+                    const dateInput = document.getElementById('ShipmentStatus_StatusDatePersian');
+                    if (dateInput && !dateInput.value) {
+                        // Let jalali date picker handle default date
+                        if (typeof jalaliDatepicker !== 'undefined') {
+                            jalaliDatepicker.startWatch();
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+

@@ -1,0 +1,271 @@
+﻿@using TestAttarClone.WebSite.Areas.Admin.Models
+@using TestAttarClone.SharedKernel.Extensions
+@using TestAttarClone.Application.DTOs.Visits
+@model VisitStatisticsViewModel
+@{
+    var statistics = Model.Statistics;
+    var dailyVisits = Model.DailyVisits?.ToList() ?? new List<DailyVisitDto>();
+    var pageSummaries = Model.PageSummaries?.ToList() ?? new List<PageVisitSummaryDto>();
+    string FormatDate(DateOnly date) => date.ToDateTime(TimeOnly.MinValue).ToPersianDateString();
+    string FormatDateTime(DateTime? dateTime) => dateTime.HasValue ? dateTime.Value.ToPersianDateTimeString() : "-";
+    
+    var pageNumber = Model.PageNumber;
+    var pageSize = Model.PageSize;
+    var totalPages = Model.TotalPages;
+    var totalCount = Model.TotalCount;
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/plugins/jalalidatepicker/css/jalalidatepicker.min.css" />
+    <link rel="stylesheet" href="~/css/admin/visits-index.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <div class="display-4 text-primary mb-2">@statistics.TotalVisits.ToString("N0")</div>
+                <div class="text-muted">کل بازدیدها</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <div class="display-4 text-success mb-2">@statistics.UniqueVisitors.ToString("N0")</div>
+                <div class="text-muted">بازدیدکنندگان منحصر به فرد</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <div class="display-4 text-info mb-2">@statistics.TotalPageVisits.ToString("N0")</div>
+                <div class="text-muted">بازدید صفحات</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+                <div class="text-muted mb-1">آخرین بازدید</div>
+                <div class="fw-bold">@FormatDateTime(statistics.LastVisitDate)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">فیلتر گزارشات</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-3" data-visits-filter-form>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="Filter.FromDatePersian">از تاریخ</label>
+                <div class="jalali-picker" data-jalali-picker>
+                    <div class="jalali-picker__controls">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="انتخاب تاریخ"
+                               value="@(Model.Filter.FromDatePersian != null ? Model.Filter.FromDatePersian.Replace("-", "/") : string.Empty)"
+                               data-jalali-input
+                               data-jdp
+                               data-jdp-only-date
+                               data-jdp-init-date="@(Model.Filter.FromDatePersian != null ? Model.Filter.FromDatePersian.Replace("-", "/") : string.Empty)"
+                               autocomplete="off"
+                               dir="ltr" />
+                    </div>
+                    <input type="hidden" asp-for="Filter.FromDatePersian" data-jalali-target />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="Filter.ToDatePersian">تا تاریخ</label>
+                <div class="jalali-picker" data-jalali-picker>
+                    <div class="jalali-picker__controls">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="انتخاب تاریخ"
+                               value="@(Model.Filter.ToDatePersian != null ? Model.Filter.ToDatePersian.Replace("-", "/") : string.Empty)"
+                               data-jalali-input
+                               data-jdp
+                               data-jdp-only-date
+                               data-jdp-init-date="@(Model.Filter.ToDatePersian != null ? Model.Filter.ToDatePersian.Replace("-", "/") : string.Empty)"
+                               autocomplete="off"
+                               dir="ltr" />
+                    </div>
+                    <input type="hidden" asp-for="Filter.ToDatePersian" data-jalali-target />
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">اعمال فیلتر</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">پاک کردن</a>
+            </div>
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@pageSize" />
+        </form>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">بازدید کل سایت طی 30 روز اخیر</h5>
+            </div>
+            <div class="card-body">
+                @if (dailyVisits.Count == 0)
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-graph-up fs-1"></i>
+                        <p class="mt-3">داده‌ای برای نمایش وجود ندارد</p>
+                    </div>
+                }
+                else
+                {
+                    <canvas id="dailyVisitsChart" height="80"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">بازدید صفحات</h5>
+            </div>
+            <div class="card-body">
+                @if (pageSummaries.Count == 0)
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-file-text fs-1"></i>
+                        <p class="mt-3">داده‌ای برای نمایش وجود ندارد</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>عنوان صفحه</th>
+                                    <th>Slug</th>
+                                    <th>کل بازدیدها</th>
+                                    <th>بازدیدکنندگان منحصر به فرد</th>
+                                    <th>آخرین بازدید</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var summary in pageSummaries)
+                                {
+                                    <tr>
+                                        <td>@(summary.PageTitle ?? "صفحه نامشخص")</td>
+                                        <td><code>@(summary.PageSlug ?? "-")</code></td>
+                                        <td>@summary.TotalVisits.ToString("N0")</td>
+                                        <td>@summary.UniqueVisitors.ToString("N0")</td>
+                                        <td>@(summary.LastVisitDate.HasValue ? FormatDate(summary.LastVisitDate.Value) : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (totalPages > 1)
+                    {
+                        var maxDisplayedPages = 5;
+                        var startPage = Math.Max(1, pageNumber - 2);
+                        var endPage = Math.Min(totalPages, startPage + maxDisplayedPages - 1);
+                        startPage = Math.Max(1, endPage - maxDisplayedPages + 1);
+                        var previousPage = Math.Max(1, pageNumber - 1);
+                        var nextPage = Math.Min(totalPages, pageNumber + 1);
+                        var summaryFirst = (pageNumber - 1) * pageSize + 1;
+                        var summaryLast = Math.Min(pageNumber * pageSize, totalCount);
+
+                        <nav class="visits-pagination mt-4" aria-label="صفحه‌بندی بازدید صفحات">
+                            <div class="visits-pagination__controls d-flex flex-wrap justify-content-center align-items-center gap-2">
+                                <a class="btn btn-outline-primary visits-pagination__control @(pageNumber == 1 ? "disabled" : string.Empty)"
+                                   asp-area="Admin"
+                                   asp-controller="Visits"
+                                   asp-action="Index"
+                                   asp-route-page="@previousPage"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-fromDatePersian="@Model.Filter.FromDatePersian"
+                                   asp-route-toDatePersian="@Model.Filter.ToDatePersian"
+                                   tabindex="@(pageNumber == 1 ? "-1" : null)"
+                                   aria-disabled="@(pageNumber == 1 ? "true" : null)">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>قبلی</span>
+                                </a>
+
+                                <div class="visits-pagination__numbers d-inline-flex flex-wrap justify-content-center gap-2">
+                                    @for (var i = startPage; i <= endPage; i++)
+                                    {
+                                        var isActivePage = i == pageNumber;
+                                        var numberClasses = isActivePage
+                                            ? "btn btn-primary"
+                                            : "btn btn-outline-primary";
+
+                                        <a class="@numberClasses visits-pagination__number"
+                                           asp-area="Admin"
+                                           asp-controller="Visits"
+                                           asp-action="Index"
+                                           asp-route-page="@i"
+                                           asp-route-pageSize="@pageSize"
+                                           asp-route-fromDatePersian="@Model.Filter.FromDatePersian"
+                                           asp-route-toDatePersian="@Model.Filter.ToDatePersian"
+                                           aria-current="@(isActivePage ? "page" : null)">
+                                            @i
+                                        </a>
+                                    }
+                                </div>
+
+                                <a class="btn btn-outline-primary visits-pagination__control @(pageNumber == totalPages ? "disabled" : string.Empty)"
+                                   asp-area="Admin"
+                                   asp-controller="Visits"
+                                   asp-action="Index"
+                                   asp-route-page="@nextPage"
+                                   asp-route-pageSize="@pageSize"
+                                   asp-route-fromDatePersian="@Model.Filter.FromDatePersian"
+                                   asp-route-toDatePersian="@Model.Filter.ToDatePersian"
+                                   tabindex="@(pageNumber == totalPages ? "-1" : null)"
+                                   aria-disabled="@(pageNumber == totalPages ? "true" : null)">
+                                    <span>بعدی</span>
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </div>
+
+                            <div class="visits-pagination__summary text-center text-muted small mt-2">
+                                نمایش @summaryFirst تا @summaryLast از @totalCount صفحه
+                            </div>
+                        </nav>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/plugins/jalalidatepicker/js/jalalidatepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script>
+        // Chart data - must be on window object for the script to access it
+        window.dailyVisitsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            dailyVisits.Select(d => new { 
+                date = d.Date.ToDateTime(TimeOnly.MinValue).ToPersianDateString(), 
+                visitCount = d.VisitCount, 
+                uniqueVisitorCount = d.UniqueVisitorCount 
+            })
+        ));
+    </script>
+    <script src="~/js/admin/visits-index.js" asp-append-version="true"></script>
+}

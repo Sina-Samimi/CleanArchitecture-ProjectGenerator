@@ -1,0 +1,29 @@
+﻿@model LogsDtoCloneTest.Application.DTOs.Pages.PageDto
+
+<div class="container">
+    <article class="page-content">
+        <header class="page-header mb-4">
+            <h1 class="page-title">@Model.Title</h1>
+        </header>
+
+        <div class="page-body">
+            @Html.Raw(Model.Content)
+        </div>
+    </article>
+</div>
+
+@section Head {
+    @if (!string.IsNullOrWhiteSpace(Model.MetaDescription))
+    {
+        <meta name="description" content="@Model.MetaDescription" />
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.MetaKeywords))
+    {
+        <meta name="keywords" content="@Model.MetaKeywords" />
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.MetaRobots))
+    {
+        <meta name="robots" content="@Model.MetaRobots" />
+    }
+}
+

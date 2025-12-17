@@ -1,0 +1,39 @@
+﻿@model DeactivateUserViewModel
+@{
+    ViewData["Title"] = "غیرفعالسازی کاربر";
+}
+
+<h1 class="mb-4">غیرفعالسازی کاربر</h1>
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="alert alert-warning">با غیرفعال کردن کاربر، دسترسی او موقتاً متوقف می‌شود.</div>
+
+<form asp-action="Deactivate" asp-route-id="@Model.Id" method="post" class="card">
+    <div class="card-body">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Email" />
+        <input type="hidden" asp-for="FullName" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <dl class="row">
+            <dt class="col-sm-3">نام کامل</dt>
+            <dd class="col-sm-9">@Model.FullName</dd>
+            <dt class="col-sm-3">ایمیل</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+        </dl>
+        <div class="mb-3">
+            <label asp-for="Reason" class="form-label"></label>
+            <textarea asp-for="Reason" class="form-control" rows="3" placeholder="در صورت نیاز توضیحات غیرفعالسازی را بنویسید."></textarea>
+            <span asp-validation-for="Reason" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" asp-action="Index">انصراف</a>
+        <button type="submit" class="btn btn-warning">تأیید غیرفعالسازی</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

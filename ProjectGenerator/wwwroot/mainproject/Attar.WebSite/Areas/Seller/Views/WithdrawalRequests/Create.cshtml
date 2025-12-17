@@ -1,0 +1,235 @@
+@model CreateWithdrawalRequestViewModel
+@{
+    ViewData["Title"] = "ثبت درخواست برداشت";
+    ViewData["Sidebar:ActiveTab"] = "withdrawals";
+}
+
+@section Breadcrumb {
+    <li class="breadcrumb-item"><a asp-area="Seller" asp-controller="Dashboard" asp-action="Index">داشبورد</a></li>
+    <li class="breadcrumb-item"><a asp-action="Index">درخواست‌های برداشت</a></li>
+    <li class="breadcrumb-item active" aria-current="page">ثبت درخواست جدید</li>
+}
+
+@await Html.PartialAsync("_StatusMessage")
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-2">ثبت درخواست برداشت</h1>
+                <p class="text-muted mb-4">اطلاعات درخواست برداشت از کیف پول را تکمیل کنید.</p>
+
+                <form asp-action="Create" method="post" data-withdrawal-form>
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- درآمد و مانده قابل برداشت -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-4">
+                            <div class="alert alert-info mb-0">
+                                <div class="text-center">
+                                    <div class="small text-muted mb-1">درآمد کل</div>
+                                    <div class="h6 mb-0">@Model.TotalRevenue.ToString("N0") @Model.Currency</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="alert alert-warning mb-0">
+                                <div class="text-center">
+                                    <div class="small text-muted mb-1">برداشت شده</div>
+                                    <div class="h6 mb-0">@Model.TotalWithdrawn.ToString("N0") @Model.Currency</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="alert alert-success mb-0">
+                                <div class="text-center">
+                                    <div class="small text-muted mb-1">مانده قابل برداشت</div>
+                                    <div class="h5 mb-0 fw-bold">@Model.AvailableAmount.ToString("N0") @Model.Currency</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- مبلغ -->
+                    <div class="mb-4">
+                        <label asp-for="Amount" class="form-label">
+                            مبلغ برداشت <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-currency-exchange"></i></span>
+                            <input asp-for="Amount"
+                                   class="form-control"
+                                   type="number"
+                                   min="1"
+                                   max="@Model.AvailableAmount"
+                                   placeholder="مبلغ را وارد کنید"
+                                   data-amount-input />
+                            <span class="input-group-text">@Model.Currency</span>
+                        </div>
+                        <span asp-validation-for="Amount" class="text-danger small"></span>
+                        <div class="form-text">
+                            حداکثر مبلغ قابل برداشت: <strong>@Model.AvailableAmount.ToString("N0") @Model.Currency</strong>
+                            <br />
+                            (درآمد کل: @Model.TotalRevenue.ToString("N0") @Model.Currency - برداشت شده: @Model.TotalWithdrawn.ToString("N0") @Model.Currency)
+                        </div>
+                    </div>
+
+                    <!-- نام بانک -->
+                    <div class="mb-4">
+                        <label asp-for="BankName" class="form-label">
+                            نام بانک <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-bank"></i></span>
+                            <input asp-for="BankName"
+                                   class="form-control"
+                                   placeholder="مثال: بانک ملی ایران"
+                                   maxlength="200" />
+                        </div>
+                        <span asp-validation-for="BankName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- شماره حساب -->
+                    <div class="mb-4">
+                        <label asp-for="BankAccountNumber" class="form-label">
+                            شماره حساب <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-credit-card"></i></span>
+                            <input asp-for="BankAccountNumber"
+                                   class="form-control"
+                                   placeholder="شماره حساب بانکی"
+                                   maxlength="100" />
+                        </div>
+                        <span asp-validation-for="BankAccountNumber" class="text-danger small"></span>
+                    </div>
+
+                    <!-- شماره کارت -->
+                    <div class="mb-4">
+                        <label asp-for="CardNumber" class="form-label">
+                            شماره کارت
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                            <input asp-for="CardNumber"
+                                   class="form-control"
+                                   placeholder="شماره کارت بانکی (16 رقمی)"
+                                   maxlength="20" />
+                        </div>
+                        <span asp-validation-for="CardNumber" class="text-danger small"></span>
+                    </div>
+
+                    <!-- شماره شبا -->
+                    <div class="mb-4">
+                        <label asp-for="Iban" class="form-label">
+                            شماره شبا
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-bank"></i></span>
+                            <input asp-for="Iban"
+                                   class="form-control"
+                                   placeholder="IR (شماره شبا 24 رقمی)"
+                                   maxlength="34" />
+                        </div>
+                        <span asp-validation-for="Iban" class="text-danger small"></span>
+                    </div>
+
+                    <!-- نام صاحب حساب -->
+                    <div class="mb-4">
+                        <label asp-for="AccountHolderName" class="form-label">
+                            نام صاحب حساب <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input asp-for="AccountHolderName"
+                                   class="form-control"
+                                   placeholder="نام کامل صاحب حساب"
+                                   maxlength="200" />
+                        </div>
+                        <span asp-validation-for="AccountHolderName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- توضیحات -->
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label">
+                            توضیحات (اختیاری)
+                        </label>
+                        <textarea asp-for="Description"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="توضیحات اضافی در مورد درخواست برداشت"
+                                  maxlength="1000"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <!-- دکمه‌ها -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            ثبت درخواست
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                            انصراف
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    راهنمای درخواست برداشت
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-3">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <strong>مراحل پردازش:</strong>
+                        <ul class="mt-2 small">
+                            <li>درخواست شما ثبت می‌شود</li>
+                            <li>ادمین درخواست را بررسی می‌کند</li>
+                            <li>در صورت تایید، مبلغ از کیف پول شما کسر می‌شود</li>
+                            <li>مبلغ به حساب بانکی شما واریز می‌شود</li>
+                        </ul>
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        <strong>توجه:</strong> فقط درخواست‌های در انتظار یا تایید شده قابل لغو هستند.
+                    </li>
+                    <li>
+                        <i class="bi bi-clock text-info"></i>
+                        <strong>زمان پردازش:</strong> معمولاً 1 تا 3 روز کاری
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const amountInput = document.querySelector('[data-amount-input]');
+            const maxAmount = @Model.AvailableAmount;
+
+            if (amountInput) {
+                amountInput.addEventListener('input', function() {
+                    const value = parseFloat(this.value) || 0;
+                    if (value > maxAmount) {
+                        this.setCustomValidity('مبلغ نمی‌تواند بیشتر از مبلغ قابل برداشت باشد.');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
+}
+

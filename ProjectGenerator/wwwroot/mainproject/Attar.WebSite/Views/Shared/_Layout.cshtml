@@ -1,0 +1,629 @@
+@using System.Text.Json
+@using System.Security.Claims
+@using Attar.Application.Queries.Cart
+@using Attar.Application.Queries.Catalog
+@using Attar.WebSite.Services.Cart
+@using MediatR
+@inject IMediator Mediator
+@inject ICartCookieService CartCookieService
+@{ 
+    var alertMessage = TempData["Alert.Message"] as string;
+    var alertTitle = TempData["Alert.Title"] as string;
+    var alertType = TempData["Alert.Type"] as string;
+    var alertConfirmText = TempData["Alert.ConfirmText"] as string;
+    var hasAlert = !string.IsNullOrWhiteSpace(alertMessage);
+    string alertJson = string.Empty;
+    
+    // Get cart item count
+    var cartItemCount = 0;
+    try
+    {
+        var userId = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var anonymousId = CartCookieService.GetAnonymousCartId();
+        var cartResult = await Mediator.Send(new GetCartQuery(userId, anonymousId));
+        if (cartResult.IsSuccess && cartResult.Value != null)
+        {
+            cartItemCount = cartResult.Value.Items.Count;
+        }
+    }
+    catch
+    {
+        // If cart service fails, default to 0
+        cartItemCount = 0;
+    }
+    
+    // Get wishlist item count (only for authenticated users)
+    var wishlistItemCount = 0;
+    var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    if (isAuthenticated)
+    {
+        try
+        {
+            var userId = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                var wishlistResult = await Mediator.Send(new GetWishlistQuery(userId));
+                if (wishlistResult.IsSuccess && wishlistResult.Value != null)
+                {
+                    wishlistItemCount = wishlistResult.Value.Count;
+                }
+            }
+        }
+        catch
+        {
+            // If wishlist service fails, default to 0
+            wishlistItemCount = 0;
+        }
+    }
+
+    if (hasAlert)
+    {
+        var payload = new
+        {
+            title = string.IsNullOrWhiteSpace(alertTitle) ? "اعلان سیستم" : alertTitle,
+            message = alertMessage,
+            type = string.IsNullOrWhiteSpace(alertType) ? "info" : alertType,
+            confirmText = string.IsNullOrWhiteSpace(alertConfirmText) ? "باشه" : alertConfirmText
+        };
+
+        alertJson = JsonSerializer.Serialize(payload);
+    }
+    var containerClass = "container site-container";
+    if (ViewData["ContainerClass"] is string extraContainer && !string.IsNullOrWhiteSpace(extraContainer))
+    {
+        containerClass += $" {extraContainer}";
+    }
+
+    var mainClass = "site-main pb-3";
+    if (ViewData["MainClass"] is string extraMain && !string.IsNullOrWhiteSpace(extraMain))
+    {
+        mainClass += $" {extraMain}";
+    }
+
+    var requestPath = Context?.Request?.Path.Value;
+    var requestQuery = Context?.Request?.QueryString.Value;
+    var currentUrl = string.IsNullOrEmpty(requestQuery)
+        ? (string.IsNullOrEmpty(requestPath) ? Url.Action("Index", "Home") ?? "/" : requestPath)
+        : $"{requestPath}{requestQuery}";
+
+    var userDisplayName = (User?.Identity?.IsAuthenticated ?? false)
+        ? (User?.Identity?.Name?.Replace("@gmail.com", "") ?? "حساب من")
+        : null;
+
+    var metaDescription = ViewData["MetaDescription"] as string;
+    var metaKeywords = ViewData["MetaKeywords"] as string;
+    var metaRobots = ViewData["MetaRobots"] as string ?? "noindex,nofollow"; // پیش‌فرض: noindex,nofollow
+    var canonicalUrl = ViewData["CanonicalUrl"] as string;
+    var metaOgTitle = ViewData["MetaOgTitle"] as string ?? ViewData["Title"]?.ToString();
+    var metaOgDescription = ViewData["MetaOgDescription"] as string ?? metaDescription;
+    var metaOgImage = ViewData["MetaOgImage"] as string;
+    var metaOgType = ViewData["MetaOgType"] as string ?? "website";
+    var metaOgUrl = ViewData["MetaOgUrl"] as string ?? currentUrl;
+    var metaArticleAuthor = ViewData["MetaArticleAuthor"] as string;
+    var metaArticlePublished = ViewData["MetaArticlePublished"] as string;
+    var twitterCard = ViewData["TwitterCard"] as string;
+    var twitterTitle = ViewData["TwitterTitle"] as string;
+    var twitterDescription = ViewData["TwitterDescription"] as string;
+    var twitterImage = ViewData["TwitterImage"] as string;
+    var schemaJson = ViewData["SchemaJson"] as string;
+    var breadcrumbsJson = ViewData["BreadcrumbsJson"] as string;
+    var pageFaqs = Context.Items["PageFaqs"] as System.Collections.Generic.IReadOnlyCollection<Attar.Application.DTOs.Seo.PageFaqDto>;
+    var seoOgImages = ViewData["SeoOgImages"] as System.Collections.Generic.IReadOnlyCollection<Attar.Application.DTOs.Seo.SeoOgImageDto> 
+        ?? Context.Items["SeoOgImages"] as System.Collections.Generic.IReadOnlyCollection<Attar.Application.DTOs.Seo.SeoOgImageDto>;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @(ViewData["SiteName"] as string ?? "عطاری آنلاین")</title>
+    @{
+        var faviconPath = ViewData["SiteFaviconPath"] as string;
+    }
+    @if (!string.IsNullOrWhiteSpace(faviconPath))
+    {
+        <link rel="icon" type="image/x-icon" href="@Url.Content(faviconPath)" />
+        <link rel="shortcut icon" type="image/x-icon" href="@Url.Content(faviconPath)" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaDescription))
+    {
+        <meta name="description" content="@metaDescription" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaKeywords))
+    {
+        <meta name="keywords" content="@metaKeywords" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaRobots))
+    {
+        <meta name="robots" content="@metaRobots" />
+    }
+    @if (!string.IsNullOrWhiteSpace(canonicalUrl))
+    {
+        <link rel="canonical" href="@canonicalUrl" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaOgTitle))
+    {
+        <meta property="og:title" content="@metaOgTitle" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaOgDescription))
+    {
+        <meta property="og:description" content="@metaOgDescription" />
+    }
+    @* پشتیبانی از چندین OG Image *@
+    @if (seoOgImages != null && seoOgImages.Any())
+    {
+        @foreach (var ogImage in seoOgImages.OrderBy(img => img.DisplayOrder))
+        {
+            <meta property="og:image" content="@ogImage.ImageUrl" />
+            @if (ogImage.Width.HasValue)
+            {
+                <meta property="og:image:width" content="@ogImage.Width.Value" />
+            }
+            @if (ogImage.Height.HasValue)
+            {
+                <meta property="og:image:height" content="@ogImage.Height.Value" />
+            }
+            @if (!string.IsNullOrWhiteSpace(ogImage.ImageType))
+            {
+                <meta property="og:image:type" content="image/@ogImage.ImageType" />
+            }
+            @if (!string.IsNullOrWhiteSpace(ogImage.Alt))
+            {
+                <meta property="og:image:alt" content="@ogImage.Alt" />
+            }
+        }
+    }
+    else if (!string.IsNullOrWhiteSpace(metaOgImage))
+    {
+        <meta property="og:image" content="@metaOgImage" />
+    }
+    <meta property="og:type" content="@metaOgType" />
+    @if (!string.IsNullOrWhiteSpace(metaOgUrl))
+    {
+        <meta property="og:url" content="@metaOgUrl" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaArticleAuthor))
+    {
+        <meta property="article:author" content="@metaArticleAuthor" />
+    }
+    @if (!string.IsNullOrWhiteSpace(metaArticlePublished))
+    {
+        <meta property="article:published_time" content="@metaArticlePublished" />
+    }
+    @if (!string.IsNullOrWhiteSpace(twitterCard))
+    {
+        <meta name="twitter:card" content="@twitterCard" />
+    }
+    else if (!string.IsNullOrWhiteSpace(metaOgImage))
+    {
+        <meta name="twitter:card" content="summary_large_image" />
+    }
+    else
+    {
+        <meta name="twitter:card" content="summary" />
+    }
+    @if (!string.IsNullOrWhiteSpace(twitterTitle))
+    {
+        <meta name="twitter:title" content="@twitterTitle" />
+    }
+    else if (!string.IsNullOrWhiteSpace(metaOgTitle))
+    {
+        <meta name="twitter:title" content="@metaOgTitle" />
+    }
+    @if (!string.IsNullOrWhiteSpace(twitterDescription))
+    {
+        <meta name="twitter:description" content="@twitterDescription" />
+    }
+    else if (!string.IsNullOrWhiteSpace(metaOgDescription))
+    {
+        <meta name="twitter:description" content="@metaOgDescription" />
+    }
+    @if (!string.IsNullOrWhiteSpace(twitterImage))
+    {
+        <meta name="twitter:image" content="@twitterImage" />
+    }
+    else if (!string.IsNullOrWhiteSpace(metaOgImage))
+    {
+        <meta name="twitter:image" content="@metaOgImage" />
+    }
+    @if (!string.IsNullOrWhiteSpace(schemaJson))
+    {
+        <script type="application/ld+json">
+            @Html.Raw(schemaJson)
+        </script>
+    }
+    @if (pageFaqs != null && pageFaqs.Any())
+    {
+        <script type="application/ld+json">
+            {
+                "@@context": "https://schema.org",
+                "@@type": "FAQPage",
+                "mainEntity": [
+                    @foreach (var faq in pageFaqs)
+                    {
+                        <text>{
+                            "@@type": "Question",
+                            "name": "@Html.Raw(faq.Question.Replace("\"", "\\\""))",
+                            "acceptedAnswer": {
+                                "@@type": "Answer",
+                                "text": "@Html.Raw(faq.Answer.Replace("\"", "\\\""))"
+                            }
+                        }</text>
+                        @if (faq != pageFaqs.Last()) { <text>,</text> }
+                    }
+                ]
+            }
+        </script>
+    }
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="~/css/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/home-herbal.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site/categories-mega-menu.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Attar.WebSite.styles.css" asp-append-version="true" />
+    <link href="/font/iransans/style.css" rel="stylesheet" asp-append-version="true" />
+    <link href="/font/iransans/fontiran.css" rel="stylesheet" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="site-body">
+    <header>
+        <nav class="navbar navbar-expand-lg site-navbar">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    @{
+                        var logoPath = ViewData["SiteLogoPath"] as string;
+                    }
+                    @if (!string.IsNullOrWhiteSpace(logoPath))
+                    {
+                        <img src="@Url.Content(logoPath)" alt="@(ViewData["SiteName"] as string ?? "عطاری آنلاین")" class="navbar-brand__logo-img" />
+                    }
+                    else
+                    {
+                        <span class="navbar-brand__logo">🌿</span>
+                    }
+                    <span class="navbar-brand__text">@(ViewData["SiteName"] as string ?? "عطاری آنلاین")</span>
+                </a>
+                <button class="site-navbar__mobile-toggle d-lg-none" type="button" data-site-menu-toggle aria-controls="siteMenuPanel" aria-expanded="false" aria-label="باز کردن منو">
+                    <span class="site-navbar__mobile-toggle-bar"></span>
+                    <span class="site-navbar__mobile-toggle-bar"></span>
+                    <span class="site-navbar__mobile-toggle-bar"></span>
+                </button>
+                <div class="site-navbar__content d-none d-lg-flex flex-column flex-lg-row align-items-lg-center w-100">
+                    <!-- Categories Mega Menu -->
+                    <div class="site-navbar__categories">
+                        @await Component.InvokeAsync("CategoriesMegaMenu")
+                    </div>
+                    <ul class="navbar-nav site-navbar__links ms-lg-auto">
+                        @await Component.InvokeAsync("NavigationMenu", new { viewName = "Default" })
+                    </ul>
+                    <div class="site-navbar__actions d-flex align-items-center gap-3">
+                        <div class="site-navbar__search-cart d-none d-lg-flex align-items-center gap-2">
+                            <a asp-controller="Cart" asp-action="Index" class="site-navbar__cart-icon-link">
+                                <span class="site-navbar__cart-icon-wrapper">
+                                    <i class="bi bi-cart3 site-navbar__cart-icon"></i>
+                                    @if (cartItemCount > 0)
+                                    {
+                                        <span class="site-navbar__cart-badge">@cartItemCount</span>
+                                    }
+                                </span>
+                            </a>
+                            @if (isAuthenticated)
+                            {
+                                <a asp-controller="Wishlist" asp-action="Index" class="site-navbar__wishlist-icon-link">
+                                    <span class="site-navbar__wishlist-icon-wrapper">
+                                        <i class="bi bi-heart site-navbar__wishlist-icon"></i>
+                                        @if (wishlistItemCount > 0)
+                                        {
+                                            <span class="site-navbar__wishlist-badge">@wishlistItemCount</span>
+                                        }
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                        <div class="site-navbar__cart d-lg-none">
+                            @await Component.InvokeAsync("CartPreview")
+                        </div>
+                        @if (User?.Identity?.IsAuthenticated ?? false)
+                        {
+                            <div class="dropdown navbar-user">
+                                <button class="navbar-user__toggle dropdown-toggle" type="button" id="navbarUserDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="navbar-user__avatar" aria-hidden="true">👤</span>
+                                    <span class="navbar-user__label">@userDisplayName</span>
+                                </button>
+                                <ul class="dropdown-menu navbar-user__menu" aria-labelledby="navbarUserDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="User" asp-controller="Profile" asp-action="Index">پنل من</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="User" asp-controller="Orders" asp-action="Index">سفارش‌های من</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="User" asp-controller="Wallet" asp-action="Index">کیف پول</a>
+                                    </li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="navbar-user__logout-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                            <button type="submit" class="navbar-user__logout-button">خروج</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="navbar-auth">
+                                <a class="navbar-auth__btn" asp-area="" asp-controller="Account" asp-action="PhoneLogin">ورود / ثبت نام</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="site-menu" id="siteMenu" aria-hidden="true">
+            <div class="site-menu__overlay" data-site-menu-dismiss></div>
+            <aside class="site-menu__panel" id="siteMenuPanel" role="dialog" aria-modal="true" aria-labelledby="siteMenuTitle" tabindex="-1">
+                <div class="site-menu__header">
+                    <div class="site-menu__brand">
+                        <span class="site-menu__brand-logo">🌿</span>
+                        <div class="site-menu__brand-text">
+                            <span class="site-menu__brand-name">عطاری آنلاین</span>
+                            <span class="site-menu__brand-sub">داروهای گیاهی و طبیعی</span>
+                        </div>
+                    </div>
+                    <button type="button" class="site-menu__close" data-site-menu-dismiss aria-label="بستن منو">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="site-menu__body" role="menu" aria-labelledby="siteMenuTitle">
+                    <h2 id="siteMenuTitle" class="site-menu__title">منوی اصلی</h2>
+                    <ul class="site-menu__links">
+                        @await Component.InvokeAsync("NavigationMenu", new { viewName = "SiteMenu" })
+                    </ul>
+                    <div class="site-menu__divider"></div>
+                    @await Component.InvokeAsync("CartPreview", new { placement = "menu" })
+                    <div class="site-menu__divider"></div>
+                    @if (User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        <div class="site-menu__user">
+                            <span class="site-menu__user-avatar">👤</span>
+                            <div class="site-menu__user-meta">
+                                <span class="site-menu__user-name">@userDisplayName</span>
+                                <span class="site-menu__user-role">کاربر عطاری</span>
+                            </div>
+                        </div>
+                        <ul class="site-menu__links site-menu__links--secondary">
+                            <li>
+                                <a class="site-menu__link" asp-area="User" asp-controller="Profile" asp-action="Index" data-site-menu-dismiss>پنل من</a>
+                            </li>
+                            <li>
+                                <a class="site-menu__link" asp-area="User" asp-controller="Orders" asp-action="Index" data-site-menu-dismiss>سفارش‌های من</a>
+                            </li>
+                            <li>
+                                <a class="site-menu__link" asp-area="User" asp-controller="Wallet" asp-action="Index" data-site-menu-dismiss>کیف پول</a>
+                            </li>
+                            <li>
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="site-menu__logout-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                    <button type="submit" class="site-menu__logout" data-site-menu-dismiss>خروج</button>
+                                </form>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="site-menu__actions">
+                            <a class="site-menu__primary-action" asp-area="" asp-controller="Account" asp-action="PhoneLogin" data-site-menu-dismiss>ورود / ثبت نام</a>
+                        </div>
+                    }
+                </div>
+            </aside>
+        </div>
+    </header>
+    <div class="@containerClass">
+        <main role="main" class="@mainClass">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    &copy; 2025 - @(ViewData["SiteName"] as string ?? "عطاری آنلاین")
+                </div>
+                <div class="d-flex flex-wrap gap-3">
+                    @await Component.InvokeAsync("FooterPages")
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy">حریم خصوصی</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    @{
+        var currentPath = Context?.Request?.Path.Value?.ToLower() ?? "";
+        
+        bool IsActive(string[] paths, bool exactMatch = false)
+        {
+            if (paths == null || paths.Length == 0) return false;
+            foreach (var path in paths)
+            {
+                var normalizedPath = path.ToLower().Trim('/');
+                
+                // Handle root/home path
+                if (string.IsNullOrEmpty(normalizedPath))
+                {
+                    if (currentPath == "/" || string.IsNullOrEmpty(currentPath) || currentPath == "/home")
+                    {
+                        return true;
+                    }
+                    continue;
+                }
+                
+                // Exact match for specific paths
+                if (exactMatch)
+                {
+                    if (currentPath == $"/{normalizedPath}" || currentPath == $"/{normalizedPath}/")
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    // For paths like /home, check exact match or starts with /home/ but not /home/contact, /home/about, etc.
+                    if (normalizedPath == "home")
+                    {
+                        if (currentPath == "/" || currentPath == "/home" || currentPath == "/home/")
+                        {
+                            return true;
+                        }
+                        continue;
+                    }
+                    
+                    // For other paths, check exact match or starts with
+                    if (currentPath == $"/{normalizedPath}" || currentPath == $"/{normalizedPath}/" || currentPath.StartsWith($"/{normalizedPath}/"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+    <nav class="mobile-bottom-nav">
+        <a asp-controller="Home" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/", "/home" }) ? "active" : "")">
+            <i class="bi bi-house mobile-bottom-nav-icon"></i>
+            <span class="mobile-bottom-nav-label">خانه</span>
+        </a>
+        
+        <a asp-controller="Product" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/product" }) ? "active" : "")">
+            <i class="bi bi-grid mobile-bottom-nav-icon"></i>
+            <span class="mobile-bottom-nav-label">محصولات</span>
+        </a>
+        
+        <a asp-controller="Cart" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/cart" }, exactMatch: true) ? "active" : "")">
+            <span class="mobile-bottom-nav-icon-wrapper">
+                <i class="bi bi-cart3 mobile-bottom-nav-icon"></i>
+                @if (cartItemCount > 0)
+                {
+                    <span class="mobile-bottom-nav-badge">@cartItemCount</span>
+                }
+            </span>
+            <span class="mobile-bottom-nav-label">سبد خرید</span>
+        </a>
+        
+        @if (isAuthenticated)
+        {
+            <a asp-area="User" asp-controller="Profile" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/user" }) ? "active" : "")">
+                <i class="bi bi-person mobile-bottom-nav-icon"></i>
+                <span class="mobile-bottom-nav-label">حساب من</span>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="PhoneLogin" class="mobile-bottom-nav-item @(IsActive(new[] { "/account/phonelogin", "/account" }) ? "active" : "")">
+                <i class="bi bi-person mobile-bottom-nav-icon"></i>
+                <span class="mobile-bottom-nav-label">ورود / ثبت نام</span>
+            </a>
+        }
+        
+        @if (isAuthenticated)
+        {
+            <a asp-controller="Wishlist" asp-action="Index" class="mobile-bottom-nav-item @(IsActive(new[] { "/wishlist" }, exactMatch: true) ? "active" : "")">
+                <span class="mobile-bottom-nav-icon-wrapper">
+                    <i class="bi bi-heart mobile-bottom-nav-icon"></i>
+                    @if (wishlistItemCount > 0)
+                    {
+                        <span class="mobile-bottom-nav-badge">@wishlistItemCount</span>
+                    }
+                </span>
+                <span class="mobile-bottom-nav-label">علاقه‌مندی‌ها</span>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="PhoneLogin" asp-route-returnUrl="@Url.Action("Index", "Wishlist")" class="mobile-bottom-nav-item">
+                <i class="bi bi-heart mobile-bottom-nav-icon"></i>
+                <span class="mobile-bottom-nav-label">علاقه‌مندی‌ها</span>
+            </a>
+        }
+    </nav>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="بازگشت به بالای صفحه" title="بازگشت به بالا">
+        <svg viewBox="0 0 24 24">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @await Html.PartialAsync("_AlertModal")
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/site/categories-mega-menu.js" asp-append-version="true"></script>
+    <script src="~/js/site/navigation-dropdown.js" asp-append-version="true"></script>
+    @if (hasAlert && !string.IsNullOrEmpty(alertJson))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.AppAlert) {
+                    window.AppAlert.show(@Html.Raw(alertJson));
+                }
+            });
+        </script>
+    }
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // Force mobile bottom navigation to be visible on mobile/tablet
+        (function() {
+            function toggleMobileNav() {
+                const nav = document.querySelector('.mobile-bottom-nav');
+                if (nav) {
+                    const width = window.innerWidth || document.documentElement.clientWidth;
+                    if (width <= 991.98) {
+                        // Show on mobile/tablet - use setProperty to avoid CSP issues
+                        nav.style.setProperty('position', 'fixed', 'important');
+                        nav.style.setProperty('bottom', '0', 'important');
+                        nav.style.setProperty('left', '0', 'important');
+                        nav.style.setProperty('right', '0', 'important');
+                        nav.style.setProperty('width', '100%', 'important');
+                        nav.style.setProperty('background', '#ffffff', 'important');
+                        nav.style.setProperty('border-top', '1px solid #e8e8e8', 'important');
+                        nav.style.setProperty('box-shadow', '0 -1px 4px rgba(0,0,0,0.08)', 'important');
+                        nav.style.setProperty('z-index', '9999', 'important');
+                        nav.style.setProperty('padding', '0.75rem 0', 'important');
+                        nav.style.setProperty('display', 'flex', 'important');
+                        nav.style.setProperty('justify-content', 'space-around', 'important');
+                        nav.style.setProperty('align-items', 'center', 'important');
+                        nav.style.setProperty('direction', 'rtl', 'important');
+                        nav.style.setProperty('visibility', 'visible', 'important');
+                        nav.style.setProperty('opacity', '1', 'important');
+                    } else {
+                        // Hide on desktop
+                        nav.style.setProperty('display', 'none', 'important');
+                        nav.style.setProperty('visibility', 'hidden', 'important');
+                    }
+                }
+            }
+            
+            // Run on load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', toggleMobileNav);
+            } else {
+                toggleMobileNav();
+            }
+            
+            // Run on resize with debounce
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(toggleMobileNav, 100);
+            });
+        })();
+    </script>
+</body>
+</html>
