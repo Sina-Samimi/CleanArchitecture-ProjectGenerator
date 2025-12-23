@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Settings;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Settings;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Admin.DeploymentProfiles;
+namespace MobiRooz.Application.Commands.Admin.DeploymentProfiles;
 
 public sealed record SaveDeploymentProfileCommand(
     Guid? Id,

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Navigation;
+namespace MobiRooz.Domain.Entities.Navigation;
 
 public sealed class NavigationMenuItem : Entity
 {

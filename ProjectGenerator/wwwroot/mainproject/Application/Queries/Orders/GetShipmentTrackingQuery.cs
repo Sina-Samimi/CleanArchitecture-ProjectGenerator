@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Orders;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Orders;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Orders;
+namespace MobiRooz.Application.Queries.Orders;
 
 public sealed record GetShipmentTrackingQuery(Guid InvoiceItemId) : IQuery<ShipmentTrackingDetailDto?>
 {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Tests;
+namespace MobiRooz.Application.DTOs.Tests;
 
 public sealed record UserTestAttemptDto
 {

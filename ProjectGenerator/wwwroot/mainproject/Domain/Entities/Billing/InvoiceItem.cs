@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Attar.Domain.Base;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Domain.Entities.Billing;
+namespace MobiRooz.Domain.Entities.Billing;
 
 public sealed class InvoiceItem : Entity
 {

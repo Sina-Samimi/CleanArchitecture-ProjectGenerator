@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Logs;
+using MobiRooz.Application.DTOs.Logs;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IApplicationLogRepository
 {

@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Application.Queries.Identity.GetUserLookups;
+namespace MobiRooz.Application.Queries.Identity.GetUserLookups;
 
 public sealed record GetAdminUserLookupsQuery(int MaxResults = 200) : IQuery<IReadOnlyCollection<UserLookupDto>>
 {

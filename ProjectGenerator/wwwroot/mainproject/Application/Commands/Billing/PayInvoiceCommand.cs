@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Commands.Billing.Wallet;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Commands.Billing.Wallet;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 
-namespace Attar.Application.Commands.Billing;
+namespace MobiRooz.Application.Commands.Billing;
 
 public sealed record PayInvoiceCommand(Guid InvoiceId, string UserId, PaymentMethod Method) : ICommand<InvoicePaymentResultDto>;
 

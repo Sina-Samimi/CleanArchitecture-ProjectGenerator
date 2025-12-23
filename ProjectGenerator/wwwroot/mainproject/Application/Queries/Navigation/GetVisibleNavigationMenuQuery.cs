@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Navigation;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Navigation;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Navigation;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Navigation;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Navigation;
+namespace MobiRooz.Application.Queries.Navigation;
 
 public sealed record GetVisibleNavigationMenuQuery : IQuery<IReadOnlyList<NavigationMenuItemDto>>
 {

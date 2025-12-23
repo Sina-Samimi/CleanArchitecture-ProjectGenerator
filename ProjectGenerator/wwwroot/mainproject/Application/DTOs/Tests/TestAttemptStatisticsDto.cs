@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Attar.Application.DTOs.Tests;
+namespace MobiRooz.Application.DTOs.Tests;
 
 public sealed record class TestAttemptStatisticsDto
 {

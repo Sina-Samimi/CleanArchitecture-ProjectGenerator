@@ -1,10 +1,10 @@
-using Attar.Domain.Base;
-using Attar.Domain.Entities;
-using Attar.Domain.Entities.Navigation;
+﻿using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Navigation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class NavigationMenuItemConfiguration : IEntityTypeConfiguration<NavigationMenuItem>
 {

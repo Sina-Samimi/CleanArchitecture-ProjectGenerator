@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Identity;
+namespace MobiRooz.Application.DTOs.Identity;
 
 public sealed record ActivityEntryDto(
     Guid? SessionId,

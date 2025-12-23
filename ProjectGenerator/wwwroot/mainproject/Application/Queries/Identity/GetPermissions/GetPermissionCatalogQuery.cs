@@ -1,11 +1,11 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Identity.GetPermissions;
+namespace MobiRooz.Application.Queries.Identity.GetPermissions;
 
 public sealed record GetPermissionCatalogQuery : IQuery<PermissionCatalogDto>;
 

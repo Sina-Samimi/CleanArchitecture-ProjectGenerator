@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Attar.Domain.Entities.Orders;
+using MobiRooz.Domain.Entities.Orders;
 
-namespace Attar.Application.DTOs.Cart;
+namespace MobiRooz.Application.DTOs.Cart;
 
 public static class CartDtoMapper
 {

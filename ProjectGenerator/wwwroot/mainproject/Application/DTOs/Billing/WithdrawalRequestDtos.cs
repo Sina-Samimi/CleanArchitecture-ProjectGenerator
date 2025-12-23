@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Billing;
+namespace MobiRooz.Application.DTOs.Billing;
 
 public sealed record WithdrawalRequestListItemDto(
     Guid Id,
@@ -54,6 +54,7 @@ public sealed record WithdrawalRequestDetailsDto(
     DateTimeOffset? ProcessedAt,
     Guid? WalletTransactionId,
     WalletTransactionListItemDto? WalletTransaction,
+    Guid? PaymentInvoiceId,
     DateTimeOffset CreateDate,
     DateTimeOffset UpdateDate);
 
@@ -81,7 +82,7 @@ public static class WithdrawalRequestDtoMapper
             request.CreateDate,
             request.UpdateDate);
 
-    public static WithdrawalRequestDetailsDto ToDetailsDto(this Domain.Entities.Billing.WithdrawalRequest request)
+    public static WithdrawalRequestDetailsDto ToDetailsDto(this Domain.Entities.Billing.WithdrawalRequest request, Guid? paymentInvoiceId = null)
         => new(
             request.Id,
             request.RequestType,
@@ -101,6 +102,7 @@ public static class WithdrawalRequestDtoMapper
             request.ProcessedAt,
             request.WalletTransactionId,
             request.WalletTransaction?.ToListItemDto(),
+            paymentInvoiceId,
             request.CreateDate,
             request.UpdateDate);
 }

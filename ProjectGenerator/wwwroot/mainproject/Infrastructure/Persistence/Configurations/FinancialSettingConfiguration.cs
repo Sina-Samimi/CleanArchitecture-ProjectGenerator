@@ -1,9 +1,9 @@
-﻿using Attar.Domain.Entities.Settings;
-using Attar.Domain.Enums;
+﻿using MobiRooz.Domain.Entities.Settings;
+using MobiRooz.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class FinancialSettingConfiguration : IEntityTypeConfiguration<FinancialSetting>
 {

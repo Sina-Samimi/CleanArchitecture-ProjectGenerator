@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using Attar.Domain.Entities.Discounts;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Entities.Discounts;
+using MobiRooz.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class DiscountCodeConfiguration : IEntityTypeConfiguration<DiscountCode>
 {

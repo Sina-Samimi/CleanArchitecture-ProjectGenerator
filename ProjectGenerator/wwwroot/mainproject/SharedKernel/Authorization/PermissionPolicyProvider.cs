@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace Attar.SharedKernel.Authorization;
+namespace MobiRooz.SharedKernel.Authorization;
 
 /// <summary>
 /// Custom policy provider for permission-based authorization

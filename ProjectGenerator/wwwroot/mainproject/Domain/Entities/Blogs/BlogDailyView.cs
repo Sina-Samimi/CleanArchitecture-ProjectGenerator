@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Blogs;
+namespace MobiRooz.Domain.Entities.Blogs;
 
 public sealed class BlogDailyView : Entity
 {

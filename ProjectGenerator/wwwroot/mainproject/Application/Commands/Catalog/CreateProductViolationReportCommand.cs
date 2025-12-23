@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Commands.Notifications;
-using Attar.Application.DTOs.Notifications;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Catalog;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Commands.Notifications;
+using MobiRooz.Application.DTOs.Notifications;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Commands.Catalog;
+namespace MobiRooz.Application.Commands.Catalog;
 
 public sealed record CreateProductViolationReportCommand(
     Guid ProductId,

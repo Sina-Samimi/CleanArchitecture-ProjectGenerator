@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities;
+namespace MobiRooz.Domain.Entities;
 
 public sealed class UserSession : Entity
 {

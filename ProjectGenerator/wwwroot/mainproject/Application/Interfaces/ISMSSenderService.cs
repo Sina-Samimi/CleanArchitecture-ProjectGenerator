@@ -1,7 +1,7 @@
-using Attar.Application.DTOs.Sms;
-using Attar.SharedKernel.DTOs;
+﻿using MobiRooz.Application.DTOs.Sms;
+using MobiRooz.SharedKernel.DTOs;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface ISMSSenderService
 {

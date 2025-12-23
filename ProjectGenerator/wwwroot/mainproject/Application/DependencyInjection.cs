@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
-using Attar.Application.Services;
+using MobiRooz.Application.Services;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Attar.Application;
+namespace MobiRooz.Application;
 
 public static class DependencyInjection
 {

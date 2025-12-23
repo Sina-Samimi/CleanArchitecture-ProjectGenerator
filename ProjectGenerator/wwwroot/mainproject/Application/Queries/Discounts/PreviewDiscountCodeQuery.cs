@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Discounts;
-using Attar.Application.Interfaces;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Discounts;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Discounts;
+namespace MobiRooz.Application.Queries.Discounts;
 
 public sealed record PreviewDiscountCodeQuery(
     string Code,

@@ -4,14 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Attar.Domain.Constants;
-using Attar.Domain.Entities;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.Authorization;
+using MobiRooz.Domain.Constants;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 
-namespace Attar.Infrastructure.Persistence;
+namespace MobiRooz.Infrastructure.Persistence;
 
 internal static class SeedData
 {

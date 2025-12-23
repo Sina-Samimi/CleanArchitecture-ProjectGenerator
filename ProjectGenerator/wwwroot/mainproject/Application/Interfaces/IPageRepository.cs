@@ -1,9 +1,9 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Pages;
-using Attar.Domain.Entities.Pages;
+using MobiRooz.Application.DTOs.Pages;
+using MobiRooz.Domain.Entities.Pages;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IPageRepository
 {

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Contacts;
+namespace MobiRooz.Application.DTOs.Contacts;
 
 public sealed record ContactMessageDto(
     Guid Id,

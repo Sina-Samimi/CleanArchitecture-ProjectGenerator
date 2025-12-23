@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Seo;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
+using MobiRooz.Application.DTOs.Seo;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class SeoTemplateService : ISeoTemplateService
 {

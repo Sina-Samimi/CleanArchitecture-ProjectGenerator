@@ -1,13 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Contacts;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Contacts;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Contacts;
+namespace MobiRooz.Application.Queries.Contacts;
 
 public sealed record GetContactMessagesQuery(
     int PageNumber = 1,

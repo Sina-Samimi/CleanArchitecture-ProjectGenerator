@@ -15,7 +15,7 @@ namespace Infrastructure.Migrations
                 name: "Logs");
 
             migrationBuilder.CreateTable(
-                name: "AttarApplicationLogs",
+                name: "ApplicationLogs",
                 schema: "Logs",
                 columns: table => new
                 {
@@ -44,15 +44,15 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AttarApplicationLogs", x => x.Id);
+                    table.PrimaryKey("PK_ApplicationLogs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AttarApplicationLogs_AspNetUsers_CreatorId",
+                        name: "FK_ApplicationLogs_AspNetUsers_CreatorId",
                         column: x => x.CreatorId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_AttarApplicationLogs_AspNetUsers_UpdaterId",
+                        name: "FK_ApplicationLogs_AspNetUsers_UpdaterId",
                         column: x => x.UpdaterId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -60,45 +60,45 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_ApplicationName",
+                name: "IX_ApplicationLogs_ApplicationName",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "ApplicationName");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_CreateDate",
+                name: "IX_ApplicationLogs_CreateDate",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "CreateDate");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_CreatorId",
+                name: "IX_ApplicationLogs_CreatorId",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "CreatorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_Level",
+                name: "IX_ApplicationLogs_Level",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "Level");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_Level_CreateDate",
+                name: "IX_ApplicationLogs_Level_CreateDate",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 columns: new[] { "Level", "CreateDate" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_SourceContext",
+                name: "IX_ApplicationLogs_SourceContext",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "SourceContext");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AttarApplicationLogs_UpdaterId",
+                name: "IX_ApplicationLogs_UpdaterId",
                 schema: "Logs",
-                table: "AttarApplicationLogs",
+                table: "ApplicationLogs",
                 column: "UpdaterId");
         }
 
@@ -106,7 +106,7 @@ namespace Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AttarApplicationLogs",
+                name: "ApplicationLogs",
                 schema: "Logs");
         }
     }

@@ -1,7 +1,7 @@
-﻿using Attar.Domain.Base;
-using Attar.Domain.Exceptions;
+﻿using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Exceptions;
 
-namespace Attar.Domain.ValueObjects;
+namespace MobiRooz.Domain.ValueObjects;
 
 public sealed class Score : ValueObject
 {

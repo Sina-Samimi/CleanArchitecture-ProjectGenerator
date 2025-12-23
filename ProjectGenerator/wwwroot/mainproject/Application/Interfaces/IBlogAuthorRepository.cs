@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Blogs;
+using MobiRooz.Domain.Entities.Blogs;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IBlogAuthorRepository
 {

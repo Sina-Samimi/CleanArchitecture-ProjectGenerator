@@ -1,9 +1,9 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Seo;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Entities.Seo;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IPageFaqRepository
 {

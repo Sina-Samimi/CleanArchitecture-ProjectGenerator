@@ -1,7 +1,7 @@
-using Attar.Domain.Entities;
+﻿using MobiRooz.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence;
+namespace MobiRooz.Infrastructure.Persistence;
 
 /// <summary>
 /// DbContext جداگانه برای دیتابیس لاگ‌ها
@@ -14,14 +14,14 @@ public sealed class LogsDbContext : DbContext
     {
     }
 
-    public DbSet<AttarApplicationLog> AttarApplicationLogs => Set<AttarApplicationLog>();
+    public DbSet<ApplicationLog> ApplicationLogs => Set<ApplicationLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
-        // فقط Configuration مربوط به AttarApplicationLog را اعمال کن
-        modelBuilder.ApplyConfiguration(new Configurations.AttarApplicationLogConfiguration());
+        // فقط Configuration مربوط به ApplicationLog را اعمال کن
+        modelBuilder.ApplyConfiguration(new Configurations.ApplicationLogConfiguration());
     }
 }
 

@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Navigation;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Navigation;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Admin.NavigationMenu;
+namespace MobiRooz.Application.Queries.Admin.NavigationMenu;
 
 public sealed record GetNavigationMenuItemQuery(Guid Id) : IQuery<NavigationMenuItemDetailDto>
 {

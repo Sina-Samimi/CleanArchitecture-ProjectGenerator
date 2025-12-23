@@ -1,21 +1,21 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Commands.Billing;
-using Attar.Application.Commands.Catalog;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Commands.Billing;
+using MobiRooz.Application.Commands.Catalog;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Attar.Application.Commands.Billing;
+namespace MobiRooz.Application.Commands.Billing;
 
 public sealed record ConfirmBankInvoicePaymentCommand(Guid InvoiceId, string Reference) : ICommand<InvoicePaymentResultDto>;
 

@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Notifications;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.Domain.Entities.Notifications;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Notifications;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Notifications;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Application.Commands.Notifications;
+namespace MobiRooz.Application.Commands.Notifications;
 
 public sealed record CreateNotificationCommand(CreateNotificationDto Dto) : ICommand<Guid>
 {

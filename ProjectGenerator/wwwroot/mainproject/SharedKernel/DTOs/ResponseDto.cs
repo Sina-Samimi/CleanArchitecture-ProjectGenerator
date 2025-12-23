@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Attar.SharedKernel.DTOs;
+namespace MobiRooz.SharedKernel.DTOs;
 
 public class Messages
 {

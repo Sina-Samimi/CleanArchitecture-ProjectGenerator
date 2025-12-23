@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Seo;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Seo;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Seo;
+namespace MobiRooz.Application.Queries.Seo;
 
 public sealed record GetSeoMetadataByIdQuery(Guid Id) : IQuery<SeoMetadataDto?>
 {

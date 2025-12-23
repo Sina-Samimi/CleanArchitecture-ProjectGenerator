@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Billing;
+namespace MobiRooz.Application.Queries.Billing;
 
 public sealed record GetSellerTotalWithdrawalsQuery(string SellerId) : IQuery<decimal>;
 

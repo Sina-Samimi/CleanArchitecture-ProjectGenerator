@@ -4,16 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Dashboard;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.Domain.Enums;
-using Attar.Infrastructure.Persistence;
-using Attar.SharedKernel.Extensions;
+using MobiRooz.Application.DTOs.Dashboard;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Infrastructure.Persistence;
+using MobiRooz.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class AdminDashboardMetricsService : IAdminDashboardMetricsService
 {
@@ -361,6 +361,8 @@ public sealed class AdminDashboardMetricsService : IAdminDashboardMetricsService
         var currentPeriodEndDate = DateOnly.FromDateTime(currentPeriodEnd.Date);
         var previousPeriodStartDate = DateOnly.FromDateTime(previousPeriodStart.Date);
         var previousPeriodEndDate = DateOnly.FromDateTime(previousPeriodEnd.Date);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        var yesterday = today.AddDays(-1);
 
         // Get site visit statistics for all time
         var allSiteVisits = await _dbContext.SiteVisits
@@ -369,6 +371,23 @@ public sealed class AdminDashboardMetricsService : IAdminDashboardMetricsService
 
         var totalSiteVisits = allSiteVisits.Count;
         var uniqueVisitors = allSiteVisits.Select(v => v.ViewerIp.ToString()).Distinct().Count();
+
+        // Get site visits for today
+        var siteVisitsToday = allSiteVisits
+            .Where(v => v.VisitDate == today)
+            .Count();
+
+        // Get site visits for yesterday
+        var siteVisitsYesterday = allSiteVisits
+            .Where(v => v.VisitDate == yesterday)
+            .Count();
+
+        // Get unique visitors for today
+        var uniqueVisitorsToday = allSiteVisits
+            .Where(v => v.VisitDate == today)
+            .Select(v => v.ViewerIp.ToString())
+            .Distinct()
+            .Count();
 
         // Get site visits for current period
         var siteVisitsCurrent = allSiteVisits
@@ -395,6 +414,9 @@ public sealed class AdminDashboardMetricsService : IAdminDashboardMetricsService
         return new VisitsMetricsDto(
             totalSiteVisits,
             uniqueVisitors,
+            siteVisitsToday,
+            siteVisitsYesterday,
+            uniqueVisitorsToday,
             siteVisitsCurrent,
             siteVisitsPrevious,
             pageVisitsCurrent,

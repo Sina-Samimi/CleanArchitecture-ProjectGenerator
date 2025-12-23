@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace Attar.SharedKernel.Authorization;
+namespace MobiRooz.SharedKernel.Authorization;
 
 public static class PermissionGroupUtility
 {

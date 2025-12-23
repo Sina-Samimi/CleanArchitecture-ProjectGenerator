@@ -1,7 +1,7 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Attar.SharedKernel.Helpers;
+namespace MobiRooz.SharedKernel.Helpers;
 
 public static class PhoneNumberHelper
 {

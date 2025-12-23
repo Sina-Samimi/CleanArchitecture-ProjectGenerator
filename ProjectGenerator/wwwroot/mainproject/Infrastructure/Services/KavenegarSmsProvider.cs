@@ -1,12 +1,12 @@
-using Attar.Application.DTOs.Sms;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.DTOs;
+﻿using MobiRooz.Application.DTOs.Sms;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.SharedKernel.Helpers;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class KavenegarSmsProvider : ISMSSenderService
 {

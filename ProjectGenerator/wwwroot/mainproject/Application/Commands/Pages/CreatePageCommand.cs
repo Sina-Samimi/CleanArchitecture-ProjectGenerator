@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Pages;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Pages;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Pages;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Pages;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Pages;
+namespace MobiRooz.Application.Commands.Pages;
 
 public sealed record CreatePageCommand(
     string Title,

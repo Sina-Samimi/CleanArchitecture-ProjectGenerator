@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Logs;
-using Attar.Application.Interfaces;
-using Attar.Infrastructure.Persistence;
+using MobiRooz.Application.DTOs.Logs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class ApplicationLogRepository : IApplicationLogRepository
 {
@@ -31,7 +31,7 @@ public sealed class ApplicationLogRepository : IApplicationLogRepository
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = _logsDbContext.AttarApplicationLogs.AsQueryable();
+        var query = _logsDbContext.ApplicationLogs.AsQueryable();
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(level))
@@ -108,7 +108,7 @@ public sealed class ApplicationLogRepository : IApplicationLogRepository
         string? environment,
         CancellationToken cancellationToken)
     {
-        var query = _logsDbContext.AttarApplicationLogs.AsQueryable();
+        var query = _logsDbContext.ApplicationLogs.AsQueryable();
 
         // Apply filters (same as GetApplicationLogsAsync)
         if (!string.IsNullOrWhiteSpace(level))
@@ -153,7 +153,7 @@ public sealed class ApplicationLogRepository : IApplicationLogRepository
         Guid id,
         CancellationToken cancellationToken)
     {
-        var log = await _logsDbContext.AttarApplicationLogs
+        var log = await _logsDbContext.ApplicationLogs
             .Where(l => l.Id == id)
             .Select(log => new ApplicationLogDetailsDto(
                 log.Id,

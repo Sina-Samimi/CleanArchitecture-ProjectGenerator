@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Tickets;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Tickets;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Tickets;
+namespace MobiRooz.Application.Queries.Tickets;
 
 public sealed record GetTicketsQuery(
     string? UserId = null,

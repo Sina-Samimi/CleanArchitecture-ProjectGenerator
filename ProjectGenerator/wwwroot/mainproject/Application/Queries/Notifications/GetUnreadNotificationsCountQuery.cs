@@ -1,10 +1,10 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Notifications;
+namespace MobiRooz.Application.Queries.Notifications;
 
 public sealed record GetUnreadNotificationsCountQuery(string UserId, string? UserRole = null) : IQuery<int>
 {

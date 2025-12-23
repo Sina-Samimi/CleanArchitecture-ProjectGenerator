@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Sms;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.DTOs;
+using MobiRooz.Application.DTOs.Sms;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.DTOs;
 using MediatR;
 
-namespace Attar.Application.Commands.Catalog;
+namespace MobiRooz.Application.Commands.Catalog;
 
 public sealed record CreateBackInStockSubscriptionCommand(
     Guid? ProductId,

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Attar.Application.DTOs.Visits;
+namespace MobiRooz.Application.DTOs.Visits;
 
 public sealed record SiteVisitListResultDto(
     IReadOnlyCollection<SiteVisitListItemDto> Items,

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class ParsedUserAgent
 {

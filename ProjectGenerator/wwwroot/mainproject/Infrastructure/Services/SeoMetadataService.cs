@@ -1,11 +1,11 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Seo;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
+using MobiRooz.Application.DTOs.Seo;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
 using MediatR;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class SeoMetadataService : ISeoMetadataService
 {

@@ -1,4 +1,4 @@
-﻿namespace Attar.Application.DTOs;
+﻿namespace MobiRooz.Application.DTOs;
 
 public sealed record RoleSummaryDto(string Id, string Name, string DisplayName);
 

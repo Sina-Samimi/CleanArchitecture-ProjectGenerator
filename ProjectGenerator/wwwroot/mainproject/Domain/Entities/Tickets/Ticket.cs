@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Entities;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Domain.Entities.Tickets;
+namespace MobiRooz.Domain.Entities.Tickets;
 
 public sealed class Ticket : Entity
 {

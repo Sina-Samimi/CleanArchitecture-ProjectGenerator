@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Catalog;
+namespace MobiRooz.Domain.Entities.Catalog;
 
 /// <summary>
 /// تعریف attribute های قابل انتخاب برای variant ها (مثل "سایز"، "رنگ")

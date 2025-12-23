@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Cart;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Cart;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using DomainEntities = Attar.Domain.Entities;
+using DomainEntities = MobiRooz.Domain.Entities;
 
-namespace Attar.Application.Queries.Cart;
+namespace MobiRooz.Application.Queries.Cart;
 
 public sealed record GetActiveCartsQuery(
     string? UserId = null,

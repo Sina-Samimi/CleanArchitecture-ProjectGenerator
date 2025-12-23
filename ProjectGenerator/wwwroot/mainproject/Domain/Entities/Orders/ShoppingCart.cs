@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Attar.Domain.Base;
-using Attar.Domain.Entities.Discounts;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.Domain.Interfaces;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities.Discounts;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.Domain.Interfaces;
 
-namespace Attar.Domain.Entities.Orders;
+namespace MobiRooz.Domain.Entities.Orders;
 
 public sealed class ShoppingCart : Entity, IAggregateRoot
 {

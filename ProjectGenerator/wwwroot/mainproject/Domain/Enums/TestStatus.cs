@@ -1,4 +1,4 @@
-﻿namespace Attar.Domain.Enums;
+﻿namespace MobiRooz.Domain.Enums;
 
 /// <summary>
 /// وضعیت تست

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Banners;
+namespace MobiRooz.Application.DTOs.Banners;
 
 public sealed record BannerDto(
     Guid Id,

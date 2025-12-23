@@ -1,9 +1,9 @@
-﻿using Attar.Domain.Entities;
-using Attar.Domain.Entities.Sellers;
+﻿using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Sellers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class SellerProfileConfiguration : IEntityTypeConfiguration<SellerProfile>
 {

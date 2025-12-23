@@ -1,10 +1,10 @@
-using System.Net;
-using Attar.Domain.Entities.Visits;
+﻿using System.Net;
+using MobiRooz.Domain.Entities.Visits;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class PageVisitConfiguration : IEntityTypeConfiguration<PageVisit>
 {

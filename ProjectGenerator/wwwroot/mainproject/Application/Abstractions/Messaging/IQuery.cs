@@ -1,7 +1,7 @@
-﻿using Attar.SharedKernel.BaseTypes;
+﻿using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 
-namespace Attar.Application.Abstractions.Messaging;
+namespace MobiRooz.Application.Abstractions.Messaging;
 
 public interface IQuery<TResponse> : IRequest<Result<TResponse>>;
 

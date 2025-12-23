@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Pages;
+namespace MobiRooz.Application.DTOs.Pages;
 
 public sealed record PageDto(
     Guid Id,

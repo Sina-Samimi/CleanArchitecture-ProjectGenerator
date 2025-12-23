@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Seo;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Seo;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Seo;
+namespace MobiRooz.Application.Commands.Seo;
 
 public sealed record UpdatePageFaqCommand(
     Guid Id,

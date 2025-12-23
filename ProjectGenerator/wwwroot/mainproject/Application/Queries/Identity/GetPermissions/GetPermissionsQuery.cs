@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Application.Queries.Identity.GetPermissions;
+namespace MobiRooz.Application.Queries.Identity.GetPermissions;
 
 public sealed record GetPermissionsQuery(
     int PageNumber = 1,

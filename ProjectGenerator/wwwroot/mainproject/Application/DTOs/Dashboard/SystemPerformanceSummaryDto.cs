@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Attar.Application.DTOs.Dashboard;
+namespace MobiRooz.Application.DTOs.Dashboard;
 
 public sealed record SystemPerformanceSummaryDto(
     PeriodWindowDto Period,
@@ -69,6 +69,9 @@ public sealed record PagesMetricsDto(
 public sealed record VisitsMetricsDto(
     int TotalSiteVisits,
     int UniqueVisitors,
+    int SiteVisitsToday,
+    int SiteVisitsYesterday,
+    int UniqueVisitorsToday,
     int SiteVisitsCurrentPeriod,
     int SiteVisitsPreviousPeriod,
     int PageVisitsCurrentPeriod,

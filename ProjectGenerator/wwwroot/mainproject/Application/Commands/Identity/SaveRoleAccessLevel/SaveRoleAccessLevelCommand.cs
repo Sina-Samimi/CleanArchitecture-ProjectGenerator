@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Commands.Identity.SaveRoleAccessLevel;
+namespace MobiRooz.Application.Commands.Identity.SaveRoleAccessLevel;
 
 public sealed record SaveRoleAccessLevelCommand(SaveRoleAccessLevelDto Payload) : ICommand<RoleAccessLevelDto>;
 

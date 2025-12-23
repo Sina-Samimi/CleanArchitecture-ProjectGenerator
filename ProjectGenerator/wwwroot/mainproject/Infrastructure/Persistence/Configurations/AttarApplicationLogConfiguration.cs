@@ -1,14 +1,14 @@
-using Attar.Domain.Entities;
+﻿using MobiRooz.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
-public sealed class AttarApplicationLogConfiguration : IEntityTypeConfiguration<AttarApplicationLog>
+public sealed class ApplicationLogConfiguration : IEntityTypeConfiguration<ApplicationLog>
 {
-    public void Configure(EntityTypeBuilder<AttarApplicationLog> builder)
+    public void Configure(EntityTypeBuilder<ApplicationLog> builder)
     {
-        builder.ToTable("AttarApplicationLogs", schema: "Logs");
+        builder.ToTable("ApplicationLogs", schema: "Logs");
 
         builder.HasKey(log => log.Id);
 

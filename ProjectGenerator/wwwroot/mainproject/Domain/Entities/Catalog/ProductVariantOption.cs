@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Catalog;
+namespace MobiRooz.Domain.Entities.Catalog;
 
 /// <summary>
 /// هر option یک مقدار برای یک variant attribute است (مثلاً "سایز: M" یا "رنگ: قرمز")

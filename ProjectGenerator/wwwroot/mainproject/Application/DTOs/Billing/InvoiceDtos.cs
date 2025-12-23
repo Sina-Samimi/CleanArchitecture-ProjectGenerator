@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Billing;
+namespace MobiRooz.Application.DTOs.Billing;
 
 public sealed record InvoiceListItemDto(
     Guid Id,
@@ -109,6 +109,7 @@ public sealed record InvoiceListFilterDto(
     InvoiceStatus? Status,
     DateTimeOffset? IssueDateFrom,
     DateTimeOffset? IssueDateTo,
+    string? ExternalReference = null,
     int? PageNumber = null,
     int? PageSize = null);
 

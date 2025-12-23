@@ -1,8 +1,8 @@
-using Attar.Domain.Entities.Tickets;
+﻿using MobiRooz.Domain.Entities.Tickets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class TicketReplyConfiguration : IEntityTypeConfiguration<TicketReply>
 {

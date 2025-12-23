@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Catalog;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Catalog;
+namespace MobiRooz.Application.Commands.Catalog;
 
 public sealed record CreateProductCommand(
     string Name,

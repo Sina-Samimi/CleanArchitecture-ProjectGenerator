@@ -1,7 +1,7 @@
 ﻿using System;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Catalog;
+namespace MobiRooz.Application.DTOs.Catalog;
 
 public sealed record UserPurchasedProductDto(
     Guid InvoiceId,

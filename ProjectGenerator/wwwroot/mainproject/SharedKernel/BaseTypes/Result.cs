@@ -1,4 +1,4 @@
-﻿namespace Attar.SharedKernel.BaseTypes;
+﻿namespace MobiRooz.SharedKernel.BaseTypes;
 
 public readonly record struct Result(bool IsSuccess, string? Error)
 {

@@ -1,10 +1,10 @@
 ﻿using System.Net;
-using Attar.Domain.Entities.Blogs;
+using MobiRooz.Domain.Entities.Blogs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class BlogDailyViewConfiguration : IEntityTypeConfiguration<BlogDailyView>
 {

@@ -1,8 +1,8 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Settings;
+using MobiRooz.Domain.Entities.Settings;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface ISmsSettingRepository
 {

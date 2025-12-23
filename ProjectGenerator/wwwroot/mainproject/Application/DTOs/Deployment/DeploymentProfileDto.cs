@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Attar.Application.DTOs.Deployment;
+namespace MobiRooz.Application.DTOs.Deployment;
 
 public sealed record DeploymentProfileDto(
     Guid Id,

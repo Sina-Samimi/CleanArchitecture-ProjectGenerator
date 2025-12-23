@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Attar.Application.DTOs.Identity;
+namespace MobiRooz.Application.DTOs.Identity;
 
 public sealed record DeviceActivityResultDto(
     IReadOnlyCollection<DeviceActivityDto> Items,

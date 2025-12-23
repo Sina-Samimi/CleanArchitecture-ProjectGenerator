@@ -1,8 +1,8 @@
-using Attar.Domain.Entities.Settings;
+﻿using MobiRooz.Domain.Entities.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class AboutSettingConfiguration : IEntityTypeConfiguration<AboutSetting>
 {

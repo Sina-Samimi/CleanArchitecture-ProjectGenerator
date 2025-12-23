@@ -1,11 +1,11 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Notifications;
+namespace MobiRooz.Application.Commands.Notifications;
 
 public sealed record MarkAllNotificationsAsReadCommand(string UserId) : ICommand
 {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Domain.Entities.Settings;
+namespace MobiRooz.Domain.Entities.Settings;
 
 public sealed class FinancialSetting : Entity
 {

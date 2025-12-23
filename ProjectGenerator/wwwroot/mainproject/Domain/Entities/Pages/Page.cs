@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Pages;
+namespace MobiRooz.Domain.Entities.Pages;
 
 public sealed class Page : Entity
 {

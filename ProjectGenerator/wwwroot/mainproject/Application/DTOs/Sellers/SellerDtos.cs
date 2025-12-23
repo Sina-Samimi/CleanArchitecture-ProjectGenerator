@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Attar.Application.DTOs.Sellers;
+namespace MobiRooz.Application.DTOs.Sellers;
 
 public sealed record SellerProfileListItemDto(
     Guid Id,

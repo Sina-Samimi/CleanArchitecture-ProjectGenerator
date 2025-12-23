@@ -1,0 +1,77 @@
+﻿{
+    "ProjectName":  "OzelDress2",
+    "OutputPath":  "D:\\\\Projects\\\\CleanArchitecture-ProjectGenerator\\\\_gen\\\\OzelDress2",
+    "Namespace":  "OzelDress2",
+    "Options":  {
+                    "IncludeWebSite":  true,
+                    "IncludeTests":  true,
+                    "GenerateInitialSeedData":  true,
+                    "SeedRoles":  [
+                                      {
+                                          "Name":  "Admin",
+                                          "Description":  "Administrator role with full access to all features",
+                                          "Permissions":  [
+                                                              "ManageUsers",
+                                                              "ManageRoles",
+                                                              "ManageSettings",
+                                                              "ViewReports"
+                                                          ]
+                                      },
+                                      {
+                                          "Name":  "Teacher",
+                                          "Description":  "Teacher role with course management capabilities",
+                                          "Permissions":  [
+                                                              "ManageCourses",
+                                                              "ViewStudents",
+                                                              "GradeAssignments"
+                                                          ]
+                                      },
+                                      {
+                                          "Name":  "Student",
+                                          "Description":  "Student role with learning access",
+                                          "Permissions":  [
+                                                              "ViewCourses",
+                                                              "SubmitAssignments",
+                                                              "ViewGrades"
+                                                          ]
+                                      },
+                                      {
+                                          "Name":  "User",
+                                          "Description":  "Regular user with basic access",
+                                          "Permissions":  [
+                                                              "ViewProfile",
+                                                              "EditOwnProfile"
+                                                          ]
+                                      }
+                                  ],
+                    "SeedUsers":  [
+                                      {
+                                          "Username":  "admin",
+                                          "Email":  "admin@example.com",
+                                          "PhoneNumber":  "09123456789",
+                                          "Password":  "Admin@123",
+                                          "Roles":  [
+                                                        "Admin"
+                                                    ]
+                                      },
+                                      {
+                                          "Username":  "teacher1",
+                                          "Email":  "teacher@example.com",
+                                          "PhoneNumber":  "09123456790",
+                                          "Password":  "Teacher@123",
+                                          "Roles":  [
+                                                        "Teacher"
+                                                    ]
+                                      },
+                                      {
+                                          "Username":  "student1",
+                                          "Email":  "student@example.com",
+                                          "PhoneNumber":  "09123456791",
+                                          "Password":  "Student@123",
+                                          "Roles":  [
+                                                        "Student"
+                                                    ]
+                                      }
+                                  ]
+                }
+}

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Attar.Domain.Base;
-using Attar.Domain.Entities.Catalog;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities.Catalog;
 
-namespace Attar.Domain.Entities.Visits;
+namespace MobiRooz.Domain.Entities.Visits;
 
 public sealed class ProductVisit : Entity
 {

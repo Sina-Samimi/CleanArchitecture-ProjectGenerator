@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Attar.SharedKernel.Extensions;
+namespace MobiRooz.SharedKernel.Extensions;
 
 public static class PersianDateExtensions
 {

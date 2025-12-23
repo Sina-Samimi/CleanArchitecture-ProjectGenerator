@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Catalog;
+namespace MobiRooz.Domain.Entities.Catalog;
 
 /// <summary>
 /// هر variant یک ترکیب از option ها است (مثلاً: سایز M + رنگ قرمز)

@@ -1,4 +1,4 @@
-namespace Attar.Application.DTOs.Settings;
+﻿namespace MobiRooz.Application.DTOs.Settings;
 
 public sealed record PaymentSettingDto(
     string ZarinPalMerchantId,

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Attar.Application.DTOs.Tests;
+namespace MobiRooz.Application.DTOs.Tests;
 
 public sealed record class PagedUserTestAttemptsDto
 {

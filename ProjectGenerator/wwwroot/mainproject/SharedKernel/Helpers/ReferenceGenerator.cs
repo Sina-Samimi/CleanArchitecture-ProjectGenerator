@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Linq;
 
-namespace Attar.SharedKernel.Helpers;
+namespace MobiRooz.SharedKernel.Helpers;
 
 public static class ReferenceGenerator
 {

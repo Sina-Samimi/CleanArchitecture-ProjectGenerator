@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Blogs;
+namespace MobiRooz.Application.DTOs.Blogs;
 
 public sealed record BlogListItemDto(
     Guid Id,

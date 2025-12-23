@@ -1,8 +1,8 @@
-﻿using Attar.Domain.Entities.Catalog;
+﻿using MobiRooz.Domain.Entities.Catalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class ProductCommentConfiguration : IEntityTypeConfiguration<ProductComment>
 {

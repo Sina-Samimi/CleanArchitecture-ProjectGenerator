@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Admin.FinancialSettings;
-using Attar.Application.Queries.Sellers;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Admin.FinancialSettings;
+using MobiRooz.Application.Queries.Sellers;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 
-namespace Attar.Application.Queries.Billing;
+namespace MobiRooz.Application.Queries.Billing;
 
 public sealed record GetSellerAvailableWithdrawalAmountQuery(string SellerId) : IQuery<SellerAvailableWithdrawalAmountDto>;
 

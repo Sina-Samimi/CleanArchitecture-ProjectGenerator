@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Commands.Sellers;
+namespace MobiRooz.Application.Commands.Sellers;
 
 public sealed record DeactivateSellerCommand(Guid SellerId, string? Reason = null) : ICommand
 {

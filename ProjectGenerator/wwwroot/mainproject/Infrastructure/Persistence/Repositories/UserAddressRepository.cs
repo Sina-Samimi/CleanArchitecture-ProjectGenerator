@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class UserAddressRepository : IUserAddressRepository
 {

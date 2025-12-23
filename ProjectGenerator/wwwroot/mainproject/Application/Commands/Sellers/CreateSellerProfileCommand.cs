@@ -3,15 +3,15 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.Domain.Entities.Sellers;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Sellers;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Commands.Sellers;
+namespace MobiRooz.Application.Commands.Sellers;
 
 public sealed record CreateSellerProfileCommand(
     string DisplayName,

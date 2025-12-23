@@ -4,14 +4,14 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Identity.Permissions;
+namespace MobiRooz.Application.Commands.Identity.Permissions;
 
 public sealed record SavePermissionCommand(SavePermissionPayload Payload) : ICommand<PermissionDetailsDto>;
 

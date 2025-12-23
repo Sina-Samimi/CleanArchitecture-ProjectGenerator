@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Catalog;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Catalog;
+namespace MobiRooz.Application.Commands.Catalog;
 
 public sealed record SubmitSellerProductCommand(
     string Name,
@@ -24,7 +24,8 @@ public sealed record SubmitSellerProductCommand(
     string? Tags,
     string? FeaturedImagePath,
     string? DigitalDownloadPath,
-    string? Brand) : ICommand<Guid>
+    string? Brand,
+    IReadOnlyCollection<(string Path, int Order)>? Gallery = null) : ICommand<Guid>
 {
     public sealed class Handler : ICommandHandler<SubmitSellerProductCommand, Guid>
     {
@@ -139,7 +140,7 @@ public sealed record SubmitSellerProductCommand(
                 slug,
                 DefaultRobots,
                 isCustomOrder: !request.Price.HasValue,
-                gallery: null,
+                gallery: request.Gallery,
                 brand: request.Brand);
 
             productRequest.CreatorId = audit.UserId;

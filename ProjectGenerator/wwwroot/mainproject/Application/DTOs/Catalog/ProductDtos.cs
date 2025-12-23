@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Catalog;
+namespace MobiRooz.Application.DTOs.Catalog;
 
 public sealed record ProductListItemDto(
     Guid Id,
@@ -21,7 +21,8 @@ public sealed record ProductListItemDto(
     string? SellerId,
     string? SellerName,
     string? SellerPhone,
-    int SellerCount);
+    int SellerCount,
+    string? CreatorId);
 
 public sealed record ProductGalleryImageDto(
     Guid Id,
@@ -117,7 +118,8 @@ public sealed record SellerProductDetailDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyCollection<ProductGalleryImageDto> Gallery,
-    int ViewCount);
+    int ViewCount,
+    bool IsCreator);
 
 public sealed record ProductListResultDto(
     IReadOnlyCollection<ProductListItemDto> Items,

@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Attar.SharedKernel.Authorization;
+namespace MobiRooz.SharedKernel.Authorization;
 
 /// <summary>
 /// Specifies that the class or method requires one or more permissions

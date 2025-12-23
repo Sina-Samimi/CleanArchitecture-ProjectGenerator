@@ -1,4 +1,4 @@
-﻿namespace Attar.SharedKernel.Extensions;
+﻿namespace MobiRooz.SharedKernel.Extensions;
 
 public static class EnumerableExtensions
 {

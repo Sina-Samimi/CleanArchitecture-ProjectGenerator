@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 
-namespace Attar.SharedKernel.Authorization;
+namespace MobiRooz.SharedKernel.Authorization;
 
 /// <summary>
 /// Extension methods for ClaimsPrincipal to check permissions

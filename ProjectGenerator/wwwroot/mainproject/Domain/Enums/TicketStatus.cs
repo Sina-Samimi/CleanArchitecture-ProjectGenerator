@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Attar.Domain.Enums;
+namespace MobiRooz.Domain.Enums;
 
 public enum TicketStatus
 {

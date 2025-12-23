@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Seo;
+namespace MobiRooz.Domain.Entities.Seo;
 
 public sealed class SeoOgImage : Entity
 {

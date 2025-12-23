@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Visits;
+namespace MobiRooz.Application.DTOs.Visits;
 
 public sealed record SiteVisitListItemDto(
     Guid Id,

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Seo;
+using MobiRooz.Domain.Entities.Seo;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface ISeoOgImageRepository
 {

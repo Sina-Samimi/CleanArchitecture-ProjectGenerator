@@ -1,4 +1,4 @@
-﻿namespace Attar.Domain.Constants;
+﻿namespace MobiRooz.Domain.Constants;
 
 public static class SystemUsers
 {

@@ -1,26 +1,26 @@
-using System.Net;
-using Attar.Domain.Base;
-using Attar.Domain.Entities;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Entities.Blogs;
-using Attar.Domain.Entities.Catalog;
-using Attar.Domain.Entities.Contacts;
-using Attar.Domain.Entities.Discounts;
-using Attar.Domain.Entities.Navigation;
-using Attar.Domain.Entities.Orders;
-using Attar.Domain.Entities.Notifications;
-using Attar.Domain.Entities.Settings;
-using Attar.Domain.Entities.Sellers;
-using Attar.Domain.Entities.Visits;
-using Attar.Domain.Entities.Tickets;
-using Attar.Domain.Entities.Seo;
+﻿using System.Net;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Entities.Blogs;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Domain.Entities.Contacts;
+using MobiRooz.Domain.Entities.Discounts;
+using MobiRooz.Domain.Entities.Navigation;
+using MobiRooz.Domain.Entities.Orders;
+using MobiRooz.Domain.Entities.Notifications;
+using MobiRooz.Domain.Entities.Settings;
+using MobiRooz.Domain.Entities.Sellers;
+using MobiRooz.Domain.Entities.Visits;
+using MobiRooz.Domain.Entities.Tickets;
+using MobiRooz.Domain.Entities.Seo;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Infrastructure.Persistence;
+namespace MobiRooz.Infrastructure.Persistence;
 
 public sealed class AppDbContext : IdentityDbContext<ApplicationUser>
 {

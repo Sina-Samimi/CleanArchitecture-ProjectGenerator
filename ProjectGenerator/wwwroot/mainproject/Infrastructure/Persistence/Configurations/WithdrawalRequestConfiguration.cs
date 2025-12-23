@@ -1,9 +1,9 @@
-using Attar.Domain.Entities;
-using Attar.Domain.Entities.Billing;
+﻿using MobiRooz.Domain.Entities;
+using MobiRooz.Domain.Entities.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<WithdrawalRequest>
 {

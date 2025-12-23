@@ -1,21 +1,21 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Commands.Billing;
-using Attar.Application.Commands.Notifications;
-using Attar.Application.DTOs.Notifications;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Admin.FinancialSettings;
-using Attar.Domain.Entities.Notifications;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Commands.Billing;
+using MobiRooz.Application.Commands.Notifications;
+using MobiRooz.Application.DTOs.Notifications;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Admin.FinancialSettings;
+using MobiRooz.Domain.Entities.Notifications;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 
-namespace Attar.Application.Commands.Cart;
+namespace MobiRooz.Application.Commands.Cart;
 
 public sealed record CheckoutCartCommand(
     string UserId,

@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Commands.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Commands.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 using MediatR;
 
-namespace Attar.Application.Commands.Billing.Wallet;
+namespace MobiRooz.Application.Commands.Billing.Wallet;
 
 public sealed record CreateWalletChargeInvoiceCommand(
     string UserId,

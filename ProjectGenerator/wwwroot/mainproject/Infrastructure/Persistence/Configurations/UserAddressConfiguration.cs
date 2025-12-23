@@ -1,8 +1,8 @@
-using Attar.Domain.Entities;
+﻿using MobiRooz.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class UserAddressConfiguration : IEntityTypeConfiguration<UserAddress>
 {

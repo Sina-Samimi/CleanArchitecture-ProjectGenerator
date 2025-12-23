@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Billing;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Entities.Orders;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Billing;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Entities.Orders;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 
-namespace Attar.Application.Commands.Orders;
+namespace MobiRooz.Application.Commands.Orders;
 
 public sealed record CreateShipmentTrackingCommand(
     Guid InvoiceItemId,
@@ -44,7 +44,15 @@ public sealed record CreateShipmentTrackingCommand(
             // Find invoice item by querying invoices
             // We'll search through invoices to find the one containing this item
             var invoicesResult = await _mediator.Send(
-                new GetInvoiceListQuery(new Application.DTOs.Billing.InvoiceListFilterDto(null, null, null, null, null, 1, 1000)),
+                new GetInvoiceListQuery(new Application.DTOs.Billing.InvoiceListFilterDto(
+                    SearchTerm: null,
+                    UserId: null,
+                    Status: null,
+                    IssueDateFrom: null,
+                    IssueDateTo: null,
+                    ExternalReference: null,
+                    PageNumber: 1,
+                    PageSize: 1000)),
                 cancellationToken);
 
             if (!invoicesResult.IsSuccess)

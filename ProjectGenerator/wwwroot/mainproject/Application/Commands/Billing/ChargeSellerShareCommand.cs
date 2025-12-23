@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Admin.FinancialSettings;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Admin.FinancialSettings;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Attar.Application.Commands.Billing;
+namespace MobiRooz.Application.Commands.Billing;
 
 public sealed record ChargeSellerShareCommand(Guid InvoiceId) : ICommand;
 

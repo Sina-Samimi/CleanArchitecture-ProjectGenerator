@@ -1,4 +1,4 @@
-﻿namespace Attar.Domain.Interfaces;
+﻿namespace MobiRooz.Domain.Interfaces;
 
 public interface IAggregateRoot
 {

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Security.Claims;
-using Attar.Application.Interfaces;
-using Attar.Domain.Constants;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Constants;
 using Microsoft.AspNetCore.Http;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class HttpAuditContext : IAuditContext
 {

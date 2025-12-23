@@ -1,4 +1,4 @@
-﻿namespace Attar.SharedKernel.Constants;
+﻿namespace MobiRooz.SharedKernel.Constants;
 
 public static class TestConstants
 {

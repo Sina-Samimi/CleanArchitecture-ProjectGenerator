@@ -1,6 +1,6 @@
-﻿using Attar.Domain.Enums;
+﻿using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Financial;
+namespace MobiRooz.Application.DTOs.Financial;
 
 public sealed record FinancialSettingDto(
     decimal SellerProductSharePercentage,

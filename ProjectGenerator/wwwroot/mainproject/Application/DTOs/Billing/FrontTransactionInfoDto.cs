@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Billing;
+namespace MobiRooz.Application.DTOs.Billing;
 
 public sealed record FrontTransactionInfoDto(
     decimal Amount,

@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.Domain.Interfaces;
-using Attar.Domain.ValueObjects;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.Domain.Interfaces;
+using MobiRooz.Domain.ValueObjects;
 
-namespace Attar.Domain.Entities.Discounts;
+namespace MobiRooz.Domain.Entities.Discounts;
 
 public sealed class DiscountCode : Entity, IAggregateRoot
 {
@@ -518,7 +518,7 @@ public sealed class DiscountCode : Entity, IAggregateRoot
 
     public sealed record DiscountApplicationResult(
         string Code,
-        Attar.Domain.Enums.DiscountType AppliedDiscountType,
+        MobiRooz.Domain.Enums.DiscountType AppliedDiscountType,
         decimal AppliedDiscountValue,
         decimal OriginalPrice,
         decimal DiscountAmount,
@@ -536,7 +536,7 @@ public sealed class DiscountCode : Entity, IAggregateRoot
         
         public static DiscountApplicationResult CreateSuccess(
             string code,
-            Attar.Domain.Enums.DiscountType appliedDiscountType,
+            MobiRooz.Domain.Enums.DiscountType appliedDiscountType,
             decimal appliedDiscountValue,
             decimal originalPrice,
             decimal discountAmount,
@@ -561,7 +561,7 @@ public sealed class DiscountCode : Entity, IAggregateRoot
         {
             return new DiscountApplicationResult(
                 string.Empty,
-                Attar.Domain.Enums.DiscountType.Percentage,
+                MobiRooz.Domain.Enums.DiscountType.Percentage,
                 0m,
                 0m,
                 0m,

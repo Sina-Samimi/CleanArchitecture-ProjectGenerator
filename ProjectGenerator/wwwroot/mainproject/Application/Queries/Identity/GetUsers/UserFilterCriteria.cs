@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Attar.Application.Queries.Identity.GetUsers;
+namespace MobiRooz.Application.Queries.Identity.GetUsers;
 
 public sealed record UserFilterCriteria(
     bool IncludeDeactivated,

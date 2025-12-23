@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Domain.Entities;
+namespace MobiRooz.Domain.Entities;
 
 public sealed class ApplicationUser : IdentityUser
 {

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Entities.Orders;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Entities.Orders;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Billing;
+namespace MobiRooz.Application.DTOs.Billing;
 
 public sealed record WalletSummaryDto(
     decimal Balance,

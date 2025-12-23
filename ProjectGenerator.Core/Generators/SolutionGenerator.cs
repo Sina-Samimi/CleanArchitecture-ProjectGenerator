@@ -75,6 +75,10 @@ public class SolutionGenerator
     {
         var sb = new StringBuilder();
         var projectGuids = new Dictionary<string, string>();
+
+        var root = _config.OutputPath;
+        var srcRoot = Path.Combine(root, "src");
+        var testsRoot = Path.Combine(root, "tests");
         
         sb.AppendLine("Microsoft Visual Studio Solution File, Format Version 12.00");
         sb.AppendLine("# Visual Studio Version 17");
@@ -84,19 +88,53 @@ public class SolutionGenerator
         // Add WebSite project FIRST to make it the startup project
         if (_config.Options.IncludeWebSite)
         {
-            var websiteGuid = AddProject(sb, $"{_config.ProjectName}.WebSite", "src");
-            projectGuids.Add($"{_config.ProjectName}.WebSite", websiteGuid);
+            var webProjectPath = ResolveProjectPath(
+                root,
+                // preferred path (matches generator/cloner output)
+                Path.Combine(srcRoot, $"{_config.ProjectName}.WebSite", $"{_config.ProjectName}.WebSite.csproj"),
+                // fallback: any *.WebSite.csproj under src
+                FindFirstCsproj(srcRoot, p => p.EndsWith(".WebSite.csproj", StringComparison.OrdinalIgnoreCase))
+            );
+
+            var webDisplayName = $"{_config.ProjectName}.WebSite";
+            var websiteGuid = AddProject(sb, webDisplayName, webProjectPath);
+            projectGuids.Add(webDisplayName, websiteGuid);
         }
 
-        // Add other projects
-        projectGuids.Add("Domain", AddProject(sb, "Domain", "src"));
-        projectGuids.Add("SharedKernel", AddProject(sb, "SharedKernel", "src"));
-        projectGuids.Add("Application", AddProject(sb, "Application", "src"));
-        projectGuids.Add("Infrastructure", AddProject(sb, "Infrastructure", "src"));
+        // Core projects
+        projectGuids.Add("Domain", AddProject(sb, "Domain", ResolveProjectPath(
+            root,
+            Path.Combine(srcRoot, "Domain", "Domain.csproj"),
+            FindFirstCsproj(Path.Combine(srcRoot, "Domain"), _ => true),
+            FindFirstCsproj(srcRoot, p => p.EndsWith("\\Domain\\Domain.csproj", StringComparison.OrdinalIgnoreCase) || p.EndsWith("/Domain/Domain.csproj", StringComparison.OrdinalIgnoreCase))
+        )));
+
+        projectGuids.Add("SharedKernel", AddProject(sb, "SharedKernel", ResolveProjectPath(
+            root,
+            Path.Combine(srcRoot, "SharedKernel", "SharedKernel.csproj"),
+            FindFirstCsproj(Path.Combine(srcRoot, "SharedKernel"), _ => true)
+        )));
+
+        projectGuids.Add("Application", AddProject(sb, "Application", ResolveProjectPath(
+            root,
+            Path.Combine(srcRoot, "Application", "Application.csproj"),
+            FindFirstCsproj(Path.Combine(srcRoot, "Application"), _ => true)
+        )));
+
+        projectGuids.Add("Infrastructure", AddProject(sb, "Infrastructure", ResolveProjectPath(
+            root,
+            Path.Combine(srcRoot, "Infrastructure", "Infrastructure.csproj"),
+            FindFirstCsproj(Path.Combine(srcRoot, "Infrastructure"), _ => true)
+        )));
 
         if (_config.Options.IncludeTests)
         {
-            projectGuids.Add("UnitTests", AddProject(sb, "UnitTests", "tests"));
+            projectGuids.Add("UnitTests", AddProject(sb, "UnitTests", ResolveProjectPath(
+                root,
+                Path.Combine(testsRoot, "UnitTests", "UnitTests.csproj"),
+                FindFirstCsproj(Path.Combine(testsRoot, "UnitTests"), _ => true),
+                FindFirstCsproj(testsRoot, p => p.EndsWith("\\UnitTests\\UnitTests.csproj", StringComparison.OrdinalIgnoreCase) || p.EndsWith("/UnitTests/UnitTests.csproj", StringComparison.OrdinalIgnoreCase))
+            )));
         }
 
         // Add solution folders
@@ -159,12 +197,49 @@ public class SolutionGenerator
         }
     }
 
-    private string AddProject(StringBuilder sb, string projectName, string folder)
+    private static string ResolveProjectPath(string solutionRoot, params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            if (File.Exists(candidate))
+            {
+                // Ensure we emit a relative path in the .sln (VS expects relative paths)
+                return Path.GetRelativePath(solutionRoot, candidate);
+            }
+        }
+
+        // Last resort: don't fail project generation; emit the first candidate as a relative path (even if missing)
+        // so the user at least gets a .sln and we can see which project didn't resolve.
+        var fallback = candidates.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
+        if (!string.IsNullOrWhiteSpace(fallback))
+        {
+            Console.WriteLine($"⚠ Could not find .csproj on disk. Using fallback path in solution: {fallback}");
+            return Path.GetRelativePath(solutionRoot, fallback);
+        }
+
+        Console.WriteLine("⚠ Could not resolve a valid .csproj path for solution generation (no candidates provided).");
+        return "MISSING_PROJECT.csproj";
+    }
+
+    private static string? FindFirstCsproj(string? rootDir, Func<string, bool> predicate)
+    {
+        if (string.IsNullOrWhiteSpace(rootDir) || !Directory.Exists(rootDir))
+        {
+            return null;
+        }
+
+        return Directory.EnumerateFiles(rootDir, "*.csproj", SearchOption.AllDirectories)
+            .FirstOrDefault(predicate);
+    }
+
+    private string AddProject(StringBuilder sb, string projectName, string projectPath)
     {
         var projectGuid = Guid.NewGuid().ToString().ToUpper();
-        var projectPath = string.IsNullOrEmpty(folder)
-            ? $"{projectName}\\{projectName}.csproj"
-            : $"{folder}\\{projectName}\\{projectName}.csproj";
 
         sb.AppendLine($"Project(\"{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}\") = \"{projectName}\", \"{projectPath}\", \"{{{projectGuid}}}\"");
         sb.AppendLine("EndProject");

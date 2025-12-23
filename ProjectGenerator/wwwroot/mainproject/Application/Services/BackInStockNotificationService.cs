@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Sms;
-using Attar.Application.Interfaces;
+using MobiRooz.Application.DTOs.Sms;
+using MobiRooz.Application.Interfaces;
 
-namespace Attar.Application.Services;
+namespace MobiRooz.Application.Services;
 
 public interface IBackInStockNotificationService
 {

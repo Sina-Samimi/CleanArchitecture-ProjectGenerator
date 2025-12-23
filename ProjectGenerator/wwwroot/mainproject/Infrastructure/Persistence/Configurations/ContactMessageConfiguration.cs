@@ -1,8 +1,8 @@
-using Attar.Domain.Entities.Contacts;
+﻿using MobiRooz.Domain.Entities.Contacts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class ContactMessageConfiguration : IEntityTypeConfiguration<ContactMessage>
 {

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities.Settings;
+namespace MobiRooz.Domain.Entities.Settings;
 
 public sealed class PaymentSetting : Entity
 {

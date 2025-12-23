@@ -166,6 +166,8 @@ internal static class ReferenceSolutionCloner
         }
 
         var templateKind = DetectTemplateKind(websiteSource);
+        var sourceWebProjectName = Path.GetFileName(websiteSource.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        Console.WriteLine($"  Detected source web project: {sourceWebProjectName}");
 
         // Old layout has src/Domain, src/Application, ... next to the web project.
         // New layout (mainproject) puts Domain/Application/... directly under referenceRoot.
@@ -201,12 +203,42 @@ internal static class ReferenceSolutionCloner
 
             var targetDir = Path.Combine(targetSrcRoot, folder);
             Console.WriteLine($" - {folder}");
-            CopyDirectory(sourceDir, targetDir, config, templateKind);
+            
+            // Check if .csproj file exists in source before copying
+            var csprojFile = Path.Combine(sourceDir, $"{folder}.csproj");
+            if (File.Exists(csprojFile))
+            {
+                Console.WriteLine($"    Found .csproj: {folder}.csproj");
+            }
+            else
+            {
+                Console.WriteLine($"    ⚠ Missing .csproj: {folder}.csproj");
+            }
+            
+            CopyDirectory(sourceDir, targetDir, config, templateKind, sourceWebProjectName);
+            
+            // Verify .csproj was copied
+            var targetCsproj = Path.Combine(targetDir, $"{folder}.csproj");
+            if (File.Exists(targetCsproj))
+            {
+                Console.WriteLine($"    ✓ Copied .csproj: {folder}.csproj");
+            }
+            else
+            {
+                Console.WriteLine($"    ✗ Failed to copy .csproj: {folder}.csproj");
+            }
         }
 
         var websiteTargetDir = Path.Combine(targetSrcRoot, $"{config.ProjectName}.WebSite");
-        Console.WriteLine($" - {config.ProjectName}.WebSite");
-        CopyDirectory(websiteSource, websiteTargetDir, config, templateKind);
+        Console.WriteLine($" - {config.ProjectName}.WebSite (from {sourceWebProjectName})");
+        CopyDirectory(websiteSource, websiteTargetDir, config, templateKind, sourceWebProjectName);
+
+        // For mainproject layout, copy any root-level files from referenceSrcRoot to output root
+        // (e.g., .editorconfig, .gitignore, README.md, etc.)
+        if (!Directory.Exists(legacySrc))
+        {
+            CopyRootLevelFiles(referenceSrcRoot, config.OutputPath, config, templateKind, sourceWebProjectName);
+        }
 
         // Ensure BaseTypes folder and Result.cs exist in SharedKernel
         EnsureSharedKernelBaseTypes(targetSrcRoot, config);
@@ -241,7 +273,52 @@ internal static class ReferenceSolutionCloner
         }
     }
 
-    private static void CopyDirectory(string sourceDir, string destinationDir, ProjectConfig config, ReferenceTemplateKind templateKind)
+    private static void CopyRootLevelFiles(string sourceRoot, string destinationRoot, ProjectConfig config, ReferenceTemplateKind templateKind, string? sourceWebProjectName = null)
+    {
+        // Copy any files at the root level of mainproject (e.g., .editorconfig, .gitignore, README.md)
+        // These should go to the root of the generated project, not into src/
+        if (!Directory.Exists(sourceRoot))
+        {
+            return;
+        }
+
+        var rootFiles = Directory.EnumerateFiles(sourceRoot, "*", SearchOption.TopDirectoryOnly)
+            .Where(file => !ShouldSkip(file, sourceRoot, templateKind));
+
+        foreach (var file in rootFiles)
+        {
+            var fileName = Path.GetFileName(file);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                continue;
+            }
+
+            // Skip known project folders that are already handled
+            var fileNameLower = fileName.ToLowerInvariant();
+            if (SourceDirectories.Any(f => f.Equals(fileName, StringComparison.OrdinalIgnoreCase)) ||
+                fileName.EndsWith(".WebSite", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var destinationFile = Path.Combine(destinationRoot, fileName);
+
+            if (IsTextFile(file))
+            {
+                var content = File.ReadAllText(file, Encoding.UTF8);
+                var transformedContent = ApplyContentTransformations(content, config, templateKind, fileName, sourceWebProjectName);
+                File.WriteAllText(destinationFile, transformedContent, Encoding.UTF8);
+                Console.WriteLine($"  Copied root file: {fileName}");
+            }
+            else
+            {
+                File.Copy(file, destinationFile, overwrite: true);
+                Console.WriteLine($"  Copied root file: {fileName}");
+            }
+        }
+    }
+
+    private static void CopyDirectory(string sourceDir, string destinationDir, ProjectConfig config, ReferenceTemplateKind templateKind, string? sourceWebProjectName = null)
     {
         Directory.CreateDirectory(destinationDir);
 
@@ -271,18 +348,25 @@ internal static class ReferenceSolutionCloner
                 }
             }
 
-            var transformedRelative = TransformRelativePath(relativePath, config);
+            var transformedRelative = TransformRelativePath(relativePath, config, sourceWebProjectName);
             Directory.CreateDirectory(Path.Combine(destinationDir, transformedRelative));
         }
 
         foreach (var file in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
         {
+            var relativePath = Path.GetRelativePath(sourceDir, file);
+            var fileName = Path.GetFileName(relativePath);
+            
             if (ShouldSkip(file, sourceDir, templateKind))
             {
+                // Log skipped .csproj files for debugging
+                if (fileName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"    ⚠ Skipping .csproj file: {relativePath}");
+                }
                 continue;
             }
 
-            var relativePath = Path.GetRelativePath(sourceDir, file);
             var normalizedPath = relativePath.Replace('\\', '/');
 
             if (templateKind == ReferenceTemplateKind.Arsis)
@@ -296,25 +380,29 @@ internal static class ReferenceSolutionCloner
                 }
 
                 // Skip migration snapshot files even if not in Migrations folder
-                var fileNameSnapshot = Path.GetFileName(relativePath);
-                if (!string.IsNullOrEmpty(fileNameSnapshot) &&
-                    fileNameSnapshot.Contains("Snapshot", StringComparison.OrdinalIgnoreCase) &&
-                    fileNameSnapshot.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(fileName) &&
+                    fileName.Contains("Snapshot", StringComparison.OrdinalIgnoreCase) &&
+                    fileName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
             }
 
-            var fileName = Path.GetFileName(relativePath);
-
-            var transformedRelative = TransformRelativePath(relativePath, config);
+            var transformedRelative = TransformRelativePath(relativePath, config, sourceWebProjectName);
             var destinationFile = Path.Combine(destinationDir, transformedRelative);
+            
+            // Debug: log .csproj file transformations
+            if (fileName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"    ✓ Copying .csproj: {relativePath} -> {transformedRelative}");
+            }
+            
             Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
 
             if (IsTextFile(file))
             {
                 var content = File.ReadAllText(file, Encoding.UTF8);
-                var transformedContent = ApplyContentTransformations(content, config, templateKind, fileName);
+                var transformedContent = ApplyContentTransformations(content, config, templateKind, fileName, sourceWebProjectName);
                 File.WriteAllText(destinationFile, transformedContent, Encoding.UTF8);
             }
             else
@@ -343,6 +431,13 @@ internal static class ReferenceSolutionCloner
             // Application/DTOs/Logs.
             if (segment.Equals("logs", StringComparison.OrdinalIgnoreCase))
             {
+                // User requirement for mainproject template: copy EVERYTHING exactly as-is,
+                // including root-level logs folder inside the web project.
+                if (templateKind == ReferenceTemplateKind.Attar)
+                {
+                    continue;
+                }
+
                 // Root-level logs folder (logs/..., not Application/DTOs/Logs)
                 if (i == 0)
                 {
@@ -355,6 +450,15 @@ internal static class ReferenceSolutionCloner
 
             if (SkippedDirectories.Contains(segment))
             {
+                // User requirement for mainproject template: do NOT skip bin/obj folders.
+                // Keep other safety skips like .git/.vs/TestResults.
+                if (templateKind == ReferenceTemplateKind.Attar &&
+                    (segment.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
+                     segment.Equals("obj", StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
                 return true;
             }
         }
@@ -609,9 +713,20 @@ internal static class ReferenceSolutionCloner
     {
         var directoryName = Path.GetFileName(websiteSource.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
-        if (directoryName.Equals("Attar.WebSite", StringComparison.OrdinalIgnoreCase))
+        // Any .WebSite project in mainproject folder is treated as Attar template
+        // (supports Attar.WebSite, MobiRooz.WebSite, or any future name)
+        if (directoryName.EndsWith(".WebSite", StringComparison.OrdinalIgnoreCase))
         {
-            return ReferenceTemplateKind.Attar;
+            // Check if it's in the mainproject folder
+            var parentDir = Directory.GetParent(websiteSource)?.FullName;
+            if (parentDir != null)
+            {
+                var parentName = Path.GetFileName(parentDir);
+                if (parentName.Equals("mainproject", StringComparison.OrdinalIgnoreCase))
+                {
+                    return ReferenceTemplateKind.Attar;
+                }
+            }
         }
 
         if (directoryName.Equals("EndPoint.WebSite", StringComparison.OrdinalIgnoreCase))
@@ -622,50 +737,129 @@ internal static class ReferenceSolutionCloner
         return ReferenceTemplateKind.Unknown;
     }
 
-    private static string TransformRelativePath(string relativePath, ProjectConfig config)
+    private static string TransformRelativePath(string relativePath, ProjectConfig config, string? sourceWebProjectName = null)
     {
         var transformed = relativePath;
 
         // Legacy template web project name
         transformed = transformed.Replace("EndPoint.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
 
-        // New mainproject web project name
-        transformed = transformed.Replace("Attar.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+        // New mainproject web project name - replace any .WebSite project name
+        if (!string.IsNullOrEmpty(sourceWebProjectName) && sourceWebProjectName.EndsWith(".WebSite", StringComparison.OrdinalIgnoreCase))
+        {
+            transformed = transformed.Replace(sourceWebProjectName, $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+            
+            // Also replace .csproj and .csproj.user file names
+            var sourceBaseName = sourceWebProjectName.Substring(0, sourceWebProjectName.Length - ".WebSite".Length);
+            transformed = transformed.Replace($"{sourceWebProjectName}.csproj", $"{config.ProjectName}.WebSite.csproj", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace($"{sourceWebProjectName}.csproj.user", $"{config.ProjectName}.WebSite.csproj.user", StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            // Fallback: try common names
+            transformed = transformed.Replace("Attar.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace("MobiRooz.WebSite", $"{config.ProjectName}.WebSite", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace("Attar.WebSite.csproj", $"{config.ProjectName}.WebSite.csproj", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace("MobiRooz.WebSite.csproj", $"{config.ProjectName}.WebSite.csproj", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace("Attar.WebSite.csproj.user", $"{config.ProjectName}.WebSite.csproj.user", StringComparison.OrdinalIgnoreCase);
+            transformed = transformed.Replace("MobiRooz.WebSite.csproj.user", $"{config.ProjectName}.WebSite.csproj.user", StringComparison.OrdinalIgnoreCase);
+        }
 
         return transformed;
     }
 
-    private static string ApplyContentTransformations(string content, ProjectConfig config, ReferenceTemplateKind templateKind, string? fileName = null)
+    private static string ApplyContentTransformations(string content, ProjectConfig config, ReferenceTemplateKind templateKind, string? fileName = null, string? sourceWebProjectName = null)
     {
         return templateKind switch
         {
-            ReferenceTemplateKind.Attar => ApplyAttarTransformations(content, config, fileName),
+            ReferenceTemplateKind.Attar => ApplyAttarTransformations(content, config, fileName, sourceWebProjectName),
             ReferenceTemplateKind.Arsis or ReferenceTemplateKind.Unknown => ApplyArsisTransformations(content, config, fileName),
             _ => ApplyArsisTransformations(content, config, fileName)
         };
     }
 
-    private static string ApplyAttarTransformations(string content, ProjectConfig config, string? fileName)
+    private static string ApplyAttarTransformations(string content, ProjectConfig config, string? fileName, string? sourceWebProjectName = null)
     {
+        // Extract the base name from source web project (e.g., "MobiRooz" from "MobiRooz.WebSite")
+        string? sourceBaseName = null;
+        if (!string.IsNullOrEmpty(sourceWebProjectName) && sourceWebProjectName.EndsWith(".WebSite", StringComparison.OrdinalIgnoreCase))
+        {
+            sourceBaseName = sourceWebProjectName.Substring(0, sourceWebProjectName.Length - ".WebSite".Length);
+        }
+
         // For the new mainproject template we only do safe renames (namespaces,
         // project name, and database names). We do NOT strip any features –
         // the generated project should be structurally identical to the
-        // original Attar project, just under a new name/namespace.
-        var transformed = content
-            // Web project name
+        // original template project, just under a new name/namespace.
+        var transformed = content;
+
+        // Replace web project name (dynamic based on source)
+        if (!string.IsNullOrEmpty(sourceBaseName))
+        {
+            transformed = transformed.Replace($"{sourceBaseName}.WebSite", $"{config.ProjectName}.WebSite", StringComparison.Ordinal);
+        }
+        // Fallback to common names
+        transformed = transformed
             .Replace("Attar.WebSite", $"{config.ProjectName}.WebSite", StringComparison.Ordinal)
-            // Root namespace
+            .Replace("MobiRooz.WebSite", $"{config.ProjectName}.WebSite", StringComparison.Ordinal);
+
+        // Replace root namespace (dynamic based on source)
+        if (!string.IsNullOrEmpty(sourceBaseName))
+        {
+            transformed = transformed
+                .Replace($"namespace {sourceBaseName}", $"namespace {config.Namespace}", StringComparison.Ordinal)
+                .Replace($"{sourceBaseName}.", $"{config.Namespace}.", StringComparison.Ordinal);
+        }
+        // Fallback to common names
+        transformed = transformed
             .Replace("namespace Attar", $"namespace {config.Namespace}", StringComparison.Ordinal)
             .Replace("Attar.", $"{config.Namespace}.", StringComparison.Ordinal)
-            // Database names
+            .Replace("namespace MobiRooz", $"namespace {config.Namespace}", StringComparison.Ordinal)
+            .Replace("MobiRooz.", $"{config.Namespace}.", StringComparison.Ordinal);
+
+        // Replace database names (dynamic based on source)
+        if (!string.IsNullOrEmpty(sourceBaseName))
+        {
+            transformed = transformed
+                .Replace($"{sourceBaseName}_DB", $"{config.ProjectName}_DB", StringComparison.Ordinal)
+                .Replace($"{sourceBaseName}_Logs_DB", $"{config.ProjectName}_Logs_DB", StringComparison.Ordinal)
+                .Replace($"{sourceBaseName}_Hangfire_DB", $"{config.ProjectName}_Hangfire_DB", StringComparison.Ordinal);
+        }
+        // Fallback to common names
+        transformed = transformed
             .Replace("Attar_DB", $"{config.ProjectName}_DB", StringComparison.Ordinal)
             .Replace("Attar_Logs_DB", $"{config.ProjectName}_Logs_DB", StringComparison.Ordinal)
             .Replace("Attar_Hangfire_DB", $"{config.ProjectName}_Hangfire_DB", StringComparison.Ordinal)
-            // ApplicationName in appsettings
-            .Replace("Attar-WebSite", $"{config.ProjectName}-WebSite", StringComparison.Ordinal);
+            .Replace("MobiRooz_DB", $"{config.ProjectName}_DB", StringComparison.Ordinal)
+            .Replace("MobiRooz_Logs_DB", $"{config.ProjectName}_Logs_DB", StringComparison.Ordinal)
+            .Replace("MobiRooz_Hangfire_DB", $"{config.ProjectName}_Hangfire_DB", StringComparison.Ordinal);
+
+        // ApplicationName in appsettings.json (should be from database, but we set a default)
+        if (!string.IsNullOrEmpty(sourceBaseName))
+        {
+            transformed = transformed
+                .Replace($"\"{sourceBaseName}-WebSite\"", $"\"{config.ProjectName}-WebSite\"", StringComparison.Ordinal)
+                .Replace($"\"ApplicationName\": \"{sourceBaseName}-WebSite\"", $"\"ApplicationName\": \"{config.ProjectName}-WebSite\"", StringComparison.Ordinal);
+        }
+        // Fallback to common names
+        transformed = transformed
+            .Replace("Attar-WebSite", $"{config.ProjectName}-WebSite", StringComparison.Ordinal)
+            .Replace("MobiRooz-WebSite", $"{config.ProjectName}-WebSite", StringComparison.Ordinal);
+
+        // Replace hardcoded default values in Program.cs
+        if (!string.IsNullOrEmpty(sourceBaseName))
+        {
+            transformed = transformed
+                .Replace($"?? \"{sourceBaseName}\"", $"?? \"{config.ProjectName}\"", StringComparison.Ordinal)
+                .Replace($"?? \"{sourceBaseName}-WebSite\"", $"?? \"{config.ProjectName}-WebSite\"", StringComparison.Ordinal);
+        }
+        // Fallback to common names
+        transformed = transformed
+            .Replace("?? \"Attar\"", $"?? \"{config.ProjectName}\"", StringComparison.Ordinal)
+            .Replace("?? \"MobiRooz\"", $"?? \"{config.ProjectName}\"", StringComparison.Ordinal);
 
         // Normalize logging entity and table names so they are not tied to the
-        // original Attar project name. We intentionally use a neutral name
+        // original project name. We intentionally use a neutral name
         // "ApplicationLog(s)" so the same template can be reused for any project.
         transformed = transformed
             // SQL / configuration table names and indexes
@@ -676,6 +870,27 @@ internal static class ReferenceSolutionCloner
             // DbSet and entity class names
             .Replace("AttarApplicationLogs", "ApplicationLogs", StringComparison.Ordinal)
             .Replace("AttarApplicationLog", "ApplicationLog", StringComparison.Ordinal);
+
+        // Fix project references in .csproj files to ensure correct relative paths
+        // In mainproject template, all projects are in src/ folder, so paths like "../Domain/Domain.csproj" are correct
+        // But we need to ensure they point to the right location
+        if (fileName != null && fileName.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+        {
+            // Ensure ProjectReference paths are relative and correct
+            // Pattern: <ProjectReference Include="../SomeProject/SomeProject.csproj" />
+            // This should already be correct for mainproject template, but we verify
+            transformed = Regex.Replace(
+                transformed,
+                @"(<ProjectReference\s+Include=[""'])(\.\./)([^""']+\.csproj)([""']\s*/>)",
+                match =>
+                {
+                    var projectName = Path.GetFileNameWithoutExtension(match.Groups[3].Value);
+                    // Ensure the path points to the correct project in src/
+                    return $"{match.Groups[1].Value}../{projectName}/{projectName}.csproj{match.Groups[4].Value}";
+                },
+                RegexOptions.IgnoreCase
+            );
+        }
 
         return transformed;
     }

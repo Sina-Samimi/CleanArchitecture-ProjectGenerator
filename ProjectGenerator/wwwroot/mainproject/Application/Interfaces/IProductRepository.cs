@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Catalog;
-using Attar.Domain.Entities.Catalog;
+using MobiRooz.Application.DTOs.Catalog;
+using MobiRooz.Domain.Entities.Catalog;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IProductRepository
 {

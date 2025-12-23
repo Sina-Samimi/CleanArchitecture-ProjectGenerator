@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Interfaces;
-using Attar.Domain.Base;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Attar.Infrastructure.Persistence.Interceptors;
+namespace MobiRooz.Infrastructure.Persistence.Interceptors;
 
 public sealed class AuditInterceptor : SaveChangesInterceptor
 {

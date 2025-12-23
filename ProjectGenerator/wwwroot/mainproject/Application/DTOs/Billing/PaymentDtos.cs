@@ -1,7 +1,7 @@
 ﻿using System;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Billing;
+namespace MobiRooz.Application.DTOs.Billing;
 
 public sealed record BankPaymentRequest(
     Guid InvoiceId,

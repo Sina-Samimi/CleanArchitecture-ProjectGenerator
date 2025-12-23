@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.Navigation;
+namespace MobiRooz.Application.DTOs.Navigation;
 
 public sealed record NavigationMenuItemDetailDto(
     Guid Id,

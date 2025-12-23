@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Authorization;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Commands.Identity.DeleteUser;
+namespace MobiRooz.Application.Commands.Identity.DeleteUser;
 
 public sealed record SoftDeleteUserCommand(string UserId) : ICommand<UserDto>
 {

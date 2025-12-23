@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Attar.Application.DTOs.UserAddresses;
+namespace MobiRooz.Application.DTOs.UserAddresses;
 
 public sealed record UserAddressDto(
     Guid Id,

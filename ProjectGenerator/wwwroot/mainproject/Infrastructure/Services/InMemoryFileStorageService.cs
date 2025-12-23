@@ -1,4 +1,4 @@
-﻿namespace Attar.Infrastructure.Services;
+﻿namespace MobiRooz.Infrastructure.Services;
 
 public sealed class InMemoryFileStorageService
 {

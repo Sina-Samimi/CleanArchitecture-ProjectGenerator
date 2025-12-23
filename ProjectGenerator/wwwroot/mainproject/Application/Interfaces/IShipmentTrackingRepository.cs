@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Orders;
+using MobiRooz.Domain.Entities.Orders;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IShipmentTrackingRepository
 {

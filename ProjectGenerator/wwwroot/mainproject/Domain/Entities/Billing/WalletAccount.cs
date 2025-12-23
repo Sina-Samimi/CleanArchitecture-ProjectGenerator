@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.Domain.Interfaces;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Domain.Entities.Billing;
+namespace MobiRooz.Domain.Entities.Billing;
 
 public sealed class WalletAccount : Entity, IAggregateRoot
 {

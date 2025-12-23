@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using Attar.Domain.Base;
-using Attar.Domain.Enums;
-using Attar.Domain.Interfaces;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Domain.Entities.Blogs;
+namespace MobiRooz.Domain.Entities.Blogs;
 
 public sealed class Blog : SeoEntity, IAggregateRoot
 {

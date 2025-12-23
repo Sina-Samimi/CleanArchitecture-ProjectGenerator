@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Entities;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities;
 
-namespace Attar.Domain.Entities.Sellers;
+namespace MobiRooz.Domain.Entities.Sellers;
 
 public sealed class SellerProfile : Entity
 {

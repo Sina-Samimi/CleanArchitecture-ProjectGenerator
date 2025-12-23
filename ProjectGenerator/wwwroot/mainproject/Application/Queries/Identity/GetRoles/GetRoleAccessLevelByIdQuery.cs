@@ -1,12 +1,12 @@
-﻿using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.Authorization;
-using Attar.SharedKernel.BaseTypes;
+﻿using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.Authorization;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Attar.Application.Queries.Identity.GetRoles;
+namespace MobiRooz.Application.Queries.Identity.GetRoles;
 
 public sealed record GetRoleAccessLevelByIdQuery(string Id) : IQuery<RoleAccessLevelDto>;
 

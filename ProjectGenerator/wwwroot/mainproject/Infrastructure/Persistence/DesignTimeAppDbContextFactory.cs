@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Attar.Infrastructure.Persistence;
+namespace MobiRooz.Infrastructure.Persistence;
 
 public sealed class DesignTimeAppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {

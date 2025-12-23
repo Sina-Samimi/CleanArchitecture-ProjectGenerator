@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Attar.Domain.Base;
-using Attar.Domain.Exceptions;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Exceptions;
 
-namespace Attar.Domain.Entities;
+namespace MobiRooz.Domain.Entities;
 
 public sealed class UserAddress : Entity
 {

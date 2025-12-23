@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Settings;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Settings;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Admin.SiteSettings;
+namespace MobiRooz.Application.Commands.Admin.SiteSettings;
 
 public sealed record UpdateSiteSettingsCommand(
     string SiteTitle,

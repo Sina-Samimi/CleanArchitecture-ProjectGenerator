@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Attar.SharedKernel.Authorization;
+namespace MobiRooz.SharedKernel.Authorization;
 
 public static class PermissionCatalog
 {

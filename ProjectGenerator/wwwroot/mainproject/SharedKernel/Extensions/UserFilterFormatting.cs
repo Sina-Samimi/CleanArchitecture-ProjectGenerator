@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.SharedKernel.Helpers;
 
-namespace Attar.SharedKernel.Extensions;
+namespace MobiRooz.SharedKernel.Extensions;
 
 public static class UserFilterFormatting
 {

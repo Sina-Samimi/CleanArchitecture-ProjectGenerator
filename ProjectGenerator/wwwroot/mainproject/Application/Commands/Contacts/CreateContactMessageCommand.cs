@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Contacts;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Contacts;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Contacts;
+namespace MobiRooz.Application.Commands.Contacts;
 
 public sealed record CreateContactMessageCommand(
     string FullName,

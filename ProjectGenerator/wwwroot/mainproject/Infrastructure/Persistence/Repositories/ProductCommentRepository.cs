@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Catalog;
-using Attar.Infrastructure.Persistence;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class ProductCommentRepository : IProductCommentRepository
 {

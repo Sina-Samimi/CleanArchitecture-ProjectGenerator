@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
-namespace Attar.SharedKernel.Extensions;
+namespace MobiRooz.SharedKernel.Extensions;
 
 public static class EnumExtensions
 {

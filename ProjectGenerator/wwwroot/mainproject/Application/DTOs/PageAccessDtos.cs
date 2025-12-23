@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Attar.Application.DTOs;
+namespace MobiRooz.Application.DTOs;
 
 public sealed record PageDescriptorDto(
     string Area,

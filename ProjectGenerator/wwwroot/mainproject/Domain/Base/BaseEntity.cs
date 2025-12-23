@@ -2,10 +2,10 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Attar.Domain.Constants;
-using Attar.Domain.Entities;
+using MobiRooz.Domain.Constants;
+using MobiRooz.Domain.Entities;
 
-namespace Attar.Domain.Base;
+namespace MobiRooz.Domain.Base;
 
 public abstract class BaseEntity
 {

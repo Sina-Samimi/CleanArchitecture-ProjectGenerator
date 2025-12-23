@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace Attar.Application.DTOs.Visits;
+namespace MobiRooz.Application.DTOs.Visits;
 
 public sealed record VisitStatisticsDto(
     int TotalVisits,

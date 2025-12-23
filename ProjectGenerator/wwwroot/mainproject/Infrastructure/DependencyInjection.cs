@@ -1,17 +1,17 @@
-using System;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities;
-using Attar.Infrastructure.Persistence;
-using Attar.Infrastructure.Persistence.Interceptors;
-using Attar.Infrastructure.Persistence.Repositories;
-using Attar.Infrastructure.Services;
-using Attar.Infrastructure.Services.Billing;
+﻿using System;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Infrastructure.Persistence;
+using MobiRooz.Infrastructure.Persistence.Interceptors;
+using MobiRooz.Infrastructure.Persistence.Repositories;
+using MobiRooz.Infrastructure.Services;
+using MobiRooz.Infrastructure.Services.Billing;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-namespace Attar.Infrastructure;
+namespace MobiRooz.Infrastructure;
 
 public static class DependencyInjection
 {

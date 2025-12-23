@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Catalog;
-using Attar.Application.Interfaces;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Catalog;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Queries.Catalog;
+namespace MobiRooz.Application.Queries.Catalog;
 
 public sealed record GetSellerProductDetailQuery(Guid ProductId, string SellerId)
     : IQuery<SellerProductDetailDto>
@@ -51,6 +51,8 @@ public sealed record GetSellerProductDetailQuery(Guid ProductId, string SellerId
                 return Result<SellerProductDetailDto>.Failure("شما اجازه ویرایش این محصول را ندارید.");
             }
 
+            var isCreator = string.Equals(product.CreatorId, request.SellerId, StringComparison.Ordinal);
+
             var gallery = product.Gallery
                 .OrderBy(image => image.DisplayOrder)
                 .ThenBy(image => image.CreateDate)
@@ -81,7 +83,8 @@ public sealed record GetSellerProductDetailQuery(Guid ProductId, string SellerId
                 product.CreateDate,
                 product.UpdateDate,
                 gallery,
-                viewCount);
+                viewCount,
+                isCreator);
 
             return Result<SellerProductDetailDto>.Success(dto);
         }

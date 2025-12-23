@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Cart;
+namespace MobiRooz.Application.DTOs.Cart;
 
 public sealed record CartItemDto(
     Guid ProductId,

@@ -1,4 +1,4 @@
-﻿namespace Attar.Domain.Base;
+﻿namespace MobiRooz.Domain.Base;
 
 public abstract class ValueObject : IEquatable<ValueObject>
 {

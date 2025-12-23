@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.Extensions.Logging;
 
-namespace Attar.Application.Commands.Billing;
+namespace MobiRooz.Application.Commands.Billing;
 
 public sealed record UpdateInvoiceCommand(
     Guid Id,
@@ -186,7 +186,7 @@ public sealed record UpdateInvoiceCommand(
         }
 
         private static void SyncAttributes(
-            Attar.Domain.Entities.Billing.InvoiceItem item,
+            MobiRooz.Domain.Entities.Billing.InvoiceItem item,
             IReadOnlyCollection<Attribute>? requestedAttributes)
         {
             requestedAttributes ??= Array.Empty<Attribute>();

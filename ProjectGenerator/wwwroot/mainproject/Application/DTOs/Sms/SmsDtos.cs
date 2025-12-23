@@ -1,4 +1,4 @@
-namespace Attar.Application.DTOs.Sms;
+﻿namespace MobiRooz.Application.DTOs.Sms;
 
 public sealed record VerifyPhonenumberSmsDto(
     string PhoneNumber,

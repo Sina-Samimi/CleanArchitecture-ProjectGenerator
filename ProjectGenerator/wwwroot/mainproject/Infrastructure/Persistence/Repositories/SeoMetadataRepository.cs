@@ -1,13 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Seo;
-using Attar.Domain.Enums;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Seo;
+using MobiRooz.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class SeoMetadataRepository : ISeoMetadataRepository
 {

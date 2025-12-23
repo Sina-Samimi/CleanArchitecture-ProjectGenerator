@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs;
-using Attar.Application.Interfaces;
-using Attar.Infrastructure.Persistence;
-using Attar.SharedKernel.Authorization;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Infrastructure.Persistence;
+using MobiRooz.SharedKernel.Authorization;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Services;
+namespace MobiRooz.Infrastructure.Services;
 
 public sealed class PermissionDefinitionService : IPermissionDefinitionService
 {

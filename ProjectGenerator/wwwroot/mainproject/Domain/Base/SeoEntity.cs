@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Attar.Domain.Base;
+namespace MobiRooz.Domain.Base;
 
 public abstract class SeoEntity : Entity
 {

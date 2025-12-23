@@ -1,8 +1,8 @@
-using Attar.Domain.Entities.Orders;
+﻿using MobiRooz.Domain.Entities.Orders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Attar.Infrastructure.Persistence.Configurations;
+namespace MobiRooz.Infrastructure.Persistence.Configurations;
 
 public sealed class ShipmentTrackingConfiguration : IEntityTypeConfiguration<ShipmentTracking>
 {

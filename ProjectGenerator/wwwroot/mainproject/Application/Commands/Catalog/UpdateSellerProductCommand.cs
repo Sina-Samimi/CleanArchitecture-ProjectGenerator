@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Commands.Catalog;
+namespace MobiRooz.Application.Commands.Catalog;
 
 public sealed record UpdateSellerProductCommand(
     Guid ProductId,
@@ -25,7 +25,8 @@ public sealed record UpdateSellerProductCommand(
     string? Tags,
     string? FeaturedImagePath,
     string? DigitalDownloadPath,
-    string? Brand) : ICommand<bool>
+    string? Brand,
+    IReadOnlyCollection<(string Path, int Order)>? Gallery = null) : ICommand<bool>
 {
     public sealed class Handler : ICommandHandler<UpdateSellerProductCommand, bool>
     {
@@ -97,6 +98,8 @@ public sealed record UpdateSellerProductCommand(
                 return Result<bool>.Failure("شما اجازه ویرایش این محصول را ندارید.");
             }
 
+            var isCreator = string.Equals(product.CreatorId, request.SellerId, StringComparison.Ordinal);
+
             var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken);
             if (category is null)
             {
@@ -157,6 +160,13 @@ public sealed record UpdateSellerProductCommand(
             product.SetBrand(request.Brand);
             product.UpdateSeoMetadata(normalizedName, seoDescription, seoKeywords, slug, DefaultRobots);
             product.AssignSeller(request.SellerId);
+            
+            // Update gallery only if seller is the creator
+            if (isCreator && request.Gallery != null)
+            {
+                product.ReplaceGallery(request.Gallery);
+            }
+            
             product.Unpublish();
 
             var audit = _auditContext.Capture();

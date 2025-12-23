@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Sellers;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Admin.FinancialSettings;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Sellers;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Admin.FinancialSettings;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Application.Queries.Sellers;
+namespace MobiRooz.Application.Queries.Sellers;
 
 public sealed record GetSellerStatisticsQuery(string SellerId) : IQuery<SellerStatisticsDto>
 {

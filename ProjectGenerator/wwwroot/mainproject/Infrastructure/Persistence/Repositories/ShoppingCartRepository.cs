@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Orders;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Orders;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class ShoppingCartRepository : IShoppingCartRepository
 {

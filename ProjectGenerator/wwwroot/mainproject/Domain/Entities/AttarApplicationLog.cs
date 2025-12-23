@@ -1,13 +1,13 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using Attar.Domain.Base;
+using MobiRooz.Domain.Base;
 
-namespace Attar.Domain.Entities;
+namespace MobiRooz.Domain.Entities;
 
 /// <summary>
 /// Entity برای ذخیره لاگ‌های خطا و هشدار در دیتابیس
 /// </summary>
-public sealed class AttarApplicationLog : Entity
+public sealed class ApplicationLog : Entity
 {
     public string Level { get; private set; } = string.Empty;
 
@@ -38,12 +38,12 @@ public sealed class AttarApplicationLog : Entity
     public string? Environment { get; private set; }
 
     [SetsRequiredMembers]
-    private AttarApplicationLog()
+    private ApplicationLog()
     {
     }
 
     [SetsRequiredMembers]
-    public AttarApplicationLog(
+    public ApplicationLog(
         string level,
         string message,
         string? exception = null,

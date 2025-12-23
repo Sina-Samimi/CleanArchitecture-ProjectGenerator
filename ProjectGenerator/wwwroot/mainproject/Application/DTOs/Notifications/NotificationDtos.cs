@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Notifications;
+namespace MobiRooz.Application.DTOs.Notifications;
 
 public sealed record NotificationFilterDto(
     IReadOnlyCollection<string>? RoleNames = null,

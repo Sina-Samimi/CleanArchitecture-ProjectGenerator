@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs;
-using Attar.Domain.Entities;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Authorization;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs;
+using MobiRooz.Domain.Entities;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Application.Commands.Identity.UpdateUser;
+namespace MobiRooz.Application.Commands.Identity.UpdateUser;
 
 public sealed record UpdateUserCommand(UpdateUserDto Payload) : ICommand<UserDto>
 {

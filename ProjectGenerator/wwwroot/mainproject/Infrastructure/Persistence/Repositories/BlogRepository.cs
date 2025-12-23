@@ -1,15 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Blogs;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Blogs;
-using Attar.Domain.Enums;
+using MobiRooz.Application.DTOs.Blogs;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Blogs;
+using MobiRooz.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class BlogRepository : IBlogRepository
 {

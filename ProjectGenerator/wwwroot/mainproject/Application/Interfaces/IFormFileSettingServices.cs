@@ -1,17 +1,17 @@
-﻿using Attar.SharedKernel.DTOs;
+﻿using MobiRooz.SharedKernel.DTOs;
 using Microsoft.AspNetCore.Http;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IFormFileSettingServices
 {
-    ResponseDto<string> UploadImage(string basePath, IFormFile file, string customFileName);
+    Task<ResponseDto<string>> UploadImageAsync(string basePath, IFormFile file, string customFileName, CancellationToken cancellationToken = default);
 
-    ResponseDto<string> UploadFile(string basePath, IFormFile file, string customFileName);
+    Task<ResponseDto<string>> UploadFileAsync(string basePath, IFormFile file, string customFileName, CancellationToken cancellationToken = default);
 
-    ResponseDto CopyFile(string sourceDir, string destinationDir);
+    Task<ResponseDto> CopyFileAsync(string sourceDir, string destinationDir, CancellationToken cancellationToken = default);
 
-    ResponseDto DeleteFile(string? filePath);
+    Task<ResponseDto> DeleteFileAsync(string? filePath, CancellationToken cancellationToken = default);
 
     bool IsFileSizeValid(IFormFile file, int maxSizeInKB);
 

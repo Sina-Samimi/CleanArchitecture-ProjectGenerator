@@ -1,19 +1,19 @@
-using System.Collections.Concurrent;
-using Attar.Domain.Entities;
-using Attar.Infrastructure.Persistence;
+﻿using System.Collections.Concurrent;
+using MobiRooz.Domain.Entities;
+using MobiRooz.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Attar.Infrastructure.Services.Logging;
+namespace MobiRooz.Infrastructure.Services.Logging;
 
 /// <summary>
 /// Custom Serilog Sink برای نوشتن لاگ‌های Error/Warning در دیتابیس
 /// با Performance بهینه (Batch Writing)
 /// </summary>
-public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
+public sealed class ApplicationLogSink : ILogEventSink, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentQueue<LogEvent> _logQueue = new();
@@ -23,7 +23,7 @@ public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
     private readonly object _lock = new();
     private volatile bool _disposed;
 
-    public AttarApplicationLogSink(IServiceProvider serviceProvider)
+    public ApplicationLogSink(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _timer = new Timer(FlushLogs, null, _flushInterval, _flushInterval);
@@ -78,7 +78,7 @@ public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
                     .Select(logEvent => CreateApplicationLog(logEvent))
                     .ToList();
 
-                logsDbContext.AttarApplicationLogs.AddRange(applicationLogs);
+                logsDbContext.ApplicationLogs.AddRange(applicationLogs);
                 logsDbContext.SaveChanges();
             }
             catch (Exception ex)
@@ -86,7 +86,7 @@ public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
                 // اگر خطا در نوشتن لاگ پیش آمد، لاگ کن (بدون exception throw)
                 try
                 {
-                    var logger = _serviceProvider.GetService<ILogger<AttarApplicationLogSink>>();
+                    var logger = _serviceProvider.GetService<ILogger<ApplicationLogSink>>();
                     logger?.LogError(ex, "Error saving application logs to database");
                 }
                 catch
@@ -97,7 +97,7 @@ public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
         }
     }
 
-    private static AttarApplicationLog CreateApplicationLog(LogEvent logEvent)
+    private static ApplicationLog CreateApplicationLog(LogEvent logEvent)
     {
         var message = logEvent.RenderMessage();
         var exception = logEvent.Exception?.ToString();
@@ -139,7 +139,7 @@ public sealed class AttarApplicationLogSink : ILogEventSink, IDisposable
             System.Net.IPAddress.TryParse(remoteIp, out ipAddress);
         }
 
-        return new AttarApplicationLog(
+        return new ApplicationLog(
             level: logEvent.Level.ToString(),
             message: message,
             exception: exception,

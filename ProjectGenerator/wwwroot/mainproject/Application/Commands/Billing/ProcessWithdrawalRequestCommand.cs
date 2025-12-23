@@ -1,18 +1,20 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Application.Queries.Billing;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Application.Queries.Billing;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 using MediatR;
 
-namespace Attar.Application.Commands.Billing;
+namespace MobiRooz.Application.Commands.Billing;
 
 public sealed record ProcessWithdrawalRequestCommand(
     Guid RequestId,
@@ -24,17 +26,23 @@ public sealed class ProcessWithdrawalRequestCommandHandler : ICommandHandler<Pro
     private readonly IWalletRepository _walletRepository;
     private readonly IAuditContext _auditContext;
     private readonly IMediator _mediator;
+    private readonly IPaymentSettingRepository _paymentSettingRepository;
+    private readonly IInvoiceRepository _invoiceRepository;
 
     public ProcessWithdrawalRequestCommandHandler(
         IWithdrawalRequestRepository withdrawalRequestRepository,
         IWalletRepository walletRepository,
         IAuditContext auditContext,
-        IMediator mediator)
+        IMediator mediator,
+        IPaymentSettingRepository paymentSettingRepository,
+        IInvoiceRepository invoiceRepository)
     {
         _withdrawalRequestRepository = withdrawalRequestRepository;
         _walletRepository = walletRepository;
         _auditContext = auditContext;
         _mediator = mediator;
+        _paymentSettingRepository = paymentSettingRepository;
+        _invoiceRepository = invoiceRepository;
     }
 
     public async Task<Result<WithdrawalRequestDetailsDto>> Handle(ProcessWithdrawalRequestCommand request, CancellationToken cancellationToken)
@@ -98,9 +106,99 @@ public sealed class ProcessWithdrawalRequestCommandHandler : ICommandHandler<Pro
                         $"برداشت شده: {totalWithdrawn:N0} {withdrawalRequest.Currency}");
                 }
 
-                // For seller revenue: No wallet transaction needed, just process the request
-                // The withdrawal is tracked by the request status, not by wallet balance
-                withdrawalRequest.Process(request.AdminUserId, null);
+                // Check if payment gateway is active
+                var paymentSetting = await _paymentSettingRepository.GetCurrentAsync(cancellationToken);
+                var isGatewayActive = paymentSetting?.IsActive == true && 
+                                      !string.IsNullOrWhiteSpace(paymentSetting.ZarinPalMerchantId);
+
+                if (isGatewayActive)
+                {
+                    // Create invoice for withdrawal payment via gateway
+                    var invoiceNumber = Invoice.GenerateInvoiceNumber();
+                    var invoiceExists = await _invoiceRepository.ExistsByNumberAsync(invoiceNumber, null, cancellationToken);
+                    if (invoiceExists)
+                    {
+                        // Retry with new number if exists
+                        invoiceNumber = Invoice.GenerateInvoiceNumber();
+                    }
+
+                    var invoiceItems = new List<CreateInvoiceCommand.Item>
+                    {
+                        new CreateInvoiceCommand.Item(
+                            Name: $"برداشت سهم فروشنده - درخواست #{withdrawalRequest.Id}",
+                            Description: $"برداشت مبلغ {withdrawalRequest.Amount:N0} {withdrawalRequest.Currency} از درآمد فروشنده",
+                            ItemType: InvoiceItemType.Miscellaneous,
+                            ReferenceId: withdrawalRequest.Id,
+                            Quantity: 1,
+                            UnitPrice: withdrawalRequest.Amount,
+                            DiscountAmount: null,
+                            Attributes: new List<CreateInvoiceCommand.Attribute>
+                            {
+                                new CreateInvoiceCommand.Attribute("WithdrawalRequestId", withdrawalRequest.Id.ToString()),
+                                new CreateInvoiceCommand.Attribute("RequestType", "SellerRevenue")
+                            },
+                            VariantId: null)
+                    };
+
+                    var createInvoiceCommand = new CreateInvoiceCommand(
+                        InvoiceNumber: invoiceNumber,
+                        Title: $"فاکتور برداشت سهم فروشنده - درخواست #{withdrawalRequest.Id}",
+                        Description: $"فاکتور پرداخت برداشت سهم فروشنده به مبلغ {withdrawalRequest.Amount:N0} {withdrawalRequest.Currency}",
+                        Currency: withdrawalRequest.Currency,
+                        UserId: null, // No user ID for seller revenue withdrawal
+                        IssueDate: audit.Timestamp,
+                        DueDate: null,
+                        TaxAmount: 0,
+                        AdjustmentAmount: 0,
+                        ExternalReference: $"WITHDRAWAL_REQUEST:{withdrawalRequest.Id}",
+                        Items: invoiceItems);
+
+                    var createInvoiceResult = await _mediator.Send(createInvoiceCommand, cancellationToken);
+                    if (!createInvoiceResult.IsSuccess)
+                    {
+                        return Result<WithdrawalRequestDetailsDto>.Failure(
+                            $"خطا در ایجاد فاکتور پرداخت: {createInvoiceResult.Error}");
+                    }
+
+                    var invoiceId = createInvoiceResult.Value;
+
+                    // Create a pending payment transaction for gateway payment
+                    var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
+                    if (invoice is null)
+                    {
+                        return Result<WithdrawalRequestDetailsDto>.Failure("فاکتور ایجاد شده یافت نشد.");
+                    }
+
+                    var reference = ReferenceGenerator.GenerateReadableReference("WDR", DateTimeOffset.UtcNow);
+                    var paymentTransaction = invoice.AddTransaction(
+                        withdrawalRequest.Amount,
+                        PaymentMethod.OnlineGateway,
+                        TransactionStatus.Pending,
+                        reference,
+                        "ZarinPal",
+                        $"پرداخت برداشت سهم فروشنده - درخواست #{withdrawalRequest.Id}",
+                        $"WITHDRAWAL_REQUEST:{withdrawalRequest.Id}");
+
+                    await _invoiceRepository.UpdateAsync(invoice, cancellationToken);
+
+                    // Don't process the withdrawal request yet - it will be processed after payment verification
+                    // Just mark it as approved and wait for payment
+                    // The withdrawal will be processed when payment is verified
+                    // Return the invoice ID in the result so admin can redirect to payment
+                    await _withdrawalRequestRepository.UpdateAsync(withdrawalRequest, cancellationToken);
+                    
+                    // Reload to get updated data
+                    withdrawalRequest = await _withdrawalRequestRepository.GetByIdAsync(request.RequestId, cancellationToken);
+                    var resultDto = withdrawalRequest!.ToDetailsDto(invoiceId);
+                    return Result<WithdrawalRequestDetailsDto>.Success(resultDto);
+                }
+                else
+                {
+                    // Payment gateway is not active, process directly without invoice
+                    // For seller revenue: No wallet transaction needed, just process the request
+                    // The withdrawal is tracked by the request status, not by wallet balance
+                    withdrawalRequest.Process(request.AdminUserId, null);
+                }
             }
             else if (withdrawalRequest.RequestType == WithdrawalRequestType.Wallet)
             {
@@ -155,7 +253,7 @@ public sealed class ProcessWithdrawalRequestCommandHandler : ICommandHandler<Pro
             // Reload to get wallet transaction
             withdrawalRequest = await _withdrawalRequestRepository.GetByIdAsync(request.RequestId, cancellationToken);
 
-            return Result<WithdrawalRequestDetailsDto>.Success(withdrawalRequest!.ToDetailsDto());
+            return Result<WithdrawalRequestDetailsDto>.Success(withdrawalRequest!.ToDetailsDto(null));
         }
         catch (DomainException ex)
         {

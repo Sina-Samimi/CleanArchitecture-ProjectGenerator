@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Billing;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.SharedKernel.BaseTypes;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IBankingGatewayService
 {

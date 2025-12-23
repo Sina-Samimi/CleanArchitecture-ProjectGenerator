@@ -1,16 +1,80 @@
 using System;
 using System.IO;
+using System.Linq;
 
 namespace ProjectGenerator.Core.Utilities;
 
 internal static class ReferencePaths
 {
+    private static bool LooksLikeMainprojectRoot(string mainprojectDir)
+    {
+        // User requirement: source of truth is ProjectGenerator/wwwroot/mainproject and it contains these folders.
+        return Directory.Exists(Path.Combine(mainprojectDir, "Domain")) &&
+               Directory.Exists(Path.Combine(mainprojectDir, "Application")) &&
+               Directory.Exists(Path.Combine(mainprojectDir, "Infrastructure")) &&
+               Directory.Exists(Path.Combine(mainprojectDir, "SharedKernel"));
+    }
+
+    private static bool HasAnyCsproj(string projectDir)
+    {
+        if (!Directory.Exists(projectDir))
+        {
+            return false;
+        }
+
+        return Directory.EnumerateFiles(projectDir, "*.csproj", SearchOption.TopDirectoryOnly).Any();
+    }
+
+    private static string? FindValidWebProjectUnder(string mainprojectDir)
+    {
+        if (!Directory.Exists(mainprojectDir))
+        {
+            return null;
+        }
+
+        // Only accept a folder that looks like the full mainproject template root,
+        // to avoid stale/partial copies in bin output directories.
+        if (!LooksLikeMainprojectRoot(mainprojectDir))
+        {
+            return null;
+        }
+
+        // Prefer folders that actually contain a csproj at their root.
+        // This avoids picking stale/partial copies that only have subfolders.
+        var candidates = Directory.EnumerateDirectories(mainprojectDir)
+            .Where(d => d.EndsWith(".WebSite", StringComparison.OrdinalIgnoreCase))
+            .Where(HasAnyCsproj)
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        // Prefer a candidate where the csproj matches the directory name.
+        foreach (var dir in candidates)
+        {
+            var dirName = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(dirName))
+            {
+                continue;
+            }
+
+            var expectedCsproj = Path.Combine(dir, $"{dirName}.csproj");
+            if (File.Exists(expectedCsproj))
+            {
+                return dir;
+            }
+        }
+
+        // Otherwise just return the first valid candidate.
+        return candidates[0];
+    }
+
     /// <summary>
     /// Finds the root folder of the reference Web project that should be cloned.
     ///
-    /// This currently supports two layouts:
-    /// 1) Legacy layout:   refrence/EndPoint.WebSite
-    /// 2) New mainproject: ProjectGenerator/wwwroot/mainproject/Attar.WebSite
+    /// ONLY supports the mainproject layout: ProjectGenerator/wwwroot/mainproject/{AnyName}.WebSite
     ///
     /// The returned path is always the web-project root (the folder that contains
     /// the .csproj and Areas/Views/...).
@@ -21,30 +85,30 @@ internal static class ReferencePaths
 
         for (var i = 0; i < 8 && !string.IsNullOrEmpty(current); i++)
         {
-            // New preferred layout: ProjectGenerator/wwwroot/mainproject/Attar.WebSite
-            var newDirect = Path.Combine(current, "wwwroot", "mainproject", "Attar.WebSite");
-            if (Directory.Exists(newDirect))
+            // ONLY use mainproject layout: ProjectGenerator/wwwroot/mainproject/{AnyName}.WebSite
+            // Dynamically find any .WebSite folder in mainproject
+            var mainprojectDirect = Path.Combine(current, "wwwroot", "mainproject");
+            var directWeb = FindValidWebProjectUnder(mainprojectDirect);
+            if (directWeb != null)
             {
-                return newDirect;
+                // Verify that mainproject structure exists (Domain, Application, Infrastructure, SharedKernel)
+                var mainprojectRoot = Directory.GetParent(directWeb)?.FullName;
+                if (mainprojectRoot != null && IsMainprojectStructureValid(mainprojectRoot))
+                {
+                    return directWeb;
+                }
             }
 
-            var newSibling = Path.Combine(current, "ProjectGenerator", "wwwroot", "mainproject", "Attar.WebSite");
-            if (Directory.Exists(newSibling))
+            var mainprojectSibling = Path.Combine(current, "ProjectGenerator", "wwwroot", "mainproject");
+            var siblingWeb = FindValidWebProjectUnder(mainprojectSibling);
+            if (siblingWeb != null)
             {
-                return newSibling;
-            }
-
-            // Legacy layout: refrence/EndPoint.WebSite
-            var legacyDirect = Path.Combine(current, "refrence", "EndPoint.WebSite");
-            if (Directory.Exists(legacyDirect))
-            {
-                return legacyDirect;
-            }
-
-            var legacySibling = Path.Combine(current, "ProjectGenerator", "refrence", "EndPoint.WebSite");
-            if (Directory.Exists(legacySibling))
-            {
-                return legacySibling;
+                // Verify that mainproject structure exists (Domain, Application, Infrastructure, SharedKernel)
+                var mainprojectRoot = Directory.GetParent(siblingWeb)?.FullName;
+                if (mainprojectRoot != null && IsMainprojectStructureValid(mainprojectRoot))
+                {
+                    return siblingWeb;
+                }
             }
 
             var parent = Directory.GetParent(current);
@@ -56,5 +120,33 @@ internal static class ReferencePaths
         }
 
         return null;
+    }
+
+    private static bool IsMainprojectStructureValid(string mainprojectRoot)
+    {
+        if (!Directory.Exists(mainprojectRoot))
+        {
+            return false;
+        }
+
+        // Verify that all required folders exist
+        var requiredFolders = new[] { "Domain", "Application", "Infrastructure", "SharedKernel" };
+        foreach (var folder in requiredFolders)
+        {
+            var folderPath = Path.Combine(mainprojectRoot, folder);
+            if (!Directory.Exists(folderPath))
+            {
+                return false;
+            }
+
+            // Verify that each folder has its .csproj file
+            var csprojPath = Path.Combine(folderPath, $"{folder}.csproj");
+            if (!File.Exists(csprojPath))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

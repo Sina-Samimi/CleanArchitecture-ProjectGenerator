@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Domain.Entities.Catalog;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Entities.Catalog;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IProductCustomRequestRepository
 {

@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Catalog;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Catalog;
+using MobiRooz.Application.DTOs.Catalog;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Catalog;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class ProductRepository : IProductRepository
 {
@@ -181,7 +181,8 @@ public sealed class ProductRepository : IProductRepository
                 TagList = product.TagList ?? string.Empty,
                 product.UpdateDate,
                 product.IsCustomOrder,
-                product.SellerId
+                product.SellerId,
+                product.CreatorId
             })
             .ToListAsync(cancellationToken);
 
@@ -254,7 +255,8 @@ public sealed class ProductRepository : IProductRepository
                     product.SellerId,
                     sellerInfo?.DisplayName,
                     sellerInfo?.ContactPhone,
-                    sellerCount);
+                    sellerCount,
+                    product.CreatorId);
             })
             .ToList();
 
@@ -360,7 +362,8 @@ public sealed class ProductRepository : IProductRepository
                     .Where(s => s.UserId == product.SellerId && !s.IsDeleted)
                     .Select(s => s.ContactPhone)
                     .FirstOrDefault() : null,
-                0)) // SellerCount will be calculated separately if needed
+                0, // SellerCount will be calculated separately if needed
+                product.CreatorId))
             .ToListAsync(cancellationToken);
 
         return items;
@@ -413,13 +416,99 @@ public sealed class ProductRepository : IProductRepository
         }
         // If already Modified or Added, no need to change state
 
+        await SyncGalleryAsync(product, cancellationToken);
         await SyncExecutionStepsAsync(product, cancellationToken);
         await SyncFaqsAsync(product, cancellationToken);
         await SyncAttributesAsync(product, cancellationToken);
         await SyncVariantAttributesAsync(product, cancellationToken);
         await SyncVariantsAsync(product, cancellationToken);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        const int maxRetries = 3;
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                return; // Success, exit the method
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (attempt == maxRetries - 1)
+                {
+                    // Last attempt failed, rethrow the exception
+                    throw;
+                }
+
+                // Reload the entity from database to get the latest version
+                await entry.ReloadAsync(cancellationToken);
+                
+                // Re-apply the changes after reload
+                entry.State = EntityState.Modified;
+                
+                // Re-sync related entities
+                await SyncGalleryAsync(product, cancellationToken);
+                await SyncExecutionStepsAsync(product, cancellationToken);
+                await SyncFaqsAsync(product, cancellationToken);
+                await SyncAttributesAsync(product, cancellationToken);
+                await SyncVariantAttributesAsync(product, cancellationToken);
+                await SyncVariantsAsync(product, cancellationToken);
+                
+                // Wait a bit before retry to allow other transactions to complete
+                await Task.Delay(50 * (attempt + 1), cancellationToken);
+            }
+        }
+    }
+
+    private async Task SyncGalleryAsync(Product product, CancellationToken cancellationToken)
+    {
+        var existingIds = await _dbContext.ProductImages
+            .AsNoTracking()
+            .Where(img => img.ProductId == product.Id)
+            .Select(img => img.Id)
+            .ToListAsync(cancellationToken);
+
+        var existingLookup = existingIds.Count == 0 ? null : existingIds.ToHashSet();
+
+        // Remove images that are no longer in the collection
+        if (existingLookup is not null)
+        {
+            var currentIds = product.Gallery.Select(img => img.Id).ToHashSet();
+            var toRemove = existingLookup.Except(currentIds).ToList();
+            if (toRemove.Count > 0)
+            {
+                var toRemoveEntities = await _dbContext.ProductImages
+                    .Where(img => toRemove.Contains(img.Id))
+                    .ToListAsync(cancellationToken);
+                _dbContext.ProductImages.RemoveRange(toRemoveEntities);
+            }
+        }
+
+        foreach (var image in product.Gallery)
+        {
+            var imageEntry = _dbContext.Entry(image);
+
+            if (imageEntry.State == EntityState.Detached)
+            {
+                if (existingLookup is not null && existingLookup.Contains(image.Id))
+                {
+                    _dbContext.ProductImages.Attach(image);
+                    imageEntry.State = EntityState.Modified;
+                }
+                else
+                {
+                    _dbContext.ProductImages.Add(image);
+                }
+
+                continue;
+            }
+
+            var existsInDatabase = existingLookup is not null && existingLookup.Contains(image.Id);
+
+            if (!existsInDatabase)
+            {
+                imageEntry.State = EntityState.Added;
+            }
+        }
     }
 
     private async Task SyncExecutionStepsAsync(Product product, CancellationToken cancellationToken)
@@ -629,10 +718,11 @@ public sealed class ProductRepository : IProductRepository
         foreach (var variant in product.Variants)
         {
             var variantEntry = _dbContext.Entry(variant);
+            var existsInDatabase = existingLookup is not null && existingLookup.Contains(variant.Id);
 
             if (variantEntry.State == EntityState.Detached)
             {
-                if (existingLookup is not null && existingLookup.Contains(variant.Id))
+                if (existsInDatabase)
                 {
                     _dbContext.ProductVariants.Attach(variant);
                     variantEntry.State = EntityState.Modified;
@@ -640,6 +730,7 @@ public sealed class ProductRepository : IProductRepository
                 else
                 {
                     _dbContext.ProductVariants.Add(variant);
+                    variantEntry.State = EntityState.Added;
                 }
 
                 // Sync variant options
@@ -647,11 +738,14 @@ public sealed class ProductRepository : IProductRepository
                 continue;
             }
 
-            var existsInDatabase = existingLookup is not null && existingLookup.Contains(variant.Id);
-
-            if (!existsInDatabase)
+            // If variant is already tracked, ensure correct state
+            if (!existsInDatabase && variantEntry.State != EntityState.Added)
             {
                 variantEntry.State = EntityState.Added;
+            }
+            else if (existsInDatabase && variantEntry.State == EntityState.Unchanged)
+            {
+                variantEntry.State = EntityState.Modified;
             }
 
             // Sync variant options

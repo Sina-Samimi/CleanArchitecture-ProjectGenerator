@@ -1,4 +1,4 @@
-﻿namespace Attar.Domain.Exceptions;
+﻿namespace MobiRooz.Domain.Exceptions;
 
 public class DomainException : Exception
 {

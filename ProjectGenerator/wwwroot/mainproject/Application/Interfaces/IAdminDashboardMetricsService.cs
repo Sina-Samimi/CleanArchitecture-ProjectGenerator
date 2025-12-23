@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Dashboard;
+using MobiRooz.Application.DTOs.Dashboard;
 
-namespace Attar.Application.Interfaces;
+namespace MobiRooz.Application.Interfaces;
 
 public interface IAdminDashboardMetricsService
 {

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Attar.Domain.Entities.Discounts;
-using Attar.Domain.Enums;
-using Attar.Domain.ValueObjects;
-using static Attar.Domain.Entities.Discounts.DiscountCode;
+using MobiRooz.Domain.Entities.Discounts;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.ValueObjects;
+using static MobiRooz.Domain.Entities.Discounts.DiscountCode;
 
-namespace Attar.Application.DTOs.Discounts;
+namespace MobiRooz.Application.DTOs.Discounts;
 
 public sealed record DiscountApplicationResultDto(
     string Code,

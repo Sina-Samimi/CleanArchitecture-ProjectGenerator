@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Attar.Domain.Enums;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Application.DTOs.Tickets;
+namespace MobiRooz.Application.DTOs.Tickets;
 
 public sealed record TicketDto(
     Guid Id,

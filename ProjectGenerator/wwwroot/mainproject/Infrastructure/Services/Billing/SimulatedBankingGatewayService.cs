@@ -2,13 +2,13 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 
-namespace Attar.Infrastructure.Services.Billing;
+namespace MobiRooz.Infrastructure.Services.Billing;
 
 public sealed class SimulatedBankingGatewayService : IBankingGatewayService
 {

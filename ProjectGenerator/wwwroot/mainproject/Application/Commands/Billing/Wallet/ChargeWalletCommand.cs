@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.Abstractions.Messaging;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
-using Attar.Domain.Exceptions;
-using Attar.SharedKernel.BaseTypes;
-using Attar.SharedKernel.Helpers;
+using MobiRooz.Application.Abstractions.Messaging;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
+using MobiRooz.Domain.Exceptions;
+using MobiRooz.SharedKernel.BaseTypes;
+using MobiRooz.SharedKernel.Helpers;
 
-namespace Attar.Application.Commands.Billing.Wallet;
+namespace MobiRooz.Application.Commands.Billing.Wallet;
 
 public sealed record ChargeWalletCommand(
     string UserId,

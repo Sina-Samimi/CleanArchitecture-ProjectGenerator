@@ -1,4 +1,4 @@
-﻿namespace Attar.Application.DTOs;
+﻿namespace MobiRooz.Application.DTOs;
 
 public sealed record RegisterUserDto(
     string UserName,

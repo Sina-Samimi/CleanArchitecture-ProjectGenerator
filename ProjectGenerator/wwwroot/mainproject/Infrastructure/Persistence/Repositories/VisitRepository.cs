@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Visits;
-using Attar.Application.Interfaces;
-using Attar.Domain.Entities.Visits;
-using Attar.Infrastructure.Services;
+using MobiRooz.Application.DTOs.Visits;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Entities.Visits;
+using MobiRooz.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class VisitRepository : IVisitRepository
 {

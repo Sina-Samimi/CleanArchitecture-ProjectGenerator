@@ -5,18 +5,18 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Attar.Application.DTOs.Billing;
-using Attar.Application.Interfaces;
-using Attar.Domain.Base;
-using Attar.Domain.Entities.Billing;
-using Attar.Domain.Enums;
-using Attar.SharedKernel.BaseTypes;
+using MobiRooz.Application.DTOs.Billing;
+using MobiRooz.Application.Interfaces;
+using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Entities.Billing;
+using MobiRooz.Domain.Enums;
+using MobiRooz.SharedKernel.BaseTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
-namespace Attar.Infrastructure.Persistence.Repositories;
+namespace MobiRooz.Infrastructure.Persistence.Repositories;
 
 public sealed class InvoiceRepository : IInvoiceRepository
 {
@@ -132,6 +132,12 @@ public sealed class InvoiceRepository : IInvoiceRepository
             {
                 var to = filter.IssueDateTo.Value;
                 query = query.Where(invoice => invoice.IssueDate < to);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.ExternalReference))
+            {
+                var externalRef = filter.ExternalReference.Trim();
+                query = query.Where(invoice => invoice.ExternalReference == externalRef);
             }
         }
 

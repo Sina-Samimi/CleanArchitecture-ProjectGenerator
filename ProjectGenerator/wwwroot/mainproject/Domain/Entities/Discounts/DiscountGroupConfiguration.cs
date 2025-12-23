@@ -1,7 +1,7 @@
-﻿using Attar.Domain.Base;
-using Attar.Domain.Enums;
+﻿using MobiRooz.Domain.Base;
+using MobiRooz.Domain.Enums;
 
-namespace Attar.Domain.Entities.Discounts;
+namespace MobiRooz.Domain.Entities.Discounts;
 
 public sealed class DiscountGroupConfiguration : ValueObject
 {
